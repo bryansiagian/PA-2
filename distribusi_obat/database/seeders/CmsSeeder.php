@@ -3,32 +3,41 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\PostCategory;
+use App\Models\Post;
 use App\Models\Profile;
+use App\Models\Contact;
+use Illuminate\Support\Str;
 
-class CmsSeeder extends Seeder
-{
-    public function run()
-    {
-        // Buat Profil Tentang Kami
-        Profile::create([
-            'key' => 'about',
-            'title' => 'Tentang Yayasan E-Pharma',
-            'content' => 'Yayasan E-Pharma adalah lembaga nirlaba yang berfokus pada distribusi obat-obatan berkualitas untuk unit kesehatan masyarakat.'
+class CmsSeeder extends Seeder {
+    public function run(): void {
+        // 1. Buat Kategori (Sebagai pengganti 'type')
+        $catNews = PostCategory::create(['name' => 'Berita', 'created_by' => 1]);
+        $catActivity = PostCategory::create(['name' => 'Kegiatan', 'created_by' => 1]);
+
+        // 2. Buat Post Contoh (Dihubungkan ke ID Kategori)
+        Post::create([
+            'user_id' => 1,
+            'post_category_id' => $catNews->id,
+            'title' => 'Pembukaan Cabang Gudang Baru',
+            'slug' => Str::slug('Pembukaan Cabang Gudang Baru'),
+            'content' => 'Isi berita tentang pembukaan cabang...',
+            'status' => 1, // Published
+            'created_by' => 1
         ]);
 
-        // Buat Visi Misi
-        Profile::create([
-            'key' => 'vision_mission',
-            'title' => 'Visi & Misi Kami',
-            'content' => '<ul><li>Menjamin ketersediaan obat.</li><li>Distribusi cepat dan transparan.</li><li>Mendukung kesehatan masyarakat.</li></ul>'
+        Post::create([
+            'user_id' => 1,
+            'post_category_id' => $catActivity->id,
+            'title' => 'Bakti Sosial Kesehatan 2024',
+            'slug' => Str::slug('Bakti Sosial Kesehatan 2024'),
+            'content' => 'Isi laporan kegiatan bakti sosial...',
+            'status' => 1, // Published
+            'created_by' => 1
         ]);
 
-        // Kontak
-        Profile::create(
-        ['key' => 'contact_address', 'title' => 'Alamat Kantor', 'content' => 'Jl. Farmasi Raya No. 45, Jakarta Pusat'],
-        ['key' => 'contact_phone', 'title' => 'Nomor Telepon', 'content' => '(021) 555-0123'],
-        ['key' => 'contact_email', 'title' => 'Email Resmi', 'content' => 'cs@e-pharma.org'],
-        ['key' => 'contact_wa', 'title' => 'WhatsApp Bisnis', 'content' => '081234567890']
-        );
+        // 3. Profiles & Contacts (Tetap sama sesuai DBML)
+        Profile::create(['key' => 'about', 'title' => 'Tentang Kami', 'content' => 'Isi about...', 'created_by' => 1]);
+        Contact::create(['key' => 'phone', 'title' => 'Telepon', 'value' => '021-12345', 'created_by' => 1]);
     }
 }

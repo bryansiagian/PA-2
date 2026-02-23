@@ -20,9 +20,12 @@ return new class extends Migration
             $table->string('unit');
             $table->integer('stock')->default(0);
             $table->integer('min_stock')->default(5);
-            $table->string('rack_number')->nullable();
-            $table->string('row_number')->nullable();
-            $table->boolean('is_bulky')->default(0);
+            $table->foreignId('rack_id')->constrained();
+            $table->decimal('price', 15, 2)->default(0);
+            $table->boolean('is_bulky')->default(false);
+            $table->integer('active')->default(1);
+            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
     }

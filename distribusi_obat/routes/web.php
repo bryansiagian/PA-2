@@ -45,12 +45,15 @@ Route::middleware(['auth'])->group(function() {
 
     // MANAJEMEN AKUN (Hanya Admin)
     Route::middleware(['role:admin'])->group(function() {
+        Route::get('/admin/cms/post-categories', function() { return view('admin.cms.post_categories'); });
         Route::get('/admin/cms/profile', function() { return view('admin.cms.profile'); });
         Route::get('/admin/cms/posts', function() { return view('admin.cms.posts'); });
         Route::get('/admin/cms/org', function() { return view('admin.cms.org'); });
-
+        Route::get('/admin/cms/gallery', function() { return view('admin.cms.gallery'); });
         Route::get('/admin/users', function() { return view('admin.users'); });
         Route::get('/admin/logs', function() { return view('admin.logs'); });
+        Route::get('/admin/cms/contacts', function() { return view('admin.cms.contacts'); });
+        Route::get('/admin/cms/files', function() { return view('admin.cms.general_files'); });
     });
 
     // INVENTORY (Operator & Admin)

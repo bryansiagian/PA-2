@@ -6,86 +6,63 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
-use App\Models\CourierDetail; // Import model baru ini
+use App\Models\CourierDetail;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 
 class RolePermissionSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        // Bersihkan cache Spatie agar tidak terjadi duplikasi
+        // Reset cache permission
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 1. BUAT DAFTAR PERMISSION (IZIN)
-        $permissions = [
-            'manage users',      // Admin & Operator (Bisa verifikasi akun baru)
-            'manage inventory',  // Admin & Operator (CRUD Obat & Kategori)
-            'create request',    // Customer
-            'delivery task',     // Courier
-            'view audit logs'    // Admin
-        ];
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+        // 1. Buat Permission
+        $permissions = ['manage users', 'manage inventory', 'create request', 'delivery task', 'view reports'];
+        foreach ($permissions as $p) {
+            Permission::create(['name' => $p, 'guard_name' => 'web']);
         }
 
-        // 2. BUAT ROLE & BERIKAN PERMISSION
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $admin->syncPermissions(Permission::all()); // Admin punya semua kunci
+        // 2. Buat Role & Assign Permission
+        $admin = Role::create(['name' => 'admin']);
+        $admin->givePermissionTo(Permission::all());
 
-        $operator = Role::firstOrCreate(['name' => 'operator']);
-        $operator->syncPermissions(['manage users', 'manage inventory']);
+        $operator = Role::create(['name' => 'operator']);
+        $operator->givePermissionTo(['manage users', 'manage inventory', 'view reports']);
 
-        $customer = Role::firstOrCreate(['name' => 'customer']);
-        $customer->syncPermissions(['create request']);
+        $customer = Role::create(['name' => 'customer']);
+        $customer->givePermissionTo(['create request']);
 
-        $courier = Role::firstOrCreate(['name' => 'courier']);
-        $courier->syncPermissions(['delivery task']);
+        $courier = Role::create(['name' => 'courier']);
+        $courier->givePermissionTo(['delivery task']);
 
-        // 3. BUAT USER CONTOH & ASSIGN ROLE
-
-        // --- SUPER ADMIN ---
-        $u1 = User::create([
-            'name' => 'Super Admin',
+        // 3. Buat User Contoh
+        $adminUser = User::create([
+            'name' => 'Admin Sistem',
             'email' => 'admin@test.com',
-            'password' => Hash::make('password123'),
-            'status' => 1,
+            'password' => Hash::make('password'),
+            'status' => 1, 'active' => 1
         ]);
-        $u1->assignRole('admin');
+        $adminUser->assignRole('admin');
 
-        // --- OPERATOR ---
-        $u2 = User::create([
+        $opUser = User::create([
             'name' => 'Budi Operator',
             'email' => 'operator@test.com',
-            'password' => Hash::make('password123'),
-            'status' => 1,
+            'password' => Hash::make('password'),
+            'status' => 1, 'active' => 1
         ]);
-        $u2->assignRole('operator');
+        $opUser->assignRole('operator');
 
-        // --- CUSTOMER ---
-        $u3 = User::create([
-            'name' => 'RSUD Sehat Selalu',
-            'email' => 'customer@test.com',
-            'password' => Hash::make('password123'),
-            'status' => 1,
-            'address' => 'Jl. Kesehatan No. 10, Jakarta',
-        ]);
-        $u3->assignRole('customer');
-
-        // --- COURIER ---
-        $u4 = User::create([
-            'name' => 'Andi Logistik',
+        $courierUser = User::create([
+            'name' => 'Andi Kurir',
             'email' => 'courier@test.com',
-            'password' => Hash::make('password123'),
-            'status' => 1,
-            'address' => 'Jl. Bukit Tinggi No. 50',
+            'password' => Hash::make('password'),
+            'status' => 1, 'active' => 1
         ]);
-        $u4->assignRole('courier');
+        $courierUser->assignRole('courier');
 
-        // PENTING: Tambahkan data kendaraan untuk si Andi
+        // Tambah Detail Kendaraan Kurir
         CourierDetail::create([
-            'user_id' => $u4->id,
+            'user_id' => $courierUser->id,
             'vehicle_type' => 'motorcycle',
             'vehicle_plate' => 'B 1234 ABC'
         ]);

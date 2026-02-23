@@ -169,8 +169,11 @@
                 <li class="menu-label">CMS Landing Page</li>
                 <li><a href="/admin/cms/profile"><i class="bi bi-info-circle"></i> Profil & Visi Misi</a></li>
                 <li><a href="/admin/cms/posts"><i class="bi bi-newspaper"></i> Berita & Kegiatan</a></li>
+                <li><a href="/admin/cms/post-categories" class="{{ request()->is('admin/cms/post-categories') ? 'active' : '' }}"><i class="bi bi-tags"></i> Kategori Post</a></li>
                 <li><a href="/admin/cms/gallery"><i class="bi bi-images"></i> Galeri Foto</a></li>
                 <li><a href="/admin/cms/org"><i class="bi bi-diagram-3"></i> Struktur Organisasi</a></li>
+                <li><a href="/admin/cms/contacts" class="{{ request()->is('admin/cms/contacts') ? 'active' : '' }}"><i class="bi bi-telephone-outbound"></i> Kontak & Sosmed</a></li>
+                <li><a href="/admin/cms/files" class="{{ request()->is('admin/cms/files') ? 'active' : '' }}"><i class="bi bi-file-earmark-arrow-up"></i> Dokumen & File</a></li>
                 @endrole
 
                 @can('manage inventory')

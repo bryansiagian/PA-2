@@ -13,9 +13,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            MasterDataSeeder::class,
             RolePermissionSeeder::class,
             CmsSeeder::class,
+            WarehouseSeeder::class, // Induk untuk obat
+            MasterDataSeeder::class, // Obat terakhir
         ]);
     }
 }

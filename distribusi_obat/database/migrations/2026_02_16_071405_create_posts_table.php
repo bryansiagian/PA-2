@@ -13,12 +13,18 @@ return new class extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained();
+            $table->foreignId('post_category_id')->nullable()->constrained('post_categories');
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('content');
             $table->string('image')->nullable();
-            $table->enum('type', ['news', 'activity']); // Pembeda Berita/Kegiatan
-            $table->foreignId('user_id')->constrained(); // Penulis
+            $table->integer('status')->default(0); // 0: Draft, 1: Published
+
+            // Audit Columns
+            $table->integer('active')->default(1);
+            $table->foreignId('created_by')->nullable()->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

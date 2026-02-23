@@ -11,15 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('organization_structures', function (Blueprint $table) {
+        Schema::create('racks', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('storage_id')->constrained('storages')->onDelete('cascade');
             $table->string('name');
-            $table->string('position');
-            $table->text('description')->nullable();
-            $table->string('photo')->nullable();
-            $table->integer('order')->default(0);
-
-            // Audit Columns
             $table->integer('active')->default(1);
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
@@ -32,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('organization_structures');
+        Schema::dropIfExists('racks');
     }
 };

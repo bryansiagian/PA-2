@@ -13,10 +13,15 @@ return new class extends Migration
     {
         Schema::create('profiles', function (Blueprint $table) {
             $table->id();
-            $table->string('key')->unique(); // 'history', 'vision_mission', 'about'
+            $table->string('key')->unique();
             $table->string('title');
             $table->text('content');
             $table->string('image')->nullable();
+
+            // Audit Columns
+            $table->integer('active')->default(1);
+            $table->foreignId('created_by')->nullable()->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

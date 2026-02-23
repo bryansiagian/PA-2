@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('organization_structures', function (Blueprint $table) {
+        Schema::create('contacts', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('position');
-            $table->text('description')->nullable();
-            $table->string('photo')->nullable();
-            $table->integer('order')->default(0);
-
-            // Audit Columns
+            $table->string('key')->unique();
+            $table->string('title');
+            $table->string('value');
+            $table->string('image')->nullable();
             $table->integer('active')->default(1);
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('organization_structures');
+        Schema::dropIfExists('contacts');
     }
 };

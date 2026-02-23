@@ -2,18 +2,28 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Traits\Blameable;
 
 class Post extends Model {
+    use Blameable;
     protected $fillable = [
+        'user_id',
+        'post_category_id',
         'title',
         'slug',
         'content',
         'image',
-        'type',
-        'user_id'
+        'status',
+        'active',
+        'created_by',
+        'updated_by'
     ];
 
-    public function user() {
-        return $this->belongsTo(User::class);
+    public function category() {
+        return $this->belongsTo(PostCategory::class, 'post_category_id');
+    }
+
+    public function author() {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
