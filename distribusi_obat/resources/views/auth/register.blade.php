@@ -1,30 +1,151 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - E-Pharma System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fa; min-height: 100vh; display: flex; align-items: center; }
-        .card-register { border: none; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
-        .register-header { background: #0d6efd; color: white; padding: 30px; border-radius: 20px 20px 0 0; text-align: center; }
-        .form-control, .form-select { border-radius: 10px; padding: 12px 15px; border: 1px solid #eee; background-color: #fcfcfc; }
-        .vehicle-box { background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 15px; display: none; /* Hidden by default */ }
-    </style>
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Registrasi - Yayasan E-Pharma</title>
+
+  <!-- Favicons -->
+  <link href="{{ asset('assets/img/favicon.png') }}" rel="icon">
+  <link href="{{ asset('assets/img/apple-touch-icon.png') }}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent-color: #3fbbc0;
+      --heading-color: #2c4964;
+    }
+
+    body {
+      background: linear-gradient(rgba(241, 247, 248, 0.9), rgba(241, 247, 248, 0.9)),
+                  url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-attachment: fixed;
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 40px 0;
+    }
+
+    .card-register {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .register-header {
+      background: var(--accent-color);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+
+    .register-logo {
+      font-family: 'Ubuntu', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .register-logo span {
+      color: var(--heading-color);
+    }
+
+    .form-label {
+      color: var(--heading-color);
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+      border-radius: 10px;
+      padding: 12px 15px;
+      border: 1px solid #deebec;
+      background-color: #fcfcfc;
+      font-size: 0.9rem;
+      transition: 0.3s;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 0.25rem rgba(63, 187, 192, 0.1);
+      background-color: #fff;
+    }
+
+    .vehicle-box {
+      background-color: #f1f7f8;
+      border: 2px dashed var(--accent-color);
+      border-radius: 15px;
+      display: none;
+      transition: 0.4s;
+    }
+
+    .btn-register {
+      background: var(--accent-color);
+      color: white;
+      border-radius: 30px;
+      padding: 15px;
+      font-weight: 600;
+      border: none;
+      transition: 0.3s;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .btn-register:hover {
+      background: #329ea2;
+      box-shadow: 0 8px 20px rgba(63, 187, 192, 0.3);
+      color: white;
+    }
+
+    .login-link {
+      color: var(--accent-color);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link:hover {
+      text-decoration: underline;
+    }
+
+    .input-group-text {
+      background: #fff;
+      border-color: #deebec;
+      color: var(--accent-color);
+      border-radius: 10px 0 0 10px;
+    }
+
+    .form-with-icon {
+      border-radius: 0 10px 10px 0;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="container py-5">
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-lg-7">
+        <div class="col-lg-8">
             <div class="card card-register">
                 <div class="register-header">
-                    <h3 class="fw-bold mb-1">Buat Akun Baru</h3>
-                    <p class="mb-0 opacity-75 small">Lengkapi data untuk bergabung dalam jaringan E-Pharma</p>
+                    <a href="/" class="register-logo">E-<span>Pharma</span></a>
+                    <h4 class="fw-bold mb-1">Registrasi Akun Baru</h4>
+                    <p class="mb-0 opacity-75 small">Bergabunglah dalam jaringan distribusi farmasi digital kami</p>
                 </div>
                 <div class="card-body p-4 p-md-5">
 
@@ -32,66 +153,95 @@
                         @csrf
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">Nama Lengkap</label>
-                                <input type="text" name="name" class="form-control" placeholder="Nama Anda" required>
+                                <label class="form-label text-uppercase">Nama Lengkap</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" name="name" class="form-control form-with-icon" placeholder="Nama lengkap petugas" required>
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">Email</label>
-                                <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+                                <label class="form-label text-uppercase">Alamat Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" name="email" class="form-control form-with-icon" placeholder="email@unitkesehatan.id" required>
+                                </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold small">Pilih Peran (Role)</label>
-                            <select name="role_id" id="roleSelect" class="form-select" onchange="toggleVehicleFields()" required>
-                                <option value="" selected disabled>-- Pilih Hak Akses --</option>
-                                @foreach($roles as $role)
-                                    <!-- Kita simpan nama role di atribut data untuk dicek di JS -->
-                                    <option value="{{ $role->id }}" data-name="{{ $role->name }}">
-                                        {{ strtoupper($role->name) }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label text-uppercase">Hak Akses Sistem (Role)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                                <select name="role_id" id="roleSelect" class="form-select form-with-icon" onchange="toggleVehicleFields()" required>
+                                    <option value="" selected disabled>-- Pilih Peran Anda --</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}" data-name="{{ $role->name }}">
+                                            {{ strtoupper($role->name) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
-                        <!-- SEKSI KENDARAAN (Hanya muncul jika Role = Courier) -->
-                        <div id="vehicleSection" class="vehicle-box p-4 mb-3">
-                            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-truck me-2"></i>Informasi Kendaraan Kurir</h6>
+                        <!-- SEKSI KENDARAAN (Khusus Kurir) -->
+                        <div id="vehicleSection" class="vehicle-box p-4 mb-4">
+                            <h6 class="fw-bold mb-3" style="color: var(--accent-color);">
+                                <i class="bi bi-truck-flatbed me-2"></i>Informasi Kendaraan Operasional
+                            </h6>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label small fw-bold">Jenis Kendaraan</label>
-                                    <select name="vehicle_type" class="form-select border-white bg-white">
+                                    <label class="form-label small">Jenis Kendaraan</label>
+                                    <select name="vehicle_type" class="form-select border-0">
                                         <option value="motorcycle">Sepeda Motor</option>
-                                        <option value="car">Mobil / Van</option>
+                                        <option value="car">Mobil / Van Farmasi</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label small fw-bold">Nomor Plat</label>
-                                    <input type="text" name="vehicle_plate" class="form-control border-white bg-white" placeholder="B 1234 ABC">
+                                    <label class="form-label small">Nomor Plat Kendaraan</label>
+                                    <input type="text" name="vehicle_plate" class="form-control border-0" placeholder="Contoh: B 1234 ABC">
                                 </div>
                             </div>
-                            <small class="text-muted" style="font-size: 10px;">* Data kendaraan akan digunakan sistem untuk mencocokkan kapasitas paket.</small>
+                            <p class="mb-0 text-muted" style="font-size: 11px;">
+                                <i class="bi bi-info-circle me-1"></i> Data kendaraan diperlukan untuk optimasi rute pengiriman obat.
+                            </p>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold small">Alamat / Lokasi Unit</label>
-                            <textarea name="address" class="form-control" rows="2" placeholder="Alamat lengkap..."></textarea>
+                            <label class="form-label text-uppercase">Alamat Lengkap Unit / Domisili</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <textarea name="address" class="form-control form-with-icon" rows="2" placeholder="Sebutkan jalan, nomor, dan kota..."></textarea>
+                            </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold small">Password</label>
-                                <input type="password" name="password" class="form-control" required>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-uppercase">Kata Sandi</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                    <input type="password" name="password" class="form-control form-with-icon" placeholder="••••••••" required>
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label fw-bold small">Konfirmasi Password</label>
-                                <input type="password" name="password_confirmation" class="form-control" required>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-uppercase">Konfirmasi Sandi</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                                    <input type="password" name="password_confirmation" class="form-control form-with-icon" placeholder="••••••••" required>
+                                </div>
                             </div>
                         </div>
 
-                        <button type="submit" id="btnSubmit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm">
-                            Daftar Sekarang
+                        <button type="submit" id="btnSubmit" class="btn btn-register shadow">
+                            Daftar Sekarang <i class="bi bi-arrow-right-circle ms-2"></i>
                         </button>
+
+                        <div class="text-center mt-4">
+                            <p class="small text-muted">Sudah memiliki akun? <a href="/login" class="login-link">Masuk di sini</a></p>
+                            <hr class="my-4 opacity-25">
+                            <a href="/" class="text-muted small text-decoration-none">
+                                <i class="bi bi-house-door me-1"></i> Kembali ke Beranda
+                            </a>
+                        </div>
                     </form>
 
                 </div>
@@ -104,7 +254,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    // Fungsi untuk menyembunyikan/menampilkan input kendaraan
     function toggleVehicleFields() {
         const roleSelect = document.getElementById('roleSelect');
         const selectedOption = roleSelect.options[roleSelect.selectedIndex];
@@ -113,7 +262,6 @@
 
         if (roleName === 'courier') {
             vehicleSection.style.display = 'block';
-            // Beri atribut required secara dinamis jika perlu
             document.getElementsByName('vehicle_plate')[0].required = true;
         } else {
             vehicleSection.style.display = 'none';
@@ -127,23 +275,28 @@
         const formData = new FormData(document.getElementById('formRegister'));
 
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses Data...';
 
         axios.post('/register', formData)
             .then(res => {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Registrasi Berhasil!',
-                    text: 'Akun Anda sedang menunggu verifikasi Admin.',
-                    confirmButtonColor: '#0d6efd',
+                    title: 'Pendaftaran Berhasil',
+                    text: 'Akun Anda telah dibuat dan menunggu verifikasi admin.',
+                    confirmButtonColor: '#3fbbc0',
                 }).then(() => window.location.href = '/login');
             })
             .catch(err => {
                 btn.disabled = false;
-                btn.innerHTML = 'Daftar Sekarang';
-                let msg = err.response.data.message || 'Terjadi kesalahan.';
+                btn.innerHTML = 'Daftar Sekarang <i class="bi bi-arrow-right-circle ms-2"></i>';
+                let msg = err.response.data.message || 'Terjadi kesalahan sistem.';
                 if(err.response.data.errors) msg = Object.values(err.response.data.errors)[0][0];
-                Swal.fire('Gagal', msg, 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Pendaftaran Gagal',
+                    text: msg,
+                    confirmButtonColor: '#3fbbc0',
+                });
             });
     }
 </script>
