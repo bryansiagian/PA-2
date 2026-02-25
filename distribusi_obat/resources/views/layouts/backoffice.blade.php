@@ -13,6 +13,48 @@
 	<link href="{{ asset('admin/assets/css/ltr/all.min.css') }}" id="stylesheet" rel="stylesheet" type="text/css">
 	<!-- /global stylesheets -->
 
+    <style>
+        /* ============================================================
+           GLOBAL FIX: SWEETALERT2 UNTUK TEMPLATE LIMITLESS
+           ============================================================ */
+        .swal2-icon {
+            width: 80px !important;
+            height: 80px !important;
+            margin: 1.25rem auto 0.5rem !important;
+            border-width: 4px !important;
+            line-height: 80px !important;
+        }
+        .swal2-icon .swal2-icon-content {
+            font-size: 3.75rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .swal2-popup {
+            font-family: 'Inter', sans-serif !important;
+            padding: 2rem !important;
+            border-radius: 1rem !important;
+            width: 25em !important;
+        }
+        .swal2-title { font-size: 1.3rem !important; font-weight: 700 !important; color: #333 !important; }
+        .swal2-html-container { font-size: 0.95rem !important; color: #666 !important; }
+        .swal2-styled.swal2-confirm {
+            background-color: #5c68e2 !important;
+            border-radius: 50px !important;
+            padding: 0.6rem 2rem !important;
+            font-weight: 600 !important;
+        }
+        .swal2-styled.swal2-cancel {
+            background-color: #f1f5f9 !important;
+            color: #475569 !important;
+            border-radius: 50px !important;
+            padding: 0.6rem 2rem !important;
+        }
+        .swal2-loader { border-color: #5c68e2 transparent #5c68e2 transparent !important; }
+
+        /* Laravel Active Link Fix */
+        .nav-link.active { background-color: rgba(var(--primary-rgb), .1); color: var(--primary) !important; }
+    </style>
 	<!-- Core JS files -->
 	<script src="{{ asset('admin/assets/js/bootstrap/bootstrap.bundle.min.js') }}"></script>
 	<!-- /core JS files -->

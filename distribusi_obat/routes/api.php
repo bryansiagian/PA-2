@@ -121,7 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // E. KHUSUS COURIER (Logistics)
     Route::middleware(['role:courier'])->group(function () {
         Route::get('/courier/stats', [DeliveryController::class, 'getCourierStats']);
-        Route::get('/courier/history', [DeliveryController::class, 'getCourierHistory']);
+        Route::get('/deliveries/history', [DeliveryController::class, 'getCourierHistory']);
         Route::get('/deliveries/available', [DeliveryController::class, 'getAvailableDeliveries']);
         Route::get('/deliveries/active', [DeliveryController::class, 'getActiveDeliveries']);
         Route::post('/deliveries/claim/{id}', [DeliveryController::class, 'claim']);

@@ -6,7 +6,7 @@
     <div class="d-flex align-items-center mb-3">
         <div class="flex-fill">
             <h4 class="fw-bold mb-0">Manajemen Permintaan & Distribusi</h4>
-            <div class="text-muted">Tinjau pesanan dan siapkan lokasi pengambilan obat (Pick List)</div>
+            <div class="text-muted">Tinjau pesanan, cek kebutuhan armada, dan siapkan lokasi pengambilan obat.</div>
         </div>
         <div class="ms-3 d-flex gap-2">
             <!-- FILTER TIPE -->
@@ -63,6 +63,7 @@
                         <th class="ps-3" style="width: 100px;">ID</th>
                         <th>Pemohon</th>
                         <th>Tipe</th>
+                        <th>Kendaraan</th> <!-- KOLOM BARU -->
                         <th>Detail Item</th>
                         <th class="text-center">Status</th>
                         <th class="text-center pe-3">Aksi</th>
@@ -70,7 +71,7 @@
                 </thead>
                 <tbody id="opRequestTable">
                     <tr>
-                        <td colspan="6" class="text-center py-5">
+                        <td colspan="7" class="text-center py-5">
                             <div class="spinner-border spinner-border-sm text-muted me-2"></div>
                             Sinkronisasi data permintaan...
                         </td>
@@ -81,7 +82,7 @@
     </div>
 </div>
 
-<!-- MODAL: PICK LIST DENGAN RAK/BARIS (Limitless Style) -->
+<!-- MODAL: PICK LIST DENGAN RAK/BARIS -->
 <div class="modal fade" id="modalItems" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -94,7 +95,6 @@
             </div>
             <div class="modal-footer bg-light border-0 py-2">
                 <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">TUTUP</button>
-                <button type="button" class="btn btn-indigo px-4 fw-bold" onclick="window.print()"><i class="ph-printer me-2"></i>CETAK LIST</button>
             </div>
         </div>
     </div>
@@ -119,11 +119,28 @@
                 const isDelivery = r.request_type === 'delivery';
                 const itemsJson = JSON.stringify(r.items).replace(/"/g, '&quot;');
 
+                // --- LOGIKA KENDARAAN (REVISI) ---
+                let vehicleHtml = '';
+                if (!isDelivery) {
+                    vehicleHtml = '<span class="text-muted fs-xs italic">N/A (Pickup)</span>';
+                } else {
+                    const isCar = r.required_vehicle === 'car';
+                    const vIcon = isCar ? 'ph-car' : 'ph-moped';
+                    const vClass = isCar ? 'bg-orange text-orange' : 'bg-slate text-slate';
+                    const vText = isCar ? 'MOBIL / VAN' : 'SEPEDA MOTOR';
+
+                    vehicleHtml = `
+                        <span class="badge ${vClass} bg-opacity-10 fw-bold px-2 py-1">
+                            <i class="${vIcon} me-1"></i>${vText}
+                        </span>`;
+                }
+
                 // Logika Status Badge
                 let statusBadge = '';
                 if(r.status === 'pending') statusBadge = '<span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-2 py-1">PENDING</span>';
                 else if(r.status === 'approved') statusBadge = '<span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1">APPROVED</span>';
-                else statusBadge = '<span class="badge bg-light text-muted fw-bold px-2 py-1">ARCHIVED</span>';
+                else if(r.status === 'shipping') statusBadge = '<span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1">SHIPPING</span>';
+                else statusBadge = '<span class="badge bg-light text-muted fw-bold px-2 py-1">COMPLETED</span>';
 
                 // Logika Aksi
                 let actions = '';
@@ -142,7 +159,7 @@
                         `<button onclick="makeReady(${r.id})" class="btn btn-sm btn-indigo px-3 shadow-sm rounded-pill fw-bold"><i class="ph-package me-1"></i> Siap Diambil</button>` :
                         `<button onclick="completePickup(${r.id})" class="btn btn-sm btn-teal text-white px-3 shadow-sm rounded-pill fw-bold"><i class="ph-check-circle me-1"></i> Selesai Ambil</button>`;
                 } else {
-                    actions = `<span class="fs-xs text-muted">Selesai</span>`;
+                    actions = `<span class="fs-xs text-muted">No Action</span>`;
                 }
 
                 html += `
@@ -157,6 +174,7 @@
                             <i class="${isDelivery ? 'ph-truck' : 'ph-storefront'} me-1"></i> ${r.request_type.toUpperCase()}
                         </span>
                     </td>
+                    <td>${vehicleHtml}</td> <!-- TAMPILAN KENDARAAN -->
                     <td>
                         <button onclick="showItems('${itemsJson}')" class="btn btn-sm btn-light border-0 text-indigo fw-bold">
                             <i class="ph-magnifying-glass me-1"></i> Lihat Item
@@ -166,7 +184,7 @@
                     <td class="text-center pe-3">${actions}</td>
                 </tr>`;
             });
-            tableBody.innerHTML = html || '<tr><td colspan="6" class="text-center py-5 text-muted">Tidak ada permintaan yang ditemukan.</td></tr>';
+            tableBody.innerHTML = html || '<tr><td colspan="7" class="text-center py-5 text-muted">Tidak ada permintaan.</td></tr>';
             document.getElementById('statTotal').innerText = requests.length;
             document.getElementById('statPending').innerText = pending;
         });
@@ -176,7 +194,10 @@
         const items = JSON.parse(encoded);
         let html = '<div class="list-group list-group-flush">';
         items.forEach(i => {
-            const drug = i.drug || { name: i.custom_drug_name, rack_number: '?', row_number: '?' };
+            const drug = i.drug || { name: i.custom_drug_name, rack: { name: '?', storage: { name: '?' } } };
+            const rackName = drug.rack ? drug.rack.name : 'N/A';
+            const storageName = drug.rack && drug.rack.storage ? drug.rack.storage.name : 'N/A';
+
             html += `
                 <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom px-3">
                     <div class="d-flex align-items-center">
@@ -186,8 +207,8 @@
                         <div>
                             <div class="fw-bold text-dark">${drug.name}</div>
                             <div class="fs-xs text-muted">
-                                <span class="badge bg-primary bg-opacity-10 text-primary me-1">Rak: ${drug.rack_number || 'N/A'}</span>
-                                <span class="badge bg-teal bg-opacity-10 text-teal">Baris: ${drug.row_number || 'N/A'}</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary me-1">Gudang: ${storageName}</span>
+                                <span class="badge bg-teal bg-opacity-10 text-teal text-uppercase">Rak: ${rackName}</span>
                             </div>
                         </div>
                     </div>
@@ -198,18 +219,17 @@
         new bootstrap.Modal(document.getElementById('modalItems')).show();
     }
 
-    // Fungsi aksi dengan SweetAlert bertema Limitless
     function approveRequest(id) {
         Swal.fire({
             title: 'Setujui Permintaan?',
-            text: "Stok obat akan dipotong dan struk akan dikirim ke email pemohon.",
+            text: "Stok akan dipotong dan email struk terkirim.",
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Ya, Setujui',
             confirmButtonColor: '#059669',
-            customClass: { confirmButton: 'btn btn-success', cancelButton: 'btn btn-light' }
         }).then(res => {
             if(res.isConfirmed) {
+                Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 axios.post(`/api/requests/${id}/approve`).then(() => {
                     Swal.fire('Berhasil!', 'Request telah disetujui.', 'success');
                     load();
@@ -220,7 +240,7 @@
 
     function makeReady(id) {
         axios.post(`/api/deliveries/ready/${id}`).then(() => {
-            Swal.fire({ icon: 'info', title: 'Pesanan Siap', text: 'Kurir telah diberitahu untuk mengambil paket.' });
+            Swal.fire({ icon: 'info', title: 'Pesanan Siap', text: 'Barang masuk ke bursa kurir.' });
             load();
         });
     }
@@ -231,8 +251,7 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Ya, Tolak',
-            customClass: { confirmButton: 'btn btn-danger', cancelButton: 'btn btn-light' }
+            confirmButtonText: 'Ya, Tolak'
         }).then(res => {
             if(res.isConfirmed) {
                 axios.post(`/api/requests/${id}/reject`).then(() => {
@@ -243,37 +262,23 @@
         });
     }
 
-    function completePickup(id) {
-        Swal.fire({
-            title: 'Selesaikan Ambil Sendiri?',
-            text: "Pastikan pelanggan sudah menerima obat sesuai pesanan.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#0d9488',
-            confirmButtonText: 'Selesai & Tutup'
-        }).then(res => {
-            if(res.isConfirmed) axios.post(`/api/requests/${id}/approve`).then(() => load());
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', load);
 </script>
 
 <style>
-    /* Styling Dasar Limitless */
     .bg-indigo { background-color: #5c68e2 !important; }
     .bg-teal { background-color: #0d9488 !important; }
+    .bg-orange { background-color: #f59e0b !important; }
+    .bg-slate { background-color: #64748b !important; }
     .text-indigo { color: #5c68e2 !important; }
+    .text-orange { color: #d97706 !important; }
+    .text-slate { color: #475569 !important; }
     .btn-indigo { background-color: #5c68e2; color: #fff; border: none; }
-    .btn-indigo:hover { background-color: #4e59cf; color: #fff; }
-    .btn-teal { background-color: #0d9488; color: #fff; border: none; }
 
     .table td { padding: 0.85rem 1rem; }
     .ph-2x { font-size: 2.2rem; }
-    .fs-base { font-size: 1rem; }
-    .font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-
-    /* Custom scroll for modal body */
+    .fs-xs { font-size: 0.7rem; }
+    .italic { font-style: italic; }
     #modalItemsBody { max-height: 450px; overflow-y: auto; }
 </style>
 @endsection

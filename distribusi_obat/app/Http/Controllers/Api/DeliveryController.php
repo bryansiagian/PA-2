@@ -118,6 +118,19 @@ class DeliveryController extends Controller {
     }
 
     public function getCourierHistory() {
-        return Delivery::with(['request.user', 'request.items.drug'])->where('courier_id', auth()->id())->where('status', 'delivered')->latest('delivered_at')->get();
+        try {
+            $user = auth()->user();
+
+            // Ambil data yang statusnya 'delivered' milik kurir ini
+            $history = Delivery::with(['request.user', 'request.items.drug'])
+                ->where('courier_id', $user->id)
+                ->where('status', 'delivered')
+                ->latest('delivered_at')
+                ->get();
+
+            return response()->json($history, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal memuat riwayat: ' . $e->getMessage()], 500);
+        }
     }
 }
