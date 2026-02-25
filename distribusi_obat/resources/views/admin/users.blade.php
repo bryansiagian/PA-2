@@ -1,171 +1,159 @@
 @extends('layouts.backoffice')
 
+@section('page_title', 'Audit Log Sistem')
+
 @section('content')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Header Section -->
+    <div class="d-sm-flex align-items-sm-center justify-content-sm-between mb-4">
         <div>
-            <h4 class="fw-bold text-dark mb-1">Daftar Pengguna Aktif</h4>
-            <p class="text-muted small mb-0">Manajemen akun Operator, Customer, dan Kurir.</p>
+            <h4 class="fw-bold mb-0">Audit Logs Sistem</h4>
+            <div class="text-muted small">Rekam jejak aktivitas digital seluruh staf dalam ekosistem E-Pharma.</div>
         </div>
-        <a href="/admin/users/pending" class="btn btn-warning rounded-pill px-4 shadow-sm text-white fw-bold">
-            <i class="bi bi-person-check-fill me-2"></i> Verifikasi Pendaftaran
-        </a>
+
+        <div class="mt-3 mt-sm-0">
+            <button onclick="fetchLogs()" class="btn btn-indigo rounded-pill px-4 shadow-sm fw-bold">
+                <i class="ph-arrows-clockwise me-2"></i> Perbarui Log
+            </button>
+        </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <!-- TABLE CARD -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header bg-transparent border-bottom d-flex align-items-center py-3">
+            <h6 class="mb-0 fw-bold"><i class="ph-activity me-2 text-indigo"></i>Jejak Aktivitas Terakhir</h6>
+            <div class="ms-auto text-muted small">
+                Status: <span class="text-success fw-bold">Live Tracking Online</span>
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                    <tr class="text-muted small fw-bold">
-                        <th class="ps-4 py-3">NAMA PENGGUNA</th>
-                        <th>EMAIL ADDRESS</th>
-                        <th>ROLE / HAK AKSES</th>
-                        <th>TANGGAL BERGABUNG</th>
-                        <th class="text-center pe-4">AKSI</th>
+                <thead class="table-light">
+                    <tr class="fs-xs text-uppercase fw-bold text-muted">
+                        <th class="ps-3 py-3" style="width: 200px;">Waktu & Tanggal</th>
+                        <th style="width: 250px;">Aktor / Pengguna</th>
+                        <th>Aksi & Keterangan Aktivitas</th>
                     </tr>
                 </thead>
-                <tbody id="userTableBody">
-                    <tr><td colspan="5" class="text-center py-5 text-muted">Memproses data...</td></tr>
+                <tbody id="logTableBody">
+                    <tr>
+                        <td colspan="3" class="text-center py-5">
+                            <div class="ph-spinner spinner text-indigo me-2"></div>
+                            <span class="text-muted">Sedang menyingkronkan database log...</span>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- MODAL EDIT ROLE -->
-<div class="modal fade" id="modalEditUser" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-dark text-white border-0">
-                <h5 class="modal-title fw-bold">Ubah Akses Pengguna</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <input type="hidden" id="edit_user_id">
-                <div class="mb-3">
-                    <label class="form-label small fw-bold text-muted">Nama Pengguna</label>
-                    <input type="text" id="edit_user_name" class="form-control bg-light border-0" readonly>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small fw-bold text-muted">Pilih Role Baru</label>
-                    <select id="edit_user_role" class="form-select border-0 bg-light py-2">
-                        <!-- Data Role dimuat via JS -->
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer border-0 bg-light text-end">
-                <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Batal</button>
-                <button onclick="updateUser()" class="btn btn-primary rounded-pill px-4 fw-bold">Simpan Perubahan</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
+    // Header Token Global
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
 
-    function loadUsers() {
-        const tableBody = document.getElementById('userTableBody');
+    function fetchLogs() {
+        const tableBody = document.getElementById('logTableBody');
 
-        axios.get('/api/users')
+        axios.get('/api/admin/logs')
             .then(res => {
-                const users = res.data;
                 let html = '';
+                const logs = res.data;
 
-                if (!users || users.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted italic">Tidak ada data pengguna aktif ditemukan.</td></tr>';
-                    return;
-                }
+                if (!logs || logs.length === 0) {
+                    html = '<tr><td colspan="3" class="text-center py-5 text-muted italic small">Belum ada catatan aktivitas sistem yang terekam.</td></tr>';
+                } else {
+                    logs.forEach(log => {
+                        // 1. Format Waktu khas Indonesia
+                        const date = new Date(log.created_at);
+                        const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        const dateStr = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
-                users.forEach(u => {
-                    // CARA SPATIE: roles adalah array. Ambil data pertama jika ada.
-                    const roleName = u.roles.length > 0 ? u.roles[0].name : 'no role';
-                    // Kita juga simpan roleId untuk kebutuhan fungsi openEdit
-                    const roleId = u.roles.length > 0 ? u.roles[0].id : '';
+                        // 2. Data User (Spatie Safe)
+                        const user = log.user || { name: 'System/Deleted', roles: [] };
+                        const roleName = user.roles.length > 0 ? user.roles[0].name : 'no-role';
 
-                    const dateJoined = new Date(u.created_at).toLocaleDateString('id-ID', {
-                        day: '2-digit', month: 'short', year: 'numeric'
+                        // 3. Tema Aksi Berdasarkan Kata Kunci
+                        const theme = getActionTheme(log.action);
+
+                        html += `
+                        <tr class="border-bottom">
+                            <td class="ps-3">
+                                <div class="fw-bold text-indigo small">${timeStr}</div>
+                                <div class="text-muted" style="font-size: 11px;">${dateStr}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-indigo text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm fw-bold" style="width: 34px; height: 34px; font-size: 11px;">
+                                        ${user.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark small">${user.name}</div>
+                                        <span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill" style="font-size: 9px; letter-spacing: 0.5px;">
+                                            ${roleName.toUpperCase()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-start py-1">
+                                    <div class="${theme.color} me-3 mt-1">
+                                        <i class="ph-${theme.icon} ph-lg"></i>
+                                    </div>
+                                    <div class="small">
+                                        <div class="${theme.bold ? 'fw-bold text-dark' : 'text-muted'}">${log.action}</div>
+                                        <div class="text-muted fs-xs opacity-75">Transaction Source: API Engine</div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>`;
                     });
-
-                    html += `
-                    <tr class="border-bottom">
-                        <td class="ps-4 py-3">
-                            <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=0D6EFD&color=fff" class="rounded-circle me-3" width="35">
-                                <span class="fw-bold text-dark">${u.name}</span>
-                            </div>
-                        </td>
-                        <td><small class="text-muted">${u.email}</small></td>
-                        <td>
-                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill" style="font-size: 10px;">
-                                ${roleName.toUpperCase()}
-                            </span>
-                        </td>
-                        <td><small class="text-muted">${dateJoined}</small></td>
-                        <td class="text-center pe-4">
-                            <button onclick="openEdit(${u.id}, '${u.name}', '${roleId}')" class="btn btn-light btn-sm rounded-circle shadow-sm me-1 text-primary">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button onclick="deleteUser(${u.id}, '${u.name}')" class="btn btn-light btn-sm rounded-circle shadow-sm text-danger">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-                });
-
+                }
                 tableBody.innerHTML = html;
             })
             .catch(err => {
-                console.error(err);
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-danger">Gagal memuat data. Sesi mungkin berakhir.</td></tr>';
+                console.error("Audit Log Error:", err);
+                tableBody.innerHTML = `<tr><td colspan="3" class="text-center py-5 text-danger small">Gagal memuat log. Periksa koneksi API Anda.</td></tr>`;
             });
     }
 
-    function openEdit(id, name, currentRoleId) {
-        document.getElementById('edit_user_id').value = id;
-        document.getElementById('edit_user_name').value = name;
+    // Helper untuk memetakan ikon Phosphor berdasarkan kata kunci aksi
+    function getActionTheme(action) {
+        const act = action.toUpperCase();
 
-        axios.get('/api/roles').then(res => {
-            let opt = '<option value="" disabled>-- Pilih Role --</option>';
-            res.data.forEach(r => {
-                opt += `<option value="${r.id}" ${r.id == currentRoleId ? 'selected' : ''}>${r.name.toUpperCase()}</option>`;
-            });
-            document.getElementById('edit_user_role').innerHTML = opt;
-            new bootstrap.Modal(document.getElementById('modalEditUser')).show();
-        });
+        // Aturan: { icon, color, bold }
+        if(act.includes('LOGIN'))   return { icon: 'sign-in', color: 'text-info', bold: false };
+        if(act.includes('LOGOUT'))  return { icon: 'sign-out', color: 'text-muted', bold: false };
+        if(act.includes('APPROVE')) return { icon: 'check-circle', color: 'text-success', bold: true };
+        if(act.includes('REJECT'))  return { icon: 'prohibit', color: 'text-danger', bold: true };
+        if(act.includes('DELETE'))  return { icon: 'trash', color: 'text-danger', bold: true };
+        if(act.includes('CANCEL'))  return { icon: 'x-circle', color: 'text-danger', bold: true };
+        if(act.includes('CREATE') || act.includes('TAMBAH')) return { icon: 'plus-circle', color: 'text-primary', bold: true };
+        if(act.includes('STOCK'))   return { icon: 'package', color: 'text-warning', bold: true };
+        if(act.includes('CMS') || act.includes('PROFILE'))   return { icon: 'browser', color: 'text-indigo', bold: true };
+
+        return { icon: 'note', color: 'text-dark', bold: false };
     }
 
-    function updateUser() {
-        const id = document.getElementById('edit_user_id').value;
-        const roleId = document.getElementById('edit_user_role').value;
-
-        axios.put(`/api/users/${id}`, { role_id: roleId })
-            .then(res => {
-                Swal.fire('Berhasil!', 'Hak akses telah diperbarui.', 'success');
-                bootstrap.Modal.getInstance(document.getElementById('modalEditUser')).hide();
-                loadUsers();
-            })
-            .catch(err => Swal.fire('Error', 'Gagal mengubah role', 'error'));
-    }
-
-    function deleteUser(id, name) {
-        Swal.fire({
-            title: 'Hapus Akun?',
-            text: `Akun ${name} akan dihapus permanen.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            confirmButtonText: 'Ya, Hapus!'
-        }).then(result => {
-            if(result.isConfirmed) {
-                axios.delete(`/api/users/${id}`).then(() => {
-                    Swal.fire('Terhapus', 'User berhasil dihapus.', 'success');
-                    loadUsers();
-                });
-            }
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', loadUsers);
+    document.addEventListener('DOMContentLoaded', fetchLogs);
 </script>
+
+<style>
+    /* Styling Tambahan Limitless */
+    .bg-indigo { background-color: #5c6bc0 !important; }
+    .text-indigo { color: #5c6bc0 !important; }
+    .btn-indigo { background-color: #5c6bc0; color: #fff; border: none; }
+    .btn-indigo:hover { background-color: #3f51b5; color: #fff; }
+    .bg-opacity-10 { --bs-bg-opacity: 0.1; }
+    .fs-xs { font-size: 0.7rem; }
+
+    /* Menyelaraskan padding sel tabel */
+    .table td { padding: 0.85rem 1.25rem; vertical-align: top; }
+    .table th { padding: 0.75rem 1.25rem; border-top: none; }
+
+    /* Animasi Hover Baris */
+    .table tbody tr { transition: background-color 0.2s; }
+    .table tbody tr:hover { background-color: rgba(92, 107, 192, 0.03); }
+</style>
 @endsection

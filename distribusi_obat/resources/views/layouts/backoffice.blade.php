@@ -1,293 +1,699 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" dir="ltr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WMS Control Panel - E-Pharma</title>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="csrf-token" content="{{ csrf_token() }}">
+	<title>E-Pharma - Control Panel</title>
 
-    <!-- CSS - Bootstrap 5 & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+	<!-- Global stylesheets -->
+	<link href="{{ asset('admin/assets/fonts/inter/inter.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ asset('admin/assets/icons/phosphor/styles.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ asset('admin/assets/css/ltr/all.min.css') }}" id="stylesheet" rel="stylesheet" type="text/css">
+	<!-- /global stylesheets -->
 
-    <!-- Fonts - Plus Jakarta Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<!-- Core JS files -->
+	<script src="{{ asset('admin/assets/js/bootstrap/bootstrap.bundle.min.js') }}"></script>
+	<!-- /core JS files -->
 
-    <!-- Core JS Libraries -->
+	<!-- Theme JS files -->
+	<script src="{{ asset('admin/assets/js/app.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <style>
-        :root {
-            --sidebar-bg: #0f172a;
-            --sidebar-hover: #1e293b;
-            --sidebar-width: 260px;
-            --primary-accent: #3b82f6;
-        }
-
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #334155; overflow-x: hidden; }
-
-        /* --- SIDEBAR SCROLLABLE CORE --- */
-        #sidebar {
-            min-width: var(--sidebar-width);
-            max-width: var(--sidebar-width);
-            background: var(--sidebar-bg);
-            color: #fff;
-            transition: all 0.3s ease-in-out;
-            height: 100vh;
-            position: fixed;
-            z-index: 1050; /* Di atas navbar */
-            overflow-y: auto; /* Aktifkan Scroll di Sidebar */
-            scrollbar-width: thin;
-            scrollbar-color: #334155 transparent;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Custom Scrollbar Styling */
-        #sidebar::-webkit-scrollbar { width: 4px; }
-        #sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-
-        /* Sidebar Header & Menu */
-        #sidebar .sidebar-header {
-            padding: 2rem 1.5rem;
-            background: #1e293b;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-
-        #sidebar .menu-label {
-            padding: 1.5rem 1.5rem 0.5rem;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #64748b;
-            font-weight: 700;
-        }
-
-        #sidebar ul li a {
-            padding: 0.8rem 1.5rem;
-            display: flex;
-            align-items: center;
-            color: #94a3b8;
-            text-decoration: none;
-            transition: all 0.2s;
-            font-size: 0.875rem;
-            margin: 0.2rem 0.8rem;
-            border-radius: 0.5rem;
-        }
-
-        #sidebar ul li a i { font-size: 1.1rem; margin-right: 12px; }
-        #sidebar ul li a:hover { color: #fff; background: var(--sidebar-hover); }
-        #sidebar ul li a.active {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--primary-accent);
-            font-weight: 600;
-        }
-
-        /* --- CONTENT AREA LOGIC --- */
-        #content {
-            width: 100%;
-            margin-left: var(--sidebar-width);
-            transition: all 0.3s;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Logic Toggle Desktop */
-        #sidebar.active { margin-left: calc(-1 * var(--sidebar-width)); }
-        #content.active { margin-left: 0; }
-
-        /* --- MOBILE LOGIC (OFF-CANVAS) --- */
-        #sidebar-overlay {
-            display: none;
-            position: fixed;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1040;
-            top: 0;
-            left: 0;
-            backdrop-filter: blur(2px);
-        }
-
-        @media (max-width: 768px) {
-            #sidebar { margin-left: calc(-1 * var(--sidebar-width)); }
-            #sidebar.show { margin-left: 0; } /* Muncul di Mobile */
-            #content { margin-left: 0 !important; }
-            #sidebar-overlay.show { display: block; }
-        }
-
-        /* Navbar Styling */
-        .navbar-main {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #e2e8f0;
-            padding: 0.75rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 900;
-        }
-
-        .card { border: none; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-    </style>
-</head>
-<body>
-    <!-- Backdrop Overlay untuk Mobile -->
-    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-    <div class="d-flex">
-        <!-- SIDEBAR -->
-        <nav id="sidebar">
-            <div class="sidebar-header">
-                <h4 class="fw-bold mb-0 text-white"><i class="bi bi-capsule-pill text-primary me-2"></i>E-PHARMA</h4>
-                <p class="small text-muted mb-0" style="font-size: 10px; letter-spacing: 2px;">LOGISTICS CENTER</p>
-            </div>
-
-            <ul class="list-unstyled flex-grow-1">
-                <li class="menu-label">Main Menu</li>
-                <li><a href="/dashboard" class="{{ request()->is('dashboard') ? 'active' : '' }}"><i class="bi bi-house-door"></i> Dashboard</a></li>
-
-                @can('view audit logs')
-                <li class="menu-label">Analytics</li>
-                <li><a href="/reports" class="{{ request()->is('reports') ? 'active' : '' }}"><i class="bi bi-bar-chart-line"></i> Laporan Distribusi</a></li>
-                @endcan
-
-                @can('manage users')
-                <li class="menu-label">Verification</li>
-                <li><a href="/admin/users/pending" class="{{ request()->is('admin/users/pending') ? 'active' : '' }}"><i class="bi bi-person-check"></i> Permintaan Akun</a></li>
-                @endcan
-
-                @role('admin')
-                <li class="menu-label">System Control</li>
-                <li><a href="/admin/users" class="{{ request()->is('admin/users') ? 'active' : '' }}"><i class="bi bi-people"></i> Kelola Pengguna</a></li>
-                <li><a href="/admin/logs" class="{{ request()->is('admin/logs') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Audit Sistem</a></li>
-                <li class="menu-label">CMS Landing Page</li>
-                <li><a href="/admin/cms/profile"><i class="bi bi-info-circle"></i> Profil & Visi Misi</a></li>
-                <li><a href="/admin/cms/posts"><i class="bi bi-newspaper"></i> Berita & Kegiatan</a></li>
-                <li><a href="/admin/cms/post-categories" class="{{ request()->is('admin/cms/post-categories') ? 'active' : '' }}"><i class="bi bi-tags"></i> Kategori Post</a></li>
-                <li><a href="/admin/cms/gallery"><i class="bi bi-images"></i> Galeri Foto</a></li>
-                <li><a href="/admin/cms/org"><i class="bi bi-diagram-3"></i> Struktur Organisasi</a></li>
-                <li><a href="/admin/cms/contacts" class="{{ request()->is('admin/cms/contacts') ? 'active' : '' }}"><i class="bi bi-telephone-outbound"></i> Kontak & Sosmed</a></li>
-                <li><a href="/admin/cms/files" class="{{ request()->is('admin/cms/files') ? 'active' : '' }}"><i class="bi bi-file-earmark-arrow-up"></i> Dokumen & File</a></li>
-                @endrole
-
-                @can('manage inventory')
-                <li class="menu-label">Warehouse</li>
-                <li><a href="/operator/drugs" class="{{ request()->is('operator/drugs') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> Stok & Katalog</a></li>
-                <li><a href="/operator/categories" class="{{ request()->is('operator/categories') ? 'active' : '' }}"><i class="bi bi-tags"></i> Kelola Kategori</a></li>
-                <li><a href="/operator/requests" class="{{ request()->is('operator/requests') ? 'active' : '' }}"><i class="bi bi-clipboard-check"></i> Antrian Request</a></li>
-                @endcan
-
-                @role('courier')
-                <li class="menu-label">Logistics</li>
-                <li><a href="/courier/available" class="{{ request()->is('courier/available') ? 'active' : '' }}"><i class="bi bi-megaphone"></i> Bursa Tugas</a></li>
-                <li><a href="/courier/active" class="{{ request()->is('courier/active') ? 'active' : '' }}"><i class="bi bi-bicycle"></i> Tugas Aktif</a></li>
-                <li><a href="/courier/history" class="{{ request()->is('courier/history') ? 'active' : '' }}"><i class="bi bi-clock-history"></i> Riwayat Selesai</a></li>
-                @endrole
-            </ul>
-
-            <!-- Tambahan: Logout di bagian bawah sidebar untuk mobile -->
-            <div class="d-md-none p-3 border-top border-secondary">
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-outline-danger w-100 rounded-pill btn-sm">
-                        <i class="bi bi-box-arrow-right me-2"></i> Logout
-                    </button>
-                </form>
-            </div>
-        </nav>
-
-        <!-- MAIN CONTENT -->
-        <div id="content">
-            <nav class="navbar navbar-main navbar-expand-lg">
-                <button type="button" id="sidebarCollapse" class="btn btn-light shadow-sm" onclick="toggleSidebar()">
-                    <i class="bi bi-list"></i>
-                </button>
-
-                <div class="ms-auto d-flex align-items-center">
-                    <div class="me-3 text-end d-none d-md-block">
-                        <p class="mb-0 fw-bold small text-dark">{{ Auth::user()->name }}</p>
-                        <span class="badge bg-light text-primary border border-primary border-opacity-25" style="font-size: 9px;">
-                            {{ strtoupper(Auth::user()->getRoleNames()->first() ?? 'User') }}
-                        </span>
-                    </div>
-
-                    <div class="dropdown">
-                        <a href="#" class="d-flex align-items-center text-decoration-none" data-bs-toggle="dropdown">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0D6EFD&color=fff&bold=true"
-                                 class="rounded-circle shadow-sm border border-2 border-white" width="40" height="40">
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 rounded-3">
-                            <li class="px-3 py-2 border-bottom">
-                                <small class="text-muted d-block">Sesi Aktif sebagai:</small>
-                                <span class="text-primary small fw-bold text-uppercase">{{ Auth::user()->getRoleNames()->first() }}</span>
-                            </li>
-                            <li>
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger py-2">
-                                        <i class="bi bi-box-arrow-right me-2"></i> Logout
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-
-            <div class="container-fluid p-4">
-                @yield('content')
-            </div>
-
-            <footer class="mt-auto py-3 bg-white border-top text-center">
-                <small class="text-muted">&copy; 2024 E-Pharma Management System. Professional PBL Edition.</small>
-            </footer>
-        </div>
-    </div>
+	<!-- /theme JS files -->
 
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const content = document.getElementById('content');
-        const overlay = document.getElementById('sidebar-overlay');
-
-        // FUNGSI TOGGLE SIDEBAR (Responsive)
-        function toggleSidebar() {
-            const isMobile = window.innerWidth <= 768;
-
-            if (isMobile) {
-                // Di HP: Gunakan class 'show' dan Overlay
-                sidebar.classList.toggle('show');
-                overlay.classList.toggle('show');
-                // Pastikan class desktop dimatikan
-                sidebar.classList.remove('active');
-                content.classList.remove('active');
-            } else {
-                // Di Desktop: Gunakan class 'active' untuk push content
-                sidebar.classList.toggle('active');
-                content.classList.toggle('active');
-                // Pastikan class mobile dimatikan
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-            }
-        }
-
         // Global Axios Configuration
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-        axios.defaults.headers.common['Accept'] = 'application/json';
-
-        // Auto-close sidebar jika ukuran layar berubah mendadak
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 768) {
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-            }
-        });
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     </script>
+</head>
+
+<body>
+
+	<!-- Main navbar -->
+	<div class="navbar navbar-dark navbar-expand-lg navbar-static border-bottom border-bottom-white border-opacity-10">
+		<div class="container-fluid">
+			<div class="d-flex d-lg-none me-2">
+				<button type="button" class="navbar-toggler sidebar-mobile-main-toggle rounded-pill">
+					<i class="ph-list"></i>
+				</button>
+			</div>
+
+			<div class="navbar-brand flex-1 flex-lg-0">
+				<a href="index.html" class="d-inline-flex align-items-center">
+					<img src="../../../admin/assets/images/logo_icon.svg" alt="">
+					<img src="../../../admin/assets/images/logo_text_light.svg" class="d-none d-sm-inline-block h-16px ms-3" alt="">
+				</a>
+			</div>
+
+			<ul class="nav flex-row">
+				<li class="nav-item d-lg-none">
+					<a href="#navbar_search" class="navbar-nav-link navbar-nav-link-icon rounded-pill" data-bs-toggle="collapse">
+						<i class="ph-magnifying-glass"></i>
+					</a>
+				</li>
+
+				<li class="nav-item nav-item-dropdown-lg dropdown">
+					<a href="#" class="navbar-nav-link navbar-nav-link-icon rounded-pill" data-bs-toggle="dropdown">
+						<i class="ph-squares-four"></i>
+					</a>
+
+					<div class="dropdown-menu dropdown-menu-scrollable-sm wmin-lg-600 p-0">
+						<div class="d-flex align-items-center border-bottom p-3">
+							<h6 class="mb-0">Browse apps</h6>
+							<a href="#" class="ms-auto">
+								View all
+								<i class="ph-arrow-circle-right ms-1"></i>
+							</a>
+						</div>
+
+						<div class="row row-cols-1 row-cols-sm-2 g-0">
+							<div class="col">
+								<button type="button" class="dropdown-item text-wrap h-100 align-items-start border-end-sm border-bottom p-3">
+									<div>
+										<img src="../../../admin/assets/images/demo/logos/1.svg" class="h-40px mb-2" alt="">
+										<div class="fw-semibold my-1">Customer data platform</div>
+										<div class="text-muted">Unify customer data from multiple sources</div>
+									</div>
+								</button>
+							</div>
+
+							<div class="col">
+								<button type="button" class="dropdown-item text-wrap h-100 align-items-start border-bottom p-3">
+									<div>
+										<img src="../../../admin/assets/images/demo/logos/2.svg" class="h-40px mb-2" alt="">
+										<div class="fw-semibold my-1">Data catalog</div>
+										<div class="text-muted">Discover, inventory, and organize data admin/assets</div>
+									</div>
+								</button>
+							</div>
+
+							<div class="col">
+								<button type="button" class="dropdown-item text-wrap h-100 align-items-start border-end-sm border-bottom border-bottom-sm-0 rounded-bottom-start p-3">
+									<div>
+										<img src="../../../admin/assets/images/demo/logos/3.svg" class="h-40px mb-2" alt="">
+										<div class="fw-semibold my-1">Data governance</div>
+										<div class="text-muted">The collaboration hub and data marketplace</div>
+									</div>
+								</button>
+							</div>
+
+							<div class="col">
+								<button type="button" class="dropdown-item text-wrap h-100 align-items-start rounded-bottom-end p-3">
+									<div>
+										<img src="../../../admin/assets/images/demo/logos/4.svg" class="h-40px mb-2" alt="">
+										<div class="fw-semibold my-1">Data privacy</div>
+										<div class="text-muted">Automated provisioning of non-production datasets</div>
+									</div>
+								</button>
+							</div>
+						</div>
+					</div>
+				</li>
+
+				<li class="nav-item nav-item-dropdown-lg dropdown ms-lg-2">
+					<a href="#" class="navbar-nav-link navbar-nav-link-icon rounded-pill" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+						<i class="ph-chats"></i>
+						<span class="badge bg-yellow text-black position-absolute top-0 end-0 translate-middle-top zindex-1 rounded-pill mt-1 me-1">8</span>
+					</a>
+
+					<div class="dropdown-menu wmin-lg-400 p-0">
+						<div class="d-flex align-items-center p-3">
+							<h6 class="mb-0">Messages</h6>
+							<div class="ms-auto">
+								<a href="#" class="text-body">
+									<i class="ph-plus-circle"></i>
+								</a>
+								<a href="#search_messages" class="collapsed text-body ms-2" data-bs-toggle="collapse">
+									<i class="ph-magnifying-glass"></i>
+								</a>
+							</div>
+						</div>
+
+						<div class="collapse" id="search_messages">
+							<div class="px-3 mb-2">
+								<div class="form-control-feedback form-control-feedback-start">
+									<input type="text" class="form-control" placeholder="Search messages">
+									<div class="form-control-feedback-icon">
+										<i class="ph-magnifying-glass"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="dropdown-menu-scrollable pb-2">
+							<a href="#" class="dropdown-item align-items-start text-wrap py-2">
+								<div class="status-indicator-container me-3">
+									<img src="../../../admin/assets/images/demo/users/face10.jpg" class="w-40px h-40px rounded-pill" alt="">
+									<span class="status-indicator bg-warning"></span>
+								</div>
+
+								<div class="flex-1">
+									<span class="fw-semibold">James Alexander</span>
+									<span class="text-muted float-end fs-sm">04:58</span>
+									<div class="text-muted">who knows, maybe that would be the best thing for me...</div>
+								</div>
+							</a>
+
+							<a href="#" class="dropdown-item align-items-start text-wrap py-2">
+								<div class="status-indicator-container me-3">
+									<img src="../../../admin/assets/images/demo/users/face3.jpg" class="w-40px h-40px rounded-pill" alt="">
+									<span class="status-indicator bg-success"></span>
+								</div>
+
+								<div class="flex-1">
+									<span class="fw-semibold">Margo Baker</span>
+									<span class="text-muted float-end fs-sm">12:16</span>
+									<div class="text-muted">That was something he was unable to do because...</div>
+								</div>
+							</a>
+
+							<a href="#" class="dropdown-item align-items-start text-wrap py-2">
+								<div class="status-indicator-container me-3">
+									<img src="../../../admin/assets/images/demo/users/face24.jpg" class="w-40px h-40px rounded-pill" alt="">
+									<span class="status-indicator bg-success"></span>
+								</div>
+								<div class="flex-1">
+									<span class="fw-semibold">Jeremy Victorino</span>
+									<span class="text-muted float-end fs-sm">22:48</span>
+									<div class="text-muted">But that would be extremely strained and suspicious...</div>
+								</div>
+							</a>
+
+							<a href="#" class="dropdown-item align-items-start text-wrap py-2">
+								<div class="status-indicator-container me-3">
+									<img src="../../../admin/assets/images/demo/users/face4.jpg" class="w-40px h-40px rounded-pill" alt="">
+									<span class="status-indicator bg-grey"></span>
+								</div>
+								<div class="flex-1">
+									<span class="fw-semibold">Beatrix Diaz</span>
+									<span class="text-muted float-end fs-sm">Tue</span>
+									<div class="text-muted">What a strenuous career it is that I've chosen...</div>
+								</div>
+							</a>
+
+							<a href="#" class="dropdown-item align-items-start text-wrap py-2">
+								<div class="status-indicator-container me-3">
+									<img src="../../../admin/assets/images/demo/users/face25.jpg" class="w-40px h-40px rounded-pill" alt="">
+									<span class="status-indicator bg-danger"></span>
+								</div>
+								<div class="flex-1">
+									<span class="fw-semibold">Richard Vango</span>
+									<span class="text-muted float-end fs-sm">Mon</span>
+									<div class="text-muted">Other travelling salesmen live a life of luxury...</div>
+								</div>
+							</a>
+						</div>
+
+						<div class="d-flex border-top py-2 px-3">
+							<a href="#" class="text-body">
+								<i class="ph-checks me-1"></i>
+								Dismiss all
+							</a>
+							<a href="#" class="text-body ms-auto">
+								View all
+								<i class="ph-arrow-circle-right ms-1"></i>
+							</a>
+						</div>
+					</div>
+				</li>
+			</ul>
+
+			<div class="navbar-collapse justify-content-center flex-lg-1 order-2 order-lg-1 collapse" id="navbar_search">
+				<div class="navbar-search flex-fill position-relative mt-2 mt-lg-0 mx-lg-3">
+					<div class="form-control-feedback form-control-feedback-start flex-grow-1" data-color-theme="dark">
+						<input type="text" class="form-control bg-transparent rounded-pill" placeholder="Search" data-bs-toggle="dropdown">
+						<div class="form-control-feedback-icon">
+							<i class="ph-magnifying-glass"></i>
+						</div>
+						<div class="dropdown-menu w-100" data-color-theme="light">
+							<button type="button" class="dropdown-item">
+								<div class="text-center w-32px me-3">
+									<i class="ph-magnifying-glass"></i>
+								</div>
+								<span>Search <span class="fw-bold">"in"</span> everywhere</span>
+							</button>
+
+							<div class="dropdown-divider"></div>
+
+							<div class="dropdown-menu-scrollable-lg">
+								<div class="dropdown-header">
+									Contacts
+									<a href="#" class="float-end">
+										See all
+										<i class="ph-arrow-circle-right ms-1"></i>
+									</a>
+								</div>
+
+								<div class="dropdown-item cursor-pointer">
+									<div class="me-3">
+										<img src="../../../admin/assets/images/demo/users/face3.jpg" class="w-32px h-32px rounded-pill" alt="">
+									</div>
+
+									<div class="d-flex flex-column flex-grow-1">
+										<div class="fw-semibold">Christ<mark>in</mark>e Johnson</div>
+										<span class="fs-sm text-muted">c.johnson@awesomecorp.com</span>
+									</div>
+
+									<div class="d-inline-flex">
+										<a href="#" class="text-body ms-2">
+											<i class="ph-user-circle"></i>
+										</a>
+									</div>
+								</div>
+
+								<div class="dropdown-item cursor-pointer">
+									<div class="me-3">
+										<img src="../../../admin/assets/images/demo/users/face24.jpg" class="w-32px h-32px rounded-pill" alt="">
+									</div>
+
+									<div class="d-flex flex-column flex-grow-1">
+										<div class="fw-semibold">Cl<mark>in</mark>ton Sparks</div>
+										<span class="fs-sm text-muted">c.sparks@awesomecorp.com</span>
+									</div>
+
+									<div class="d-inline-flex">
+										<a href="#" class="text-body ms-2">
+											<i class="ph-user-circle"></i>
+										</a>
+									</div>
+								</div>
+
+								<div class="dropdown-divider"></div>
+
+								<div class="dropdown-header">
+									Clients
+									<a href="#" class="float-end">
+										See all
+										<i class="ph-arrow-circle-right ms-1"></i>
+									</a>
+								</div>
+
+								<div class="dropdown-item cursor-pointer">
+									<div class="me-3">
+										<img src="../../../admin/assets/images/brands/adobe.svg" class="w-32px h-32px rounded-pill" alt="">
+									</div>
+
+									<div class="d-flex flex-column flex-grow-1">
+										<div class="fw-semibold">Adobe <mark>In</mark>c.</div>
+										<span class="fs-sm text-muted">Enterprise license</span>
+									</div>
+
+									<div class="d-inline-flex">
+										<a href="#" class="text-body ms-2">
+											<i class="ph-briefcase"></i>
+										</a>
+									</div>
+								</div>
+
+								<div class="dropdown-item cursor-pointer">
+									<div class="me-3">
+										<img src="../../../admin/assets/images/brands/holiday-inn.svg" class="w-32px h-32px rounded-pill" alt="">
+									</div>
+
+									<div class="d-flex flex-column flex-grow-1">
+										<div class="fw-semibold">Holiday-<mark>In</mark>n</div>
+										<span class="fs-sm text-muted">On-premise license</span>
+									</div>
+
+									<div class="d-inline-flex">
+										<a href="#" class="text-body ms-2">
+											<i class="ph-briefcase"></i>
+										</a>
+									</div>
+								</div>
+
+								<div class="dropdown-item cursor-pointer">
+									<div class="me-3">
+										<img src="../../../admin/assets/images/brands/ing.svg" class="w-32px h-32px rounded-pill" alt="">
+									</div>
+
+									<div class="d-flex flex-column flex-grow-1">
+										<div class="fw-semibold"><mark>IN</mark>G Group</div>
+										<span class="fs-sm text-muted">Perpetual license</span>
+									</div>
+
+									<div class="d-inline-flex">
+										<a href="#" class="text-body ms-2">
+											<i class="ph-briefcase"></i>
+										</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<a href="#" class="navbar-nav-link align-items-center justify-content-center w-40px h-32px rounded-pill position-absolute end-0 top-50 translate-middle-y p-0 me-1" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+						<i class="ph-faders-horizontal"></i>
+					</a>
+
+					<div class="dropdown-menu w-100 p-3">
+						<div class="d-flex align-items-center mb-3">
+							<h6 class="mb-0">Search options</h6>
+							<a href="#" class="text-body rounded-pill ms-auto">
+								<i class="ph-clock-counter-clockwise"></i>
+							</a>
+						</div>
+
+						<div class="mb-3">
+							<label class="d-block form-label">Category</label>
+							<label class="form-check form-check-inline">
+								<input type="checkbox" class="form-check-input" checked>
+								<span class="form-check-label">Invoices</span>
+							</label>
+							<label class="form-check form-check-inline">
+								<input type="checkbox" class="form-check-input">
+								<span class="form-check-label">Files</span>
+							</label>
+							<label class="form-check form-check-inline">
+								<input type="checkbox" class="form-check-input">
+								<span class="form-check-label">Users</span>
+							</label>
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label">Addition</label>
+							<div class="input-group">
+								<select class="form-select w-auto flex-grow-0">
+									<option value="1" selected>has</option>
+									<option value="2">has not</option>
+								</select>
+								<input type="text" class="form-control" placeholder="Enter the word(s)">
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label">Status</label>
+							<div class="input-group">
+								<select class="form-select w-auto flex-grow-0">
+									<option value="1" selected>is</option>
+									<option value="2">is not</option>
+								</select>
+								<select class="form-select">
+									<option value="1" selected>Active</option>
+									<option value="2">Inactive</option>
+									<option value="3">New</option>
+									<option value="4">Expired</option>
+									<option value="5">Pending</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="d-flex">
+							<button type="button" class="btn btn-light">Reset</button>
+
+							<div class="ms-auto">
+								<button type="button" class="btn btn-light">Cancel</button>
+								<button type="button" class="btn btn-primary ms-2">Apply</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<ul class="nav flex-row justify-content-end order-1 order-lg-2">
+				<li class="nav-item ms-lg-2">
+					<a href="#" class="navbar-nav-link navbar-nav-link-icon rounded-pill" data-bs-toggle="offcanvas" data-bs-target="#notifications">
+						<i class="ph-bell"></i>
+						<span class="badge bg-yellow text-black position-absolute top-0 end-0 translate-middle-top zindex-1 rounded-pill mt-1 me-1">2</span>
+					</a>
+				</li>
+
+				<li class="nav-item nav-item-dropdown-lg dropdown ms-lg-2">
+					<a href="#" class="navbar-nav-link align-items-center rounded-pill p-1" data-bs-toggle="dropdown">
+						<div class="status-indicator-container">
+							<img src="../../../admin/assets/images/demo/users/face11.jpg" class="w-32px h-32px rounded-pill" alt="">
+							<span class="status-indicator bg-success"></span>
+						</div>
+						<span class="d-none d-lg-inline-block mx-lg-2">Victoria</span>
+					</a>
+
+					<div class="dropdown-menu dropdown-menu-end">
+						<a href="#" class="dropdown-item">
+							<i class="ph-user-circle me-2"></i>
+							My profile
+						</a>
+                        <div class="dropdown-divider"></div>
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="ph-sign-out me-2"></i>
+                                Keluar (Logout)
+                            </button>
+                        </form>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<!-- /main navbar -->
+
+
+	<!-- Page content -->
+	<div class="page-content">
+
+		<!-- Main sidebar -->
+		<div class="sidebar sidebar-dark sidebar-main sidebar-expand-lg">
+
+			<!-- Sidebar content -->
+			<div class="sidebar-content">
+
+				<!-- Sidebar header -->
+				<div class="sidebar-section">
+					<div class="sidebar-section-body d-flex justify-content-center">
+						<h5 class="sidebar-resize-hide flex-grow-1 my-auto">Navigasi Utama</h5>
+
+						<div>
+							<button type="button" class="btn btn-flat-white btn-icon btn-sm rounded-pill border-transparent sidebar-control sidebar-main-resize d-none d-lg-inline-flex">
+								<i class="ph-arrows-left-right"></i>
+							</button>
+
+							<button type="button" class="btn btn-flat-white btn-icon btn-sm rounded-pill border-transparent sidebar-mobile-main-toggle d-lg-none">
+								<i class="ph-x"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+				<!-- /sidebar header -->
+
+
+				<!-- Main navigation -->
+				<div class="sidebar-section">
+					<ul class="nav nav-sidebar" data-nav-type="accordion">
+
+                        <!-- DASHBOARD MODULE -->
+						<li class="nav-item-header pt-0">
+							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Main</div>
+							<i class="ph-dots-three sidebar-resize-show"></i>
+						</li>
+						<li class="nav-item">
+							<a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
+								<i class="ph-house"></i>
+								<span>Dashboard</span>
+							</a>
+						</li>
+
+                        @can('view reports')
+						<li class="nav-item">
+							<a href="/reports" class="nav-link {{ request()->is('reports') ? 'active' : '' }}">
+								<i class="ph-chart-line"></i>
+								<span>Analytics</span>
+							</a>
+						</li>
+                        @endcan
+
+                        <!-- VERIFICATION MODULE (Admin & Operator) -->
+                        @can('manage users')
+                        <li class="nav-item-header">
+							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Verification</div>
+							<i class="ph-dots-three sidebar-resize-show"></i>
+						</li>
+                        <li class="nav-item">
+                            <a href="/admin/users/pending" class="nav-link {{ request()->is('admin/users/pending') ? 'active' : '' }}">
+                                <i class="ph-user-plus"></i>
+                                <span>Permintaan Akun</span>
+                            </a>
+                        </li>
+                        @endcan
+
+                        <!-- SYSTEM CONTROL (Admin Only) -->
+                        @role('admin')
+                        <li class="nav-item-header">
+							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">System Control</div>
+							<i class="ph-dots-three sidebar-resize-show"></i>
+						</li>
+                        <li class="nav-item">
+                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users') ? 'active' : '' }}">
+                                <i class="ph-users"></i>
+                                <span>Kelola Pengguna</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/logs" class="nav-link {{ request()->is('admin/logs') ? 'active' : '' }}">
+                                <i class="ph-shield-check"></i>
+                                <span>Log Sistem</span>
+                            </a>
+                        </li>
+
+                        <!-- CMS MODULE -->
+                        <li class="nav-item-header">
+							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Content Management</div>
+							<i class="ph-dots-three sidebar-resize-show"></i>
+						</li>
+                        <li class="nav-item">
+                            <a href="/admin/cms/profile" class="nav-link {{ request()->is('admin/cms/profile') ? 'active' : '' }}">
+                                <i class="ph-info"></i>
+                                <span>Profile Yayasan</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/cms/post-categories" class="nav-link {{ request()->is('admin/cms/post-categories') ? 'active' : '' }}">
+                                <i class="ph-tag"></i>
+                                <span>Kategori Post</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/cms/posts" class="nav-link {{ request()->is('admin/cms/posts') ? 'active' : '' }}">
+                                <i class="ph-newspaper"></i>
+                                <span>Berita & Kegiatan</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/cms/contacts" class="nav-link {{ request()->is('admin/cms/contacts') ? 'active' : '' }}">
+                                <i class="ph-phone"></i>
+                                <span>Kontak & Sosmed</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/cms/files" class="nav-link {{ request()->is('admin/cms/files') ? 'active' : '' }}">
+                                <i class="ph-file-arrow-up"></i>
+                                <span>Dokumen & File</span>
+                            </a>
+                        </li>
+                        @endrole
+
+                        <!-- WAREHOUSE MODULE (Admin & Operator) -->
+                        @can('manage inventory')
+                        <li class="nav-item-header">
+							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Gudang</div>
+							<i class="ph-dots-three sidebar-resize-show"></i>
+						</li>
+                        <li class="nav-item">
+                            <a href="/operator/drugs" class="nav-link {{ request()->is('operator/drugs') ? 'active' : '' }}">
+                                <i class="ph-pill"></i>
+                                <span>Stok & Katalog</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/operator/categories" class="nav-link {{ request()->is('operator/categories') ? 'active' : '' }}">
+                                <i class="ph-tags"></i>
+                                <span>Kategori Obat</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/operator/requests" class="nav-link {{ request()->is('operator/requests') ? 'active' : '' }}">
+                                <i class="ph-clipboard-text"></i>
+                                <span>Antrian Request</span>
+                            </a>
+                        </li>
+                        @endcan
+
+                        <!-- COURIER MODULE -->
+                        @role('courier')
+                        <li class="nav-item-header">
+							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Logistik</div>
+							<i class="ph-dots-three sidebar-resize-show"></i>
+						</li>
+                        <li class="nav-item">
+                            <a href="/courier/available" class="nav-link {{ request()->is('courier/available') ? 'active' : '' }}">
+                                <i class="ph-megaphone"></i>
+                                <span>Bursa Tugas</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/courier/active" class="nav-link {{ request()->is('courier/active') ? 'active' : '' }}">
+                                <i class="ph-bicycle"></i>
+                                <span>Tugas Aktif</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/courier/history" class="nav-link {{ request()->is('courier/history') ? 'active' : '' }}">
+                                <i class="ph-clock-counter-clockwise"></i>
+                                <span>Riwayat Selesai</span>
+                            </a>
+                        </li>
+                        @endrole
+
+					</ul>
+				</div>
+				<!-- /main navigation -->
+
+			</div>
+			<!-- /sidebar content -->
+
+		</div>
+		<!-- /main sidebar -->
+
+
+		<!-- Main content -->
+		<div class="content-wrapper">
+
+			<!-- Inner content -->
+			<div class="content-inner">
+
+				<!-- Page header -->
+				<div class="page-header">
+					{{-- <div class="page-header-content d-lg-flex">
+						<div class="d-flex p-3">
+							<h4 class="page-title mb-0">
+								Backoffice - <span class="fw-normal">@yield('page_title', 'Dashboard')</span>
+							</h4>
+						</div>
+					</div> --}}
+
+					{{-- <div class="page-header-content d-lg-flex border-top">
+						<div class="d-flex">
+							<div class="breadcrumb py-2">
+								<a href="/dashboard" class="breadcrumb-item"><i class="ph-house me-2"></i> Home</a>
+								<span class="breadcrumb-item active">@yield('page_title', 'Dashboard')</span>
+							</div>
+						</div>
+					</div> --}}
+				</div>
+				<!-- /page header -->
+
+
+				<!-- Content area -->
+				<div class="content">
+					@yield('content')
+				</div>
+				<!-- /content area -->
+
+
+				<!-- Footer -->
+				<div class="navbar navbar-sm navbar-footer border-top p-3">
+					<div class="container-fluid">
+						<span>&copy; 2026 <a href="#" class="text-indigo fw-bold text-decoration-none">Yayasan Satriabudi Dharma Setia</a></span>
+						<ul class="nav">
+							<li class="nav-item">
+								<span class="text-muted small">Kelompok 10</span>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<!-- /footer -->
+
+			</div>
+			<!-- /inner content -->
+
+		</div>
+		<!-- /main content -->
+
+	</div>
+	<!-- /page content -->
+
 </body>
 </html>
