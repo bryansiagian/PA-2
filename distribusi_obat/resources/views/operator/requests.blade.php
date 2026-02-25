@@ -2,61 +2,99 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold text-dark mb-1">Manajemen Permintaan & Distribusi</h4>
-            <p class="text-muted small mb-0">Tinjau pesanan dan siapkan lokasi pengambilan obat (Pick List).</p>
+    <!-- Header Page -->
+    <div class="d-flex align-items-center mb-3">
+        <div class="flex-fill">
+            <h4 class="fw-bold mb-0">Manajemen Permintaan & Distribusi</h4>
+            <div class="text-muted">Tinjau pesanan dan siapkan lokasi pengambilan obat (Pick List)</div>
         </div>
-        <div class="col-auto d-flex gap-2">
-            <!-- FILTER TIPE (REVISI DOSEN #2) -->
-            <select id="filterType" class="form-select border-0 shadow-sm rounded-pill px-4" onchange="load()">
+        <div class="ms-3 d-flex gap-2">
+            <!-- FILTER TIPE -->
+            <select id="filterType" class="form-select border-0 shadow-sm rounded-pill px-3 bg-white" onchange="load()" style="min-width: 180px;">
                 <option value="all">Semua Tipe</option>
                 <option value="delivery">🚚 Pengantaran Kurir</option>
                 <option value="self_pickup">🏢 Ambil Sendiri</option>
             </select>
-            <button onclick="load()" class="btn btn-white border shadow-sm rounded-pill px-3">
-                <i class="bi bi-arrow-clockwise"></i>
+            <button onclick="load()" class="btn btn-light btn-icon shadow-sm rounded-circle" title="Refresh Data">
+                <i class="ph-arrows-clockwise"></i>
             </button>
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-3"><div class="card border-0 shadow-sm rounded-4 p-3 border-start border-primary border-4"><small class="text-muted fw-bold">TOTAL REQUEST</small><h3 class="fw-bold mb-0" id="statTotal">0</h3></div></div>
-        <div class="col-md-3"><div class="card border-0 shadow-sm rounded-4 p-3 border-start border-warning border-4"><small class="text-muted fw-bold">MENUNGGU</small><h3 class="fw-bold mb-0 text-warning" id="statPending">0</h3></div></div>
+    <!-- Statistik Row (Limitless Style) -->
+    <div class="row mb-3">
+        <div class="col-lg-3">
+            <div class="card card-body bg-indigo text-white shadow-sm border-0 mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="flex-fill">
+                        <h4 class="mb-0 fw-bold" id="statTotal">0</h4>
+                        <div class="text-uppercase fs-xs opacity-75">Total Request</div>
+                    </div>
+                    <i class="ph-clipboard-text ph-2x opacity-75 ms-3"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card card-body bg-warning text-white shadow-sm border-0 mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="flex-fill">
+                        <h4 class="mb-0 fw-bold" id="statPending">0</h4>
+                        <div class="text-uppercase fs-xs opacity-75">Menunggu (Pending)</div>
+                    </div>
+                    <i class="ph-hourglass-medium ph-2x opacity-75 ms-3"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <!-- Table Section -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header d-flex align-items-center bg-transparent border-bottom py-3">
+            <h5 class="mb-0 fw-bold"><i class="ph-list-bullets me-2 text-primary"></i>Antrean Distribusi Obat</h5>
+            <div class="ms-auto">
+                <span class="badge bg-primary bg-opacity-10 text-primary fw-bold">Live Request List</span>
+            </div>
+        </div>
+
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                    <tr class="text-muted small fw-bold">
-                        <th class="ps-4 py-3">ID</th>
-                        <th>PEMOHON</th>
-                        <th>TIPE</th>
-                        <th>DETAIL ITEM</th>
-                        <th>STATUS</th>
-                        <th class="text-center pe-4">AKSI</th>
+            <table class="table table-hover text-nowrap align-middle">
+                <thead class="table-light">
+                    <tr class="fs-xs text-uppercase fw-bold text-muted">
+                        <th class="ps-3" style="width: 100px;">ID</th>
+                        <th>Pemohon</th>
+                        <th>Tipe</th>
+                        <th>Detail Item</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center pe-3">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="opRequestTable">
-                    <tr><td colspan="6" class="text-center py-5">Memuat data...</td></tr>
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="spinner-border spinner-border-sm text-muted me-2"></div>
+                            Sinkronisasi data permintaan...
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- MODAL: PICK LIST DENGAN RAK/BARIS (REVISI DOSEN #1) -->
+<!-- MODAL: PICK LIST DENGAN RAK/BARIS (Limitless Style) -->
 <div class="modal fade" id="modalItems" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold"><i class="bi bi-list-check me-2"></i>Daftar Petik (Pick List)</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-indigo text-white border-0 py-3">
+                <h6 class="modal-title fw-bold"><i class="ph-list-checks me-2"></i>Daftar Petik (Pick List)</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4" id="modalItemsBody"></div>
-            <div class="modal-footer border-0 bg-light">
-                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+            <div class="modal-body p-0" id="modalItemsBody">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="modal-footer bg-light border-0 py-2">
+                <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">TUTUP</button>
+                <button type="button" class="btn btn-indigo px-4 fw-bold" onclick="window.print()"><i class="ph-printer me-2"></i>CETAK LIST</button>
             </div>
         </div>
     </div>
@@ -81,28 +119,54 @@
                 const isDelivery = r.request_type === 'delivery';
                 const itemsJson = JSON.stringify(r.items).replace(/"/g, '&quot;');
 
+                // Logika Status Badge
+                let statusBadge = '';
+                if(r.status === 'pending') statusBadge = '<span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-2 py-1">PENDING</span>';
+                else if(r.status === 'approved') statusBadge = '<span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1">APPROVED</span>';
+                else statusBadge = '<span class="badge bg-light text-muted fw-bold px-2 py-1">ARCHIVED</span>';
+
+                // Logika Aksi
                 let actions = '';
                 if (r.status === 'pending') {
-                    actions = `<div class="btn-group shadow-sm rounded-pill overflow-hidden"><button onclick="approveRequest(${r.id})" class="btn btn-success btn-sm px-3">Approve</button><button onclick="rejectRequest(${r.id})" class="btn btn-outline-danger btn-sm px-3">Tolak</button></div>`;
+                    actions = `
+                        <div class="d-inline-flex">
+                            <button onclick="approveRequest(${r.id})" class="btn btn-sm btn-success border-0 me-1" title="Approve">
+                                <i class="ph-check"></i>
+                            </button>
+                            <button onclick="rejectRequest(${r.id})" class="btn btn-sm btn-light text-danger border-0" title="Tolak">
+                                <i class="ph-x"></i>
+                            </button>
+                        </div>`;
                 } else if (r.status === 'approved') {
                     actions = isDelivery ?
-                        `<button onclick="makeReady(${r.id})" class="btn btn-primary btn-sm rounded-pill shadow-sm"><i class="bi bi-box-seam"></i> Siap Diambil</button>` :
-                        `<button onclick="completePickup(${r.id})" class="btn btn-dark btn-sm rounded-pill shadow-sm"><i class="bi bi-check-circle"></i> Selesai Ambil</button>`;
+                        `<button onclick="makeReady(${r.id})" class="btn btn-sm btn-indigo px-3 shadow-sm rounded-pill fw-bold"><i class="ph-package me-1"></i> Siap Diambil</button>` :
+                        `<button onclick="completePickup(${r.id})" class="btn btn-sm btn-teal text-white px-3 shadow-sm rounded-pill fw-bold"><i class="ph-check-circle me-1"></i> Selesai Ambil</button>`;
                 } else {
-                    actions = `<span class="text-muted small">Arsip</span>`;
+                    actions = `<span class="fs-xs text-muted">Selesai</span>`;
                 }
 
                 html += `
-                <tr class="border-bottom">
-                    <td class="ps-4 fw-bold text-primary">#REQ-${r.id}</td>
-                    <td><div class="fw-bold">${r.user?.name}</div><small class="text-muted">${new Date(r.created_at).toLocaleDateString('id-ID')}</small></td>
-                    <td><span class="badge ${isDelivery ? 'bg-light text-primary' : 'bg-light text-dark'} border small"><i class="bi ${isDelivery ? 'bi-truck' : 'bi-person-walking'}"></i> ${r.request_type.toUpperCase()}</span></td>
-                    <td><button onclick="showItems('${itemsJson}')" class="btn btn-sm btn-light border text-primary rounded-pill px-3">Lihat Item</button></td>
-                    <td><span class="badge bg-warning text-dark rounded-pill px-3">${r.status.toUpperCase()}</span></td>
-                    <td class="text-center pe-4">${actions}</td>
+                <tr>
+                    <td class="ps-3"><span class="font-monospace fw-bold text-indigo">#REQ-${r.id}</span></td>
+                    <td>
+                        <div class="fw-bold text-dark">${r.user?.name}</div>
+                        <div class="fs-xs text-muted"><i class="ph-calendar me-1"></i>${new Date(r.created_at).toLocaleDateString('id-ID')}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${isDelivery ? 'bg-primary bg-opacity-10 text-primary' : 'bg-teal bg-opacity-10 text-teal'} px-2 py-1 border-0">
+                            <i class="${isDelivery ? 'ph-truck' : 'ph-storefront'} me-1"></i> ${r.request_type.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        <button onclick="showItems('${itemsJson}')" class="btn btn-sm btn-light border-0 text-indigo fw-bold">
+                            <i class="ph-magnifying-glass me-1"></i> Lihat Item
+                        </button>
+                    </td>
+                    <td class="text-center">${statusBadge}</td>
+                    <td class="text-center pe-3">${actions}</td>
                 </tr>`;
             });
-            tableBody.innerHTML = html || '<tr><td colspan="6" class="text-center py-5 text-muted">Tidak ada data.</td></tr>';
+            tableBody.innerHTML = html || '<tr><td colspan="6" class="text-center py-5 text-muted">Tidak ada permintaan yang ditemukan.</td></tr>';
             document.getElementById('statTotal').innerText = requests.length;
             document.getElementById('statPending').innerText = pending;
         });
@@ -114,38 +178,102 @@
         items.forEach(i => {
             const drug = i.drug || { name: i.custom_drug_name, rack_number: '?', row_number: '?' };
             html += `
-                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 px-0">
-                    <div>
-                        <div class="fw-bold text-dark">${drug.name}</div>
-                        <small class="text-primary fw-bold"><i class="bi bi-geo-fill"></i> ${drug.rack_number || 'N/A'} | ${drug.row_number || 'N/A'}</small>
+                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom px-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light p-2 rounded me-3 text-indigo">
+                            <i class="ph-pill fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">${drug.name}</div>
+                            <div class="fs-xs text-muted">
+                                <span class="badge bg-primary bg-opacity-10 text-primary me-1">Rak: ${drug.rack_number || 'N/A'}</span>
+                                <span class="badge bg-teal bg-opacity-10 text-teal">Baris: ${drug.row_number || 'N/A'}</span>
+                            </div>
+                        </div>
                     </div>
-                    <span class="badge bg-light text-primary border rounded-pill">x${i.quantity}</span>
+                    <span class="badge bg-light text-indigo border rounded-pill px-3 fs-base">x${i.quantity}</span>
                 </div>`;
         });
         document.getElementById('modalItemsBody').innerHTML = html + '</div>';
         new bootstrap.Modal(document.getElementById('modalItems')).show();
     }
 
+    // Fungsi aksi dengan SweetAlert bertema Limitless
     function approveRequest(id) {
-        Swal.fire({ title: 'Setujui?', text: "Stok akan terpotong & email struk terkirim.", icon: 'question', showCancelButton: true, confirmButtonColor: '#198754', showLoaderOnConfirm: true, preConfirm: () => {
-            return axios.post(`/api/requests/${id}/approve`).catch(e => Swal.showValidationMessage(e.response.data.message))
-        }}).then(res => { if(res.isConfirmed) { Swal.fire('Berhasil!', 'Request disetujui.', 'success'); load(); } });
+        Swal.fire({
+            title: 'Setujui Permintaan?',
+            text: "Stok obat akan dipotong dan struk akan dikirim ke email pemohon.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Setujui',
+            confirmButtonColor: '#059669',
+            customClass: { confirmButton: 'btn btn-success', cancelButton: 'btn btn-light' }
+        }).then(res => {
+            if(res.isConfirmed) {
+                axios.post(`/api/requests/${id}/approve`).then(() => {
+                    Swal.fire('Berhasil!', 'Request telah disetujui.', 'success');
+                    load();
+                }).catch(e => Swal.fire('Gagal', e.response.data.message, 'error'));
+            }
+        });
     }
 
     function makeReady(id) {
-        axios.post(`/api/deliveries/ready/${id}`).then(() => { Swal.fire('Siap!', 'Kurir bisa mengambil paket.', 'info'); load(); });
+        axios.post(`/api/deliveries/ready/${id}`).then(() => {
+            Swal.fire({ icon: 'info', title: 'Pesanan Siap', text: 'Kurir telah diberitahu untuk mengambil paket.' });
+            load();
+        });
     }
 
     function rejectRequest(id) {
-        axios.post(`/api/requests/${id}/reject`).then(() => { Swal.fire('Ditolak', 'Permintaan dibatalkan.', 'error'); load(); });
+        Swal.fire({
+            title: 'Tolak Permintaan?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Tolak',
+            customClass: { confirmButton: 'btn btn-danger', cancelButton: 'btn btn-light' }
+        }).then(res => {
+            if(res.isConfirmed) {
+                axios.post(`/api/requests/${id}/reject`).then(() => {
+                    Swal.fire('Ditolak', 'Permintaan telah dibatalkan.', 'error');
+                    load();
+                });
+            }
+        });
     }
 
     function completePickup(id) {
-        Swal.fire({ title: 'Selesaikan Ambil Sendiri?', text: "Pastikan customer sudah menerima barang.", icon: 'warning', showCancelButton: true }).then(res => {
-            if(res.isConfirmed) axios.post(`/api/requests/${id}/approve`).then(() => { load(); }); // Re-use approve logic or create separate endpt
+        Swal.fire({
+            title: 'Selesaikan Ambil Sendiri?',
+            text: "Pastikan pelanggan sudah menerima obat sesuai pesanan.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            confirmButtonText: 'Selesai & Tutup'
+        }).then(res => {
+            if(res.isConfirmed) axios.post(`/api/requests/${id}/approve`).then(() => load());
         });
     }
 
     document.addEventListener('DOMContentLoaded', load);
 </script>
+
+<style>
+    /* Styling Dasar Limitless */
+    .bg-indigo { background-color: #5c68e2 !important; }
+    .bg-teal { background-color: #0d9488 !important; }
+    .text-indigo { color: #5c68e2 !important; }
+    .btn-indigo { background-color: #5c68e2; color: #fff; border: none; }
+    .btn-indigo:hover { background-color: #4e59cf; color: #fff; }
+    .btn-teal { background-color: #0d9488; color: #fff; border: none; }
+
+    .table td { padding: 0.85rem 1rem; }
+    .ph-2x { font-size: 2.2rem; }
+    .fs-base { font-size: 1rem; }
+    .font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    /* Custom scroll for modal body */
+    #modalItemsBody { max-height: 450px; overflow-y: auto; }
+</style>
 @endsection

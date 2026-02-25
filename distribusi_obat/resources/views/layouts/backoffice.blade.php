@@ -43,11 +43,16 @@
 			</div>
 
 			<div class="navbar-brand flex-1 flex-lg-0">
-				<a href="index.html" class="d-inline-flex align-items-center">
-					<img src="../../../admin/assets/images/logo_icon.svg" alt="">
-					<img src="../../../admin/assets/images/logo_text_light.svg" class="d-none d-sm-inline-block h-16px ms-3" alt="">
-				</a>
-			</div>
+    <a href="{{ url('/dashboard') }}" class="d-inline-flex align-items-center text-white text-decoration-none">
+        <!-- Ikon Logo (Menggunakan Ikon Obat) -->
+        <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+            <i class="ph-pill text-indigo fs-4"></i>
+        </div>
+
+        <!-- Teks Brand -->
+        <span class="d-none d-sm-inline-block fw-bold fs-5 tracking-tight">E-PHARMA</span>
+    </a>
+    </div>
 
 			<ul class="nav flex-row">
 				<li class="nav-item d-lg-none">
@@ -428,14 +433,14 @@
 							<img src="../../../admin/assets/images/demo/users/face11.jpg" class="w-32px h-32px rounded-pill" alt="">
 							<span class="status-indicator bg-success"></span>
 						</div>
-						<span class="d-none d-lg-inline-block mx-lg-2">Victoria</span>
+						<span class="d-none d-lg-inline-block mx-lg-2">{{ Auth::user()->name }}</span>
 					</a>
 
 					<div class="dropdown-menu dropdown-menu-end">
-						<a href="#" class="dropdown-item">
-							<i class="ph-user-circle me-2"></i>
-							My profile
-						</a>
+						<a href="{{ route('profile.index') }}" class="dropdown-item">
+                        <i class="ph-user-circle me-2"></i>
+                         My profile
+                        </a>
                         <div class="dropdown-divider"></div>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf

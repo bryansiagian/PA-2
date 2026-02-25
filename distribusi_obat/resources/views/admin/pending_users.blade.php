@@ -4,39 +4,46 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
+    <!-- Header Page -->
+    <div class="d-flex align-items-center mb-3">
+        <div class="flex-fill">
             <h4 class="fw-bold mb-0">Persetujuan Akun Baru</h4>
-            <div class="text-muted small">Tinjau dan verifikasi pendaftaran pengguna sebelum memberikan akses sistem.</div>
+            <div class="text-muted">Tinjau dan verifikasi pendaftaran pengguna sebelum memberikan akses sistem</div>
         </div>
-        <a href="/admin/users" class="btn btn-outline-indigo rounded-pill px-3">
-            <i class="ph-arrow-left me-2"></i> Kembali ke Daftar User
-        </a>
+        <div class="ms-3">
+            <a href="/admin/users" class="btn btn-light btn-label rounded-pill fw-bold">
+                <i class="ph-arrow-left me-2"></i> Kembali ke Daftar User
+            </a>
+        </div>
     </div>
 
     <!-- TABLE CARD -->
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-header bg-transparent border-bottom d-flex align-items-center py-3">
-            <h6 class="mb-0 fw-bold"><i class="ph-user-plus me-2 text-orange"></i>Antrian Pendaftaran</h6>
+    <div class="card shadow-sm border-0">
+        <div class="card-header d-flex align-items-center bg-transparent border-bottom py-3">
+            <h5 class="mb-0 fw-bold"><i class="ph-user-plus me-2 text-warning"></i>Antrian Pendaftaran</h5>
             <div class="ms-auto">
-                <span class="badge bg-orange bg-opacity-10 text-orange rounded-pill">Pending Verification</span>
+                <!-- Badge dibuat solid agar teks terlihat jelas -->
+                <span class="badge bg-warning text-dark fw-bold px-3 shadow-sm rounded-pill">
+                    <i class="ph-clock-counter-clockwise me-1"></i> PENDING VERIFICATION
+                </span>
             </div>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover text-nowrap align-middle">
                 <thead class="table-light">
                     <tr class="fs-xs text-uppercase fw-bold text-muted">
                         <th class="ps-3 py-3">Calon Pengguna</th>
                         <th>Role Pengajuan</th>
                         <th>Tanggal Daftar</th>
-                        <th class="text-center">Aksi</th>
+                        <th class="text-center pe-3">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="pendingTableBody">
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-muted">
-                            <div class="ph-spinner spinner me-2"></div> Memuat data pendaftaran...
+                        <td colspan="4" class="text-center py-5">
+                            <div class="ph-spinner spinner text-indigo me-2"></div>
+                            <span class="fw-bold text-muted">Memuat data pendaftaran...</span>
                         </td>
                     </tr>
                 </tbody>
@@ -46,22 +53,22 @@
 </div>
 
 <!-- ==========================================
-     MODAL: DETAIL PROFIL CALON USER (Limitless Style)
+     MODAL: DETAIL PROFIL CALON USER
      ========================================== -->
 <div class="modal fade" id="modalDetailUser" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-3">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-indigo text-white border-0 py-3">
-                <h5 class="modal-title fw-bold"><i class="ph-user-focus me-2"></i>Tinjau Profil Pengaju</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h6 class="modal-title fw-bold"><i class="ph-user-focus me-2"></i>Tinjau Profil Pengaju</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <div id="userDetailContent">
                     <!-- Konten Detail User Diisi via JS -->
                 </div>
             </div>
-            <div class="modal-footer bg-light border-top-0 d-flex justify-content-between p-3">
-                <button type="button" class="btn btn-link text-muted text-decoration-none fw-semibold" data-bs-dismiss="modal">Tutup</button>
+            <div class="modal-footer bg-light border-0 py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">TUTUP</button>
                 <div id="footerActions" class="d-flex gap-2">
                     <!-- Tombol Approve/Reject diisi via JS -->
                 </div>
@@ -71,7 +78,6 @@
 </div>
 
 <script>
-    // Token sudah diset di layout, tapi kita pastikan lagi jika perlu
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
 
     let pendingUsers = [];
@@ -84,34 +90,34 @@
             let html = '';
 
             if (!pendingUsers || pendingUsers.length === 0) {
-                html = '<tr><td colspan="4" class="text-center py-5 text-muted italic small">Tidak ada permintaan akun baru saat ini.</td></tr>';
+                html = '<tr><td colspan="4" class="text-center py-5 text-muted small">Tidak ada permintaan akun baru saat ini.</td></tr>';
             } else {
                 pendingUsers.forEach(u => {
                     const roleName = u.roles.length > 0 ? u.roles[0].name : 'No Role';
                     const date = new Date(u.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
 
                     html += `
-                    <tr class="border-bottom">
-                        <td class="ps-3 py-3">
+                    <tr>
+                        <td class="ps-3">
                             <div class="d-flex align-items-center">
-                                <div class="bg-indigo text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 40px; height: 40px; font-weight: bold;">
-                                    ${u.name.charAt(0)}
+                                <div class="bg-indigo text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm fw-bold" style="width: 40px; height: 40px;">
+                                    ${u.name.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark">${u.name}</div>
-                                    <div class="text-muted small">${u.email}</div>
+                                    <div class="fs-xs text-muted">${u.email}</div>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill px-3">
+                            <span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill px-3 fw-bold">
                                 ${roleName.toUpperCase()}
                             </span>
                         </td>
-                        <td><div class="text-muted small fw-semibold">${date}</div></td>
-                        <td class="text-center">
-                            <button onclick="showFullProfile(${u.id})" class="btn btn-indigo btn-sm rounded-pill px-3 shadow-sm">
-                                <i class="ph-magnifying-glass me-1"></i> Periksa Profil
+                        <td><div class="text-muted small fw-bold"><i class="ph-calendar me-1"></i>${date}</div></td>
+                        <td class="text-center pe-3">
+                            <button onclick="showFullProfile(${u.id})" class="btn btn-indigo btn-sm rounded-pill px-3 shadow-sm fw-bold">
+                                <i class="ph-magnifying-glass me-1"></i> PERIKSA PROFIL
                             </button>
                         </td>
                     </tr>`;
@@ -119,7 +125,7 @@
             }
             tableBody.innerHTML = html;
         }).catch(err => {
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger">Gagal sinkronisasi dengan server pendaftaran.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger fw-bold">Gagal sinkronisasi dengan server pendaftaran.</td></tr>';
         });
     }
 
@@ -129,41 +135,41 @@
 
         let detailHtml = `
             <div class="text-center mb-4">
-                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&size=128&bold=true" class="rounded-circle shadow mb-3 border border-4 border-white" width="100">
-                <h4 class="fw-bold mb-1 text-indigo">${u.name}</h4>
-                <div class="text-muted small mb-0">${u.email}</div>
-                <span class="badge bg-indigo rounded-pill px-3 mt-2" style="font-size: 10px; letter-spacing: 1px;">ROLE: ${roleName.toUpperCase()}</span>
+                <div class="d-inline-block position-relative mb-3">
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=5c68e2&color=fff&size=128&bold=true" class="rounded-circle shadow border border-4 border-white" width="90">
+                </div>
+                <h5 class="fw-bold mb-0 text-dark">${u.name}</h5>
+                <div class="text-muted fs-xs mb-2">${u.email}</div>
+                <span class="badge bg-indigo text-white rounded-pill px-3" style="font-size: 9px; letter-spacing: 1px;">ROLE: ${roleName.toUpperCase()}</span>
             </div>
 
-            <div class="row g-3">
-                <div class="col-12">
-                    <div class="p-3 bg-light rounded-3 border-start border-indigo border-3">
-                        <label class="d-block fs-xs fw-bold text-muted text-uppercase mb-1">Alamat / Lokasi Unit</label>
-                        <div class="text-dark small">${u.address || '<span class="text-muted italic">Tidak mencantumkan alamat</span>'}</div>
-                    </div>
+            <div class="mb-3">
+                <div class="p-3 bg-light rounded-3 border-start border-indigo border-3">
+                    <label class="d-block fs-xs fw-bold text-muted text-uppercase mb-1">Alamat / Lokasi Unit</label>
+                    <div class="text-dark small fw-semibold">${u.address || 'Tidak mencantumkan alamat'}</div>
                 </div>
+            </div>
 
-                <div class="col-12">
-                    <div class="p-3 bg-light rounded-3 border-start border-indigo border-3">
-                        <label class="d-block fs-xs fw-bold text-muted text-uppercase mb-1">Nomor Telepon</label>
-                        <div class="text-dark small">${u.phone || '-'}</div>
-                    </div>
+            <div class="mb-0">
+                <div class="p-3 bg-light rounded-3 border-start border-indigo border-3">
+                    <label class="d-block fs-xs fw-bold text-muted text-uppercase mb-1">Nomor Telepon</label>
+                    <div class="text-dark small fw-semibold">${u.phone || '-'}</div>
                 </div>
             </div>`;
 
-        // JIKA KURIR, TAMPILKAN DATA KENDARAAN (REVISI POIN #4)
+        // DATA KURIR (REVISI POIN #4)
         if (roleName === 'courier' && u.courier_detail) {
             detailHtml += `
-            <div class="mt-4 p-3 border border-indigo border-opacity-20 rounded-3 bg-white shadow-sm">
-                <label class="d-block fs-xs text-indigo fw-bold text-uppercase mb-3"><i class="ph-truck me-1"></i> Informasi Armada Kurir</label>
+            <div class="mt-3 p-3 border border-indigo border-opacity-20 rounded-3 bg-white shadow-sm">
+                <label class="d-block fs-xs text-indigo fw-bold text-uppercase mb-2"><i class="ph-truck me-1"></i> Informasi Armada Kurir</label>
                 <div class="row text-center">
                     <div class="col-6 border-end">
-                        <small class="text-muted d-block fs-xs">JENIS KENDARAAN</small>
-                        <span class="fw-bold text-dark">${u.courier_detail.vehicle_type.toUpperCase()}</span>
+                        <div class="fs-xs text-muted mb-1">KENDARAAN</div>
+                        <span class="fw-bold text-dark small">${u.courier_detail.vehicle_type.toUpperCase()}</span>
                     </div>
                     <div class="col-6">
-                        <small class="text-muted d-block fs-xs">NOMOR PLAT</small>
-                        <span class="fw-bold text-dark">${u.courier_detail.vehicle_plate}</span>
+                        <div class="fs-xs text-muted mb-1">NOMOR PLAT</div>
+                        <span class="fw-bold text-dark small">${u.courier_detail.vehicle_plate}</span>
                     </div>
                 </div>
             </div>`;
@@ -171,10 +177,9 @@
 
         document.getElementById('userDetailContent').innerHTML = detailHtml;
 
-        // Update tombol aksi di footer modal
         document.getElementById('footerActions').innerHTML = `
-            <button onclick="decide(${u.id}, 'reject')" class="btn btn-outline-danger rounded-pill px-3 fw-bold btn-sm">Tolak Akun</button>
-            <button onclick="decide(${u.id}, 'approve')" class="btn btn-success rounded-pill px-3 shadow-sm fw-bold btn-sm"><i class="ph-check-circle me-1"></i>Setujui Akun</button>
+            <button onclick="decide(${u.id}, 'reject')" class="btn btn-light text-danger fw-bold rounded-pill px-3 btn-sm">TOLAK</button>
+            <button onclick="decide(${u.id}, 'approve')" class="btn btn-indigo rounded-pill px-3 shadow-sm fw-bold btn-sm"><i class="ph-check-circle me-1"></i>SETUJUI AKUN</button>
         `;
 
         new bootstrap.Modal(document.getElementById('modalDetailUser')).show();
@@ -182,30 +187,27 @@
 
     function decide(id, action) {
         const title = action === 'approve' ? 'Setujui pendaftaran ini?' : 'Tolak pendaftaran ini?';
-        const confirmColor = action === 'approve' ? '#10b981' : '#ef4444';
-
-        const modalEl = document.getElementById('modalDetailUser');
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if(modalInstance) modalInstance.hide();
+        const confirmColor = action === 'approve' ? '#059669' : '#ef4444';
 
         Swal.fire({
             title: title,
-            text: "Konfirmasi aksi ini untuk memperbarui status akses pengguna.",
+            text: "Status akses pengguna akan segera diperbarui.",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: confirmColor,
             confirmButtonText: 'Ya, Lanjutkan',
             cancelButtonText: 'Batal',
-            reverseButtons: true
+            customClass: { confirmButton: 'btn btn-indigo', cancelButton: 'btn btn-light' }
         }).then(result => {
             if(result.isConfirmed) {
-                Swal.fire({ title: 'Sedang memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                bootstrap.Modal.getInstance(document.getElementById('modalDetailUser')).hide();
+                Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
                 axios.post(`/api/users/${id}/${action}`).then(res => {
                     Swal.fire('Berhasil!', res.data.message, 'success');
                     loadPending();
                 }).catch(err => {
-                    Swal.fire('Gagal', 'Terjadi kesalahan sistem otoritas.', 'error');
+                    Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error');
                 });
             }
         });
@@ -215,14 +217,17 @@
 </script>
 
 <style>
-    .bg-indigo { background-color: #5c6bc0 !important; }
-    .text-indigo { color: #5c6bc0 !important; }
-    .btn-indigo { background-color: #5c6bc0; color: #fff; border: none; }
-    .btn-indigo:hover { background-color: #3f51b5; color: #fff; }
-    .btn-outline-indigo { color: #5c6bc0; border-color: #5c6bc0; }
-    .btn-outline-indigo:hover { background-color: #5c6bc0; color: #fff; }
-    .italic { font-style: italic; }
-    .fs-xs { font-size: 0.7rem; }
-    .border-start-indigo { border-left: 3px solid #5c6bc0 !important; }
+    /* Styling Dasar Indigo Limitless */
+    .bg-indigo { background-color: #5c68e2 !important; }
+    .text-indigo { color: #5c68e2 !important; }
+    .btn-indigo { background-color: #5c68e2; color: #fff; border: none; }
+    .btn-indigo:hover { background-color: #4e59cf; color: #fff; }
+
+    .table td { padding: 0.85rem 1rem; }
+    .fs-xs { font-size: 0.75rem; }
+
+    /* Animasi Spinner */
+    .spinner { animation: rotation 2s infinite linear; display: inline-block; }
+    @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
 </style>
 @endsection

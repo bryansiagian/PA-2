@@ -6,16 +6,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\CmsController;
 
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 // Rute Root: Langsung cek autentikasi
@@ -31,11 +25,17 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
-// Logout
-
+// Authenticated Routes
 Route::middleware(['auth'])->group(function() {
+
+    // Dasar (Akses Semua Role)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // RUTE PROFILE (Baru ditambahkan)
+    Route::get('/profile', function () {
+    return view('admin.cms.profile'); // Mengarah ke admin/cms/profile.blade.php
+    })->name('profile.index');
 
     // VERIFIKASI USER (Admin & Operator - Revisi Dosen)
     Route::middleware(['permission:manage users'])->group(function() {
@@ -43,7 +43,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/reports', function() { return view('admin.reports'); })->name('reports');
     });
 
-    // MANAJEMEN AKUN (Hanya Admin)
+    // MANAJEMEN AKUN & CMS (Hanya Admin)
     Route::middleware(['role:admin'])->group(function() {
         Route::get('/admin/cms/post-categories', function() { return view('admin.cms.post_categories'); });
         Route::get('/admin/cms/profile', function() { return view('admin.cms.profile'); });
@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/operator/tracking/{id}', function ($id) { return view('operator.tracking', ['id' => $id]); })->name('operator.tracking');
     });
 
+    // CUSTOMER MODULE
     Route::middleware(['role:customer'])->group(function() {
         Route::get('/customer/requests', function() { return view('customer.requests'); });
         Route::get('/customer/history', function () { return view('customer.history'); })->name('customer.history');
@@ -72,6 +73,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/customer/tracking/{id}', function ($id) { return view('customer.tracking', ['id' => $id]); })->name('customer.tracking');
     });
 
+    // COURIER MODULE
     Route::middleware(['role:courier'])->group(function() {
         Route::get('/courier/tasks', function() { return view('courier.tasks'); });
         Route::get('/courier/available', function () { return view('courier.available'); })->name('courier.available');
@@ -79,4 +81,3 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/courier/history', function () { return view('courier.history'); })->name('courier.history');
     });
 });
-

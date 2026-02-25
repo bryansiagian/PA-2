@@ -20,7 +20,9 @@
         <div class="card-header bg-transparent border-bottom d-flex align-items-center py-3">
             <h6 class="mb-0 fw-bold"><i class="ph-tag me-2 text-indigo"></i>Daftar Kategori Aktif</h6>
             <div class="ms-auto">
-                <span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill">Database Terhubung</span>
+                <span class="badge bg-indigo text-white rounded-pill px-3 shadow-sm fw-bold">
+                <i class="ph-database me-1"></i> Database Terhubung
+                </span>
             </div>
         </div>
 
