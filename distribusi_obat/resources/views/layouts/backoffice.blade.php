@@ -15,42 +15,87 @@
 
     <style>
         /* ============================================================
-           GLOBAL FIX: SWEETALERT2 UNTUK TEMPLATE LIMITLESS
-           ============================================================ */
-        .swal2-icon {
-            width: 80px !important;
-            height: 80px !important;
-            margin: 1.25rem auto 0.5rem !important;
-            border-width: 4px !important;
-            line-height: 80px !important;
-        }
-        .swal2-icon .swal2-icon-content {
-            font-size: 3.75rem !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
+        ULTIMATE FIX: SWEETALERT2 FOR LIMITLESS TEMPLATE
+        ============================================================ */
+
+        /* 1. Perbaikan Container Utama */
         .swal2-popup {
-            font-family: 'Inter', sans-serif !important;
-            padding: 2rem !important;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
             border-radius: 1rem !important;
-            width: 25em !important;
+            padding: 2.5rem 1.5rem !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
         }
-        .swal2-title { font-size: 1.3rem !important; font-weight: 700 !important; color: #333 !important; }
-        .swal2-html-container { font-size: 0.95rem !important; color: #666 !important; }
+
+        /* 2. Perbaikan Ikon dan Animasi (Fix Skewed Checkmark) */
+        .swal2-icon {
+            border-width: 4px !important;
+            zoom: 0.8; /* Mengecilkan sedikit agar lebih elegan */
+            margin-top: 0.5rem !important;
+            margin-bottom: 1.5rem !important;
+        }
+
+        /* FIX KHUSUS: Garis centang yang miring/berantakan */
+        .swal2-icon.swal2-success [class^='swal2-success-line'] {
+            height: 5px !important;
+            background-color: #a5dc86 !important;
+        }
+
+        .swal2-icon.swal2-success .swal2-success-ring {
+            width: 100% !important;
+            height: 100% !important;
+            box-sizing: content-box !important; /* Paksa balik ke standar */
+        }
+
+        /* 3. Perbaikan Judul & Teks */
+        .swal2-title {
+            font-size: 1.4rem !important;
+            font-weight: 800 !important;
+            color: #1e293b !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .swal2-html-container {
+            font-size: 0.95rem !important;
+            color: #64748b !important;
+            line-height: 1.6 !important;
+        }
+
+        /* 4. Perbaikan Tombol (Limitless Style) */
+        .swal2-actions {
+            margin-top: 2rem !important;
+            gap: 10px !important;
+        }
+
         .swal2-styled.swal2-confirm {
-            background-color: #5c68e2 !important;
-            border-radius: 50px !important;
-            padding: 0.6rem 2rem !important;
+            background-color: #5c6bc0 !important; /* Indigo asli Limitless */
+            color: #fff !important;
+            border-radius: 0.5rem !important;
+            padding: 0.6rem 2.5rem !important;
             font-weight: 600 !important;
+            font-size: 0.875rem !important;
+            border: none !important;
+            transition: all 0.2s !important;
         }
+
+        .swal2-styled.swal2-confirm:hover {
+            background-color: #3f51b5 !important;
+            transform: translateY(-1px) !important;
+        }
+
         .swal2-styled.swal2-cancel {
             background-color: #f1f5f9 !important;
             color: #475569 !important;
-            border-radius: 50px !important;
-            padding: 0.6rem 2rem !important;
+            border-radius: 0.5rem !important;
+            padding: 0.6rem 2.5rem !important;
+            font-weight: 600 !important;
+            font-size: 0.875rem !important;
         }
-        .swal2-loader { border-color: #5c68e2 transparent #5c68e2 transparent !important; }
+
+        /* 5. Loading Spinner Fix */
+        .swal2-loader {
+            border-color: #5c6bc0 transparent #5c6bc0 transparent !important;
+        }
+
 
         /* Laravel Active Link Fix */
         .nav-link.active { background-color: rgba(var(--primary-rgb), .1); color: var(--primary) !important; }
@@ -479,11 +524,11 @@
 					</a>
 
 					<div class="dropdown-menu dropdown-menu-end">
-						<a href="{{ route('profile.index') }}" class="dropdown-item">
+						{{-- <a href="{{ route('profile.index') }}" class="dropdown-item">
                         <i class="ph-user-circle me-2"></i>
                          My profile
-                        </a>
-                        <div class="dropdown-divider"></div>
+                        </a> --}}
+                        {{-- <div class="dropdown-divider"></div> --}}
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit" class="dropdown-item text-danger">
@@ -612,6 +657,12 @@
                             <a href="/admin/cms/contacts" class="nav-link {{ request()->is('admin/cms/contacts') ? 'active' : '' }}">
                                 <i class="ph-phone"></i>
                                 <span>Kontak & Sosmed</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/cms/gallery" class="nav-link {{ request()->is('admin/cms/gallery') ? 'active' : '' }}">
+                                <i class="ph-picture"></i>
+                                <span>Galeri</span>
                             </a>
                         </li>
                         <li class="nav-item">
