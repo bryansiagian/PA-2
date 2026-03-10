@@ -68,6 +68,74 @@ class CmsController extends Controller {
         }
     }
 
+    // --- Manajemen Kategori Postingan (INI YANG KURANG) ---
+    public function indexPostCategories() {
+        try {
+            // withCount untuk menghitung jumlah berita/kegiatan di tiap kategori
+            return PostCategory::withCount(['posts' => function($q) {
+                $q->where('active', 1);
+            }])->where('active', 1)->latest()->get();
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function storePostCategory(Request $request) {
+        $request->validate(['name' => 'required|string|unique:post_categories,name']);
+
+        return DB::transaction(function() use ($request) {
+            $category = PostCategory::create([
+                'name' => $request->name,
+                'active' => 1
+            ]);
+
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => "CMS: Menambah kategori postingan baru - {$category->name}"
+            ]);
+
+            return response()->json(['message' => 'Kategori berhasil ditambahkan'], 201);
+        });
+    }
+
+    public function updatePostCategory(Request $request, $id) {
+        $category = PostCategory::findOrFail($id);
+        $request->validate(['name' => "required|string|unique:post_categories,name,{$id}"]);
+
+        return DB::transaction(function() use ($request, $category) {
+            $oldName = $category->name;
+            $category->update(['name' => $request->name]);
+
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => "CMS: Mengubah kategori postingan {$oldName} menjadi {$request->name}"
+            ]);
+
+            return response()->json(['message' => 'Kategori berhasil diperbarui']);
+        });
+    }
+
+    public function deletePostCategory($id) {
+        $category = PostCategory::findOrFail($id);
+
+        // Proteksi: Jangan hapus jika masih ada berita di kategori ini
+        if ($category->posts()->where('active', 1)->count() > 0) {
+            return response()->json(['message' => 'Gagal! Kategori ini masih digunakan oleh beberapa postingan aktif.'], 422);
+        }
+
+        return DB::transaction(function() use ($category) {
+            $name = $category->name;
+            $category->update(['active' => 0]);
+
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => "CMS: Menghapus kategori postingan - {$name}"
+            ]);
+
+            return response()->json(['message' => 'Kategori berhasil dihapus']);
+        });
+    }
+
     // --- Manajemen Berita & Kegiatan (Admin) ---
     public function indexPosts() {
         return Post::with(['category', 'author'])->where('active', 1)->latest()->get();
