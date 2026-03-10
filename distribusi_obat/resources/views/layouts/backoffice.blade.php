@@ -573,128 +573,150 @@
 
 
 				<!-- Main navigation -->
-				<div class="sidebar-section">
-					<ul class="nav nav-sidebar" data-nav-type="accordion">
+                <div class="sidebar-section">
+                    <ul class="nav nav-sidebar" data-nav-type="accordion">
 
                         <!-- DASHBOARD MODULE -->
-						<li class="nav-item-header pt-0">
-							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Main</div>
-							<i class="ph-dots-three sidebar-resize-show"></i>
-						</li>
-						<li class="nav-item">
-							<a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
-								<i class="ph-house"></i>
-								<span>Dashboard</span>
-							</a>
-						</li>
+                        <li class="nav-item-header pt-0">
+                            <div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Utama</div>
+                            <i class="ph-dots-three sidebar-resize-show"></i>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
+                                <i class="ph-layout"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
 
                         @can('view reports')
-						<li class="nav-item">
-							<a href="/reports" class="nav-link {{ request()->is('reports') ? 'active' : '' }}">
-								<i class="ph-chart-line"></i>
-								<span>Analytics</span>
-							</a>
-						</li>
+                        <li class="nav-item">
+                            <a href="/reports" class="nav-link {{ request()->is('reports') ? 'active' : '' }}">
+                                <i class="ph-chart-bar"></i>
+                                <span>Analytics</span>
+                            </a>
+                        </li>
                         @endcan
 
-                        <!-- VERIFICATION MODULE (Admin & Operator) -->
+                        <!-- VERIFICATION MODULE -->
                         @can('manage users')
                         <li class="nav-item-header">
-							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Verification</div>
-							<i class="ph-dots-three sidebar-resize-show"></i>
-						</li>
+                            <div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Verifikasi</div>
+                            <i class="ph-dots-three sidebar-resize-show"></i>
+                        </li>
                         <li class="nav-item">
                             <a href="/admin/users/pending" class="nav-link {{ request()->is('admin/users/pending') ? 'active' : '' }}">
-                                <i class="ph-user-plus"></i>
+                                <i class="ph-user-circle-plus"></i>
                                 <span>Permintaan Akun</span>
                             </a>
                         </li>
                         @endcan
 
-                        <!-- SYSTEM CONTROL (Admin Only) -->
+                        <!-- SYSTEM CONTROL -->
                         @role('admin')
                         <li class="nav-item-header">
-							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">System Control</div>
-							<i class="ph-dots-three sidebar-resize-show"></i>
-						</li>
+                            <div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Kontrol Sistem</div>
+                            <i class="ph-dots-three sidebar-resize-show"></i>
+                        </li>
                         <li class="nav-item">
-                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users') ? 'active' : '' }}">
-                                <i class="ph-users"></i>
+                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
+                                <i class="ph-users-three"></i>
                                 <span>Kelola Pengguna</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/logs" class="nav-link {{ request()->is('admin/logs') ? 'active' : '' }}">
-                                <i class="ph-shield-check"></i>
+                                <i class="ph-terminal-window"></i>
                                 <span>Log Sistem</span>
                             </a>
                         </li>
 
                         <!-- CMS MODULE -->
                         <li class="nav-item-header">
-							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Content Management</div>
-							<i class="ph-dots-three sidebar-resize-show"></i>
-						</li>
+                            <div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Manajemen Konten</div>
+                            <i class="ph-dots-three sidebar-resize-show"></i>
+                        </li>
                         <li class="nav-item">
                             <a href="/admin/cms/profile" class="nav-link {{ request()->is('admin/cms/profile') ? 'active' : '' }}">
-                                <i class="ph-info"></i>
+                                <i class="ph-briefcase"></i>
                                 <span>Profile Yayasan</span>
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="/admin/cms/org" class="nav-link {{ request()->is('admin/cms/org') ? 'active' : '' }}">
+                                <i class="ph-hierarchy"></i>
+                                <span>Struktur Organisasi</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="/admin/cms/post-categories" class="nav-link {{ request()->is('admin/cms/post-categories') ? 'active' : '' }}">
-                                <i class="ph-tag"></i>
+                                <i class="ph-list-dashes"></i>
                                 <span>Kategori Post</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/admin/cms/posts" class="nav-link {{ request()->is('admin/cms/posts') ? 'active' : '' }}">
+                            <a href="/admin/cms/posts" class="nav-link {{ request()->is('admin/cms/posts*') ? 'active' : '' }}">
                                 <i class="ph-newspaper"></i>
                                 <span>Berita & Kegiatan</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/contacts" class="nav-link {{ request()->is('admin/cms/contacts') ? 'active' : '' }}">
-                                <i class="ph-phone"></i>
+                                <i class="ph-address-book"></i>
                                 <span>Kontak & Sosmed</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/gallery" class="nav-link {{ request()->is('admin/cms/gallery') ? 'active' : '' }}">
-                                <i class="ph-picture"></i>
+                                <i class="ph-image"></i>
                                 <span>Galeri</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/files" class="nav-link {{ request()->is('admin/cms/files') ? 'active' : '' }}">
-                                <i class="ph-file-arrow-up"></i>
+                                <i class="ph-file-text"></i>
                                 <span>Dokumen & File</span>
                             </a>
                         </li>
                         @endrole
 
-                        <!-- WAREHOUSE MODULE (Admin & Operator) -->
+                        <!-- WAREHOUSE MODULE -->
                         @can('manage inventory')
                         <li class="nav-item-header">
-							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Gudang</div>
-							<i class="ph-dots-three sidebar-resize-show"></i>
-						</li>
+                            <div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Gudang & Stok</div>
+                            <i class="ph-dots-three sidebar-resize-show"></i>
+                        </li>
                         <li class="nav-item">
-                            <a href="/operator/drugs" class="nav-link {{ request()->is('operator/drugs') ? 'active' : '' }}">
+                            <a href="/operator/products" class="nav-link {{ request()->is('operator/products*') ? 'active' : '' }}">
                                 <i class="ph-pill"></i>
-                                <span>Stok & Katalog</span>
+                                <span>Katalog Produk</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/operator/categories" class="nav-link {{ request()->is('operator/categories') ? 'active' : '' }}">
-                                <i class="ph-tags"></i>
-                                <span>Kategori Obat</span>
+                            <a href="/operator/categories" class="nav-link {{ request()->is('operator/categories*') ? 'active' : '' }}">
+                                <i class="ph-unite"></i>
+                                <span>Kategori Produk</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/operator/requests" class="nav-link {{ request()->is('operator/requests') ? 'active' : '' }}">
-                                <i class="ph-clipboard-text"></i>
-                                <span>Antrian Request</span>
+                            <a href="/operator/orders" class="nav-link {{ request()->is('operator/orders*') ? 'active' : '' }}">
+                                <i class="ph-git-pull-request"></i>
+                                <span>Antrian Pesanan</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item-header">
+                            <div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Infrastruktur</div>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/operator/warehouses" class="nav-link {{ request()->is('operator/warehouses*') ? 'active' : '' }}">
+                                <i class="ph-warehouse"></i>
+                                <span>Daftar Gudang</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/operator/racks" class="nav-link {{ request()->is('operator/racks*') ? 'active' : '' }}">
+                                <i class="ph-squares-four"></i>
+                                <span>Daftar Rak</span>
                             </a>
                         </li>
                         @endcan
@@ -702,32 +724,31 @@
                         <!-- COURIER MODULE -->
                         @role('courier')
                         <li class="nav-item-header">
-							<div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Logistik</div>
-							<i class="ph-dots-three sidebar-resize-show"></i>
-						</li>
+                            <div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Logistik</div>
+                            <i class="ph-dots-three sidebar-resize-show"></i>
+                        </li>
                         <li class="nav-item">
                             <a href="/courier/available" class="nav-link {{ request()->is('courier/available') ? 'active' : '' }}">
-                                <i class="ph-megaphone"></i>
+                                <i class="ph-hand-grabbing"></i>
                                 <span>Bursa Tugas</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/courier/active" class="nav-link {{ request()->is('courier/active') ? 'active' : '' }}">
-                                <i class="ph-bicycle"></i>
+                                <i class="ph-truck"></i>
                                 <span>Tugas Aktif</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/courier/history" class="nav-link {{ request()->is('courier/history') ? 'active' : '' }}">
-                                <i class="ph-clock-counter-clockwise"></i>
+                                <i class="ph-clock-afternoon"></i>
                                 <span>Riwayat Selesai</span>
                             </a>
                         </li>
                         @endrole
 
-					</ul>
-				</div>
-				<!-- /main navigation -->
+                    </ul>
+                </div>
 
 			</div>
 			<!-- /sidebar content -->

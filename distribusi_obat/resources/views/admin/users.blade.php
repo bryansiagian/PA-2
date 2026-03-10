@@ -1,159 +1,221 @@
 @extends('layouts.backoffice')
 
-@section('page_title', 'Audit Log Sistem')
-
 @section('content')
 <div class="container-fluid">
-    <!-- Header Section -->
-    <div class="d-sm-flex align-items-sm-center justify-content-sm-between mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-0">Audit Logs Sistem</h4>
-            <div class="text-muted small">Rekam jejak aktivitas digital seluruh staf dalam ekosistem E-Pharma.</div>
+            <h4 class="fw-bold mb-0">Kelola Pengguna</h4>
+            <p class="text-muted small mb-0">Daftar akun Operator, Kurir, dan Mitra Faskes yang aktif.</p>
         </div>
-
-        <div class="mt-3 mt-sm-0">
-            <button onclick="fetchLogs()" class="btn btn-indigo rounded-pill px-4 shadow-sm fw-bold">
-                <i class="ph-arrows-clockwise me-2"></i> Perbarui Log
-            </button>
-        </div>
+        <button class="btn btn-indigo rounded-pill px-4 shadow-sm" onclick="openAddModal()">
+            <i class="ph-plus-circle me-2"></i> Tambah Pengguna
+        </button>
     </div>
 
-    <!-- TABLE CARD -->
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-header bg-transparent border-bottom d-flex align-items-center py-3">
-            <h6 class="mb-0 fw-bold"><i class="ph-activity me-2 text-indigo"></i>Jejak Aktivitas Terakhir</h6>
-            <div class="ms-auto text-muted small">
-                Status: <span class="text-success fw-bold">Live Tracking Online</span>
-            </div>
-        </div>
-
+    <div class="card border-0 shadow-sm rounded-3">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr class="fs-xs text-uppercase fw-bold text-muted">
-                        <th class="ps-3 py-3" style="width: 200px;">Waktu & Tanggal</th>
-                        <th style="width: 250px;">Aktor / Pengguna</th>
-                        <th>Aksi & Keterangan Aktivitas</th>
+                        <th class="ps-3">Nama & Email</th>
+                        <th>Role / Hak Akses</th>
+                        <th>Terdaftar Pada</th>
+                        <th class="text-center pe-3">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="logTableBody">
-                    <tr>
-                        <td colspan="3" class="text-center py-5">
-                            <div class="ph-spinner spinner text-indigo me-2"></div>
-                            <span class="text-muted">Sedang menyingkronkan database log...</span>
-                        </td>
-                    </tr>
+                <tbody id="userTableBody">
+                    <tr><td colspan="4" class="text-center py-5 text-muted">Memuat data pengguna...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
+<!-- MODAL: TAMBAH USER -->
+<div class="modal fade" id="modalUser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-header bg-indigo text-white border-0 py-3">
+                <h5 class="modal-title fw-bold" id="modalTitle">Tambah Pengguna Baru</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="userForm" onsubmit="submitUser(event)">
+                <!-- Cari bagian modal-body di dalam modalUser dan sesuaikan isinya -->
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted">Nama Lengkap</label>
+                        <input type="text" name="name" class="form-control" placeholder="Nama asli atau Nama Unit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted">Alamat Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="email@domain.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted">Kata Sandi</label>
+                        <input type="password" name="password" class="form-control" placeholder="Min. 6 karakter" required>
+                    </div>
+
+                    <!-- INPUT ALAMAT (Baru Ditambahkan) -->
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted">Alamat Lengkap / Lokasi Unit</label>
+                        <textarea name="address" class="form-control" rows="2" placeholder="Jl. Kesehatan No. 123..."></textarea>
+                        <small class="text-muted" style="font-size: 10px;">Wajib diisi untuk akun Mitra Faskes (Customer).</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted">Pilih Role</label>
+                        <select name="role_id" id="roleSelect" class="form-select" onchange="handleRoleChange()" required>
+                            <option value="" selected disabled>-- Pilih Role --</option>
+                            <!-- Diisi via JS fetchRoles -->
+                        </select>
+                        <!-- Penting: Input ini untuk membantu validasi required_if di Laravel -->
+                        <input type="hidden" name="role_name" id="role_name">
+                    </div>
+
+                    <!-- SEKSI KHUSUS KURIR -->
+                    <div id="courierFields" class="p-3 bg-light rounded-3 border-start border-start-width-5 border-start-indigo d-none mb-3">
+                        <h6 class="fw-bold text-indigo mb-3"><i class="ph-truck me-2"></i>Informasi Kendaraan</h6>
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted">Jenis Kendaraan</label>
+                            <select name="vehicle_type" class="form-select border-0">
+                                <option value="motorcycle">Sepeda Motor</option>
+                                <option value="car">Mobil / Van</option>
+                            </select>
+                        </div>
+                        <div class="mb-0">
+                            <label class="small fw-bold text-muted">Nomor Plat</label>
+                            <input type="text" name="vehicle_plate" class="form-control border-0" placeholder="Contoh: B 1234 ABC">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light py-2">
+                    <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">BATAL</button>
+                    <button type="submit" id="btnSubmit" class="btn btn-indigo px-4 fw-bold shadow-sm rounded-pill">SIMPAN AKUN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Header Token Global
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
 
-    function fetchLogs() {
-        const tableBody = document.getElementById('logTableBody');
+    const modalUser = new bootstrap.Modal(document.getElementById('modalUser'));
+    let roleList = [];
 
-        axios.get('/api/admin/logs')
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchRoles();
+        fetchUsers();
+    });
+
+    function fetchRoles() {
+        axios.get('/api/roles').then(res => {
+            roleList = res.data;
+            let opt = '<option value="" selected disabled>-- Pilih Role --</option>';
+            roleList.forEach(r => {
+                opt += `<option value="${r.id}" data-name="${r.name}">${r.name.toUpperCase()}</option>`;
+            });
+            document.getElementById('roleSelect').innerHTML = opt;
+        });
+    }
+
+    function handleRoleChange() {
+        const select = document.getElementById('roleSelect');
+        const selectedOption = select.options[select.selectedIndex];
+        const roleName = selectedOption.getAttribute('data-name');
+
+        // Simpan role name ke hidden input untuk validasi required_if di backend
+        document.getElementById('role_name').value = roleName;
+
+        const courierSection = document.getElementById('courierFields');
+        if (roleName === 'courier') {
+            courierSection.classList.remove('d-none');
+        } else {
+            courierSection.classList.add('d-none');
+        }
+    }
+
+    function fetchUsers() {
+        axios.get('/api/users').then(res => {
+            let html = '';
+            res.data.forEach(u => {
+                const roleName = u.roles[0] ? u.roles[0].name.toUpperCase() : 'NO ROLE';
+                const date = new Date(u.created_at).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+
+                html += `
+                <tr>
+                    <td class="ps-3">
+                        <div class="fw-bold text-dark">${u.name}</div>
+                        <div class="text-muted small">${u.email}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${roleName === 'CUSTOMER' ? 'bg-teal' : 'bg-indigo'} bg-opacity-10 text-indigo border-indigo border-opacity-25 px-2 py-1">
+                            ${roleName}
+                        </span>
+                    </td>
+                    <td><div class="small text-muted">${date}</div></td>
+                    <td class="text-center pe-3">
+                        <button onclick="deleteUser(${u.id})" class="btn btn-light btn-icon btn-sm rounded-pill text-danger shadow-none border">
+                            <i class="ph-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('userTableBody').innerHTML = html || '<tr><td colspan="4" class="text-center py-4">Tidak ada data.</td></tr>';
+        });
+    }
+
+    function openAddModal() {
+        document.getElementById('userForm').reset();
+        document.getElementById('courierFields').classList.add('d-none');
+        modalUser.show();
+    }
+
+    function submitUser(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        const formData = new FormData(e.target);
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ph-spinner spinner me-2"></i> Memproses...';
+
+        axios.post('/api/users', formData)
             .then(res => {
-                let html = '';
-                const logs = res.data;
-
-                if (!logs || logs.length === 0) {
-                    html = '<tr><td colspan="3" class="text-center py-5 text-muted italic small">Belum ada catatan aktivitas sistem yang terekam.</td></tr>';
-                } else {
-                    logs.forEach(log => {
-                        // 1. Format Waktu khas Indonesia
-                        const date = new Date(log.created_at);
-                        const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                        const dateStr = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-
-                        // 2. Data User (Spatie Safe)
-                        const user = log.user || { name: 'System/Deleted', roles: [] };
-                        const roleName = user.roles.length > 0 ? user.roles[0].name : 'no-role';
-
-                        // 3. Tema Aksi Berdasarkan Kata Kunci
-                        const theme = getActionTheme(log.action);
-
-                        html += `
-                        <tr class="border-bottom">
-                            <td class="ps-3">
-                                <div class="fw-bold text-indigo small">${timeStr}</div>
-                                <div class="text-muted" style="font-size: 11px;">${dateStr}</div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-indigo text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm fw-bold" style="width: 34px; height: 34px; font-size: 11px;">
-                                        ${user.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark small">${user.name}</div>
-                                        <span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill" style="font-size: 9px; letter-spacing: 0.5px;">
-                                            ${roleName.toUpperCase()}
-                                        </span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-start py-1">
-                                    <div class="${theme.color} me-3 mt-1">
-                                        <i class="ph-${theme.icon} ph-lg"></i>
-                                    </div>
-                                    <div class="small">
-                                        <div class="${theme.bold ? 'fw-bold text-dark' : 'text-muted'}">${log.action}</div>
-                                        <div class="text-muted fs-xs opacity-75">Transaction Source: API Engine</div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>`;
-                    });
-                }
-                tableBody.innerHTML = html;
+                modalUser.hide();
+                Swal.fire('Berhasil', res.data.message, 'success');
+                fetchUsers();
             })
             .catch(err => {
-                console.error("Audit Log Error:", err);
-                tableBody.innerHTML = `<tr><td colspan="3" class="text-center py-5 text-danger small">Gagal memuat log. Periksa koneksi API Anda.</td></tr>`;
+                Swal.fire('Gagal', err.response.data.message || 'Terjadi kesalahan', 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = 'SIMPAN AKUN';
             });
     }
 
-    // Helper untuk memetakan ikon Phosphor berdasarkan kata kunci aksi
-    function getActionTheme(action) {
-        const act = action.toUpperCase();
-
-        // Aturan: { icon, color, bold }
-        if(act.includes('LOGIN'))   return { icon: 'sign-in', color: 'text-info', bold: false };
-        if(act.includes('LOGOUT'))  return { icon: 'sign-out', color: 'text-muted', bold: false };
-        if(act.includes('APPROVE')) return { icon: 'check-circle', color: 'text-success', bold: true };
-        if(act.includes('REJECT'))  return { icon: 'prohibit', color: 'text-danger', bold: true };
-        if(act.includes('DELETE'))  return { icon: 'trash', color: 'text-danger', bold: true };
-        if(act.includes('CANCEL'))  return { icon: 'x-circle', color: 'text-danger', bold: true };
-        if(act.includes('CREATE') || act.includes('TAMBAH')) return { icon: 'plus-circle', color: 'text-primary', bold: true };
-        if(act.includes('STOCK'))   return { icon: 'package', color: 'text-warning', bold: true };
-        if(act.includes('CMS') || act.includes('PROFILE'))   return { icon: 'browser', color: 'text-indigo', bold: true };
-
-        return { icon: 'note', color: 'text-dark', bold: false };
+    function deleteUser(id) {
+        Swal.fire({
+            title: 'Hapus Akun?',
+            text: "Akun akan dihapus permanen dari sistem.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef5350',
+            confirmButtonText: 'Ya, Hapus'
+        }).then(res => {
+            if (res.isConfirmed) {
+                axios.delete(`/api/users/${id}`).then(() => {
+                    Swal.fire('Terhapus', 'Akun berhasil dihapus', 'success');
+                    fetchUsers();
+                });
+            }
+        });
     }
-
-    document.addEventListener('DOMContentLoaded', fetchLogs);
 </script>
 
 <style>
-    /* Styling Tambahan Limitless */
-    .bg-indigo { background-color: #5c6bc0 !important; }
-    .text-indigo { color: #5c6bc0 !important; }
-    .btn-indigo { background-color: #5c6bc0; color: #fff; border: none; }
-    .btn-indigo:hover { background-color: #3f51b5; color: #fff; }
-    .bg-opacity-10 { --bs-bg-opacity: 0.1; }
-    .fs-xs { font-size: 0.7rem; }
-
-    /* Menyelaraskan padding sel tabel */
-    .table td { padding: 0.85rem 1.25rem; vertical-align: top; }
-    .table th { padding: 0.75rem 1.25rem; border-top: none; }
-
-    /* Animasi Hover Baris */
-    .table tbody tr { transition: background-color 0.2s; }
-    .table tbody tr:hover { background-color: rgba(92, 107, 192, 0.03); }
+    .btn-indigo { background-color: #5c6bc0; color: #fff; }
+    .spinner { animation: rotation 2s infinite linear; display: inline-block; }
+    @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
 </style>
 @endsection

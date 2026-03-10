@@ -10,12 +10,14 @@ return new class extends Migration
     {
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('drug_request_id')->constrained('drug_requests')->onDelete('cascade');
+            $table->foreignUuid('product_order_id')->unique()->constrained()->onDelete('cascade');
             $table->foreignId('courier_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('tracking_number')->unique();
-            $table->enum('status', ['ready', 'claimed', 'picked_up', 'in_transit', 'delivered'])->default('ready');
-            $table->string('proof_image')->nullable();
-            $table->timestamp('picked_up_at')->nullable();
+            $table->foreignId('delivery_status_id')->constrained('delivery_status');
+            $table->string('image')->nullable(); // Proof image
+            $table->string('receiver_name')->nullable();
+            $table->string('receiver_relation')->nullable();
+            $table->text('delivery_note')->nullable();
             $table->timestamp('delivered_at')->nullable();
             $table->timestamps();
         });

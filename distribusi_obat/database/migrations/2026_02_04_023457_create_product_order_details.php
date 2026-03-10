@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stock_logs', function (Blueprint $table) {
-            $table->id();
+        Schema::create('product_order_details', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('product_order_id')->constrained()->onDelete('cascade');
             $table->foreignUuid('product_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained();
-            $table->enum('type', ['in', 'out']);
             $table->integer('quantity');
-            $table->enum('reference', ['Manual', 'Request']);
+            $table->decimal('price_at_order', 15, 2); // Harga sejarah saat dipesan
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('stock_logs');
+        Schema::dropIfExists('product_order_details');
     }
 };

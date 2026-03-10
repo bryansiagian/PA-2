@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StockLog extends Model {
     protected $fillable = [
-        'drug_id',
+        'product_id',
         'user_id',
         'type',
         'quantity',
         'reference'
     ];
-    
-    public function drug() { return $this->belongsTo(Drug::class); }
+
+    public function product() {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
 }

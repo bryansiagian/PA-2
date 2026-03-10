@@ -4,16 +4,16 @@
 <style>
     /* Custom Styling untuk menyelaraskan dengan MediNest */
     .page-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 40px 0;
-        border-bottom: 1px solid #dee2e6;
-        margin-bottom: 40px;
+        background: transparent;
+        padding: 30px 0;
+        margin-bottom: 25px;
     }
     .section-heading {
-        color: #2c4964; /* Warna biru MediNest */
+        color: #2c4964;
         font-weight: 700;
         position: relative;
         padding-bottom: 15px;
+        font-size: 1.5rem;
     }
     .section-heading::after {
         content: "";
@@ -21,7 +21,7 @@
         display: block;
         width: 50px;
         height: 3px;
-        background: #3fbbc0; /* Warna aksen MediNest */
+        background: #3fbbc0;
         bottom: 0;
         left: 0;
     }
@@ -30,7 +30,8 @@
         border-radius: 15px;
         transition: all 0.3s ease;
         background: #fff;
-        border-left: 5px solid #3fbbc0; /* Aksen kiri */
+        border-left: 5px solid #3fbbc0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .card-history:hover {
         transform: translateY(-5px);
@@ -39,13 +40,15 @@
     .req-number {
         color: #3fbbc0;
         font-family: 'Ubuntu', sans-serif;
+        font-size: 1.1rem;
     }
     .badge-status {
-        font-size: 0.75rem;
-        padding: 6px 15px;
-        font-weight: 600;
+        font-size: 0.7rem;
+        padding: 8px 12px;
+        font-weight: 700;
         letter-spacing: 0.5px;
-        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
     }
     .btn-medinest {
         background: #3fbbc0;
@@ -53,23 +56,23 @@
         border-radius: 25px;
         padding: 8px 20px;
         transition: 0.3s;
+        font-weight: 600;
     }
-    .btn-medinest:hover {
-        background: #329ea2;
-        color: white;
-    }
-    .empty-state-icon {
-        color: #3fbbc0;
-        opacity: 0.2;
-    }
-    .modal-content {
-        border-radius: 20px;
-        border: none;
-    }
-    .modal-header {
-        background: #f8f9fa;
-        border-radius: 20px 20px 0 0;
-        border-bottom: 1px solid #eee;
+
+    @media (max-width: 768px) {
+        .page-header { padding: 20px 0; }
+        .section-heading { font-size: 1.25rem; }
+        .btn-group-mobile {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+        }
+        .btn-group-mobile .btn {
+            border-radius: 10px !important;
+            margin: 0 !important;
+            width: 100%;
+        }
     }
 </style>
 
@@ -77,19 +80,13 @@
 <div class="page-header">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-md-6">
-                <h2 class="section-heading">Riwayat Permintaan Obat</h2>
-                <p class="text-muted">Pantau status distribusi logistik unit kesehatan Anda secara real-time.</p>
+            <div class="col-12 col-md-6 mb-3 mb-md-0 text-center text-md-start">
+                <h2 class="section-heading d-inline-block d-md-block">Riwayat Permintaan</h2>
+                <p class="text-muted small mb-0">Pantau distribusi logistik secara real-time.</p>
             </div>
-            <div class="col-md-6 text-md-end">
-                <nav aria-label="breadcrumb" class="d-inline-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="/dashboard">Portal</a></li>
-                        <li class="breadcrumb-item active">Riwayat</li>
-                    </ol>
-                </nav>
-                <button onclick="fetchHistory()" class="btn btn-outline-secondary rounded-pill px-4 ms-2 shadow-sm bg-white">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Sinkronisasi
+            <div class="col-12 col-md-6 text-center text-md-end">
+                <button onclick="fetchHistory()" class="btn btn-white btn-sm rounded-pill px-4 border shadow-sm">
+                    <i class="bi bi-arrow-clockwise me-1 text-info"></i> Sinkronisasi
                 </button>
             </div>
         </div>
@@ -99,18 +96,15 @@
 <div class="container mb-5">
     <!-- Loading State -->
     <div id="loadingHistory" class="text-center py-5">
-        <div class="spinner-border text-info" role="status" style="width: 3rem; height: 3rem;"></div>
-        <p class="mt-3 text-muted fw-bold">Menghubungkan ke Server E-Pharma...</p>
+        <div class="spinner-border text-info" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+        <p class="mt-3 text-muted small fw-bold">Menghubungkan ke Server...</p>
     </div>
 
     <!-- Empty State -->
     <div id="emptyHistory" class="text-center py-5 d-none bg-white rounded-4 shadow-sm border">
-        <div class="mb-4">
-            <i class="bi bi-clipboard2-pulse empty-state-icon" style="font-size: 6rem;"></i>
-        </div>
-        <h4 class="fw-bold">Belum Ada Permintaan</h4>
-        <p class="text-muted mx-auto" style="max-width: 400px;">Unit Anda belum melakukan pemesanan stok obat. Silakan buat permintaan baru melalui katalog produk.</p>
-        <a href="/#katalog" class="btn btn-medinest mt-3 px-5 shadow">Mulai Pesan</a>
+        <i class="bi bi-clipboard2-pulse opacity-25" style="font-size: 4rem; color: #3fbbc0;"></i>
+        <h4 class="fw-bold mt-3">Belum Ada Permintaan</h4>
+        <a href="/#katalog" class="btn btn-medinest mt-2 px-5 shadow">Mulai Pesan</a>
     </div>
 
     <!-- History List -->
@@ -122,16 +116,14 @@
 <!-- Modal Detail -->
 <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg">
-            <div class="modal-header">
-                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-medical me-2 text-info"></i>Rincian Item</h5>
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-light">
+                <h6 class="fw-bold mb-0 text-secondary"><i class="bi bi-file-earmark-medical me-2 text-info"></i>Rincian Item</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4" id="detailContent">
-                <!-- Data item via JS -->
-            </div>
+            <div class="modal-body p-3" id="detailContent"></div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-light rounded-pill w-100" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -149,7 +141,8 @@
         listContainer.innerHTML = '';
         empty.classList.add('d-none');
 
-        axios.get('/api/requests')
+        // PERBAIKAN: Ganti URL dari /api/requests menjadi /api/orders
+        axios.get('/api/orders')
             .then(res => {
                 loading.classList.add('d-none');
                 const data = res.data;
@@ -161,47 +154,58 @@
 
                 let html = '';
                 data.forEach(req => {
-                    const statusConfig = getStatusBadge(req.status);
+                    // Karena menggunakan Lookup Status, ambil req.status.name
+                    const statusName = req.status ? req.status.name : 'Unknown';
+                    const statusConfig = getStatusBadge(statusName.toLowerCase());
+
                     const date = new Date(req.created_at).toLocaleDateString('id-ID', {
                         day: 'numeric', month: 'short', year: 'numeric'
                     });
 
-                    const canCancel = req.status === 'pending' || req.status === 'approved';
+                    // Cek tipe pengambilan (Self Pickup biasanya ID 2 di Seeder)
+                    const isPickup = req.product_order_delivery_id == 2;
+                    let statusText = statusName.toUpperCase();
+
+                    if (statusName === 'Processed' && isPickup) {
+                        statusText = "SIAP DIAMBIL";
+                    }
+
+                    const canCancel = statusName === 'Pending';
                     const deliveryId = req.delivery ? req.delivery.id : null;
 
                     html += `
-                    <div class="col-12 mb-4">
-                        <div class="card card-history shadow-sm">
-                            <div class="card-body p-4">
+                    <div class="col-12 mb-3">
+                        <div class="card card-history">
+                            <div class="card-body p-3 p-md-4">
                                 <div class="row align-items-center">
-                                    <div class="col-md-2 mb-3 mb-md-0">
-                                        <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 11px;">ID Transaksi</div>
-                                        <h5 class="req-number fw-bold mb-0">#REQ-${req.id}</h5>
+                                    <div class="col-6 col-md-3">
+                                        <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 9px;">ID Pesanan</div>
+                                        <h6 class="req-number fw-bold mb-0 text-truncate">#${req.id.substring(0,8)}...</h6>
                                     </div>
-                                    <div class="col-md-3 mb-3 mb-md-0">
-                                        <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 11px;">Waktu Pengajuan</div>
-                                        <div class="text-dark fw-semibold"><i class="bi bi-calendar3 me-2 text-info"></i>${date}</div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 9px;">Tanggal</div>
+                                        <div class="text-dark fw-bold small"><i class="bi bi-calendar3 me-1 text-info"></i>${date}</div>
                                     </div>
-                                    <div class="col-md-3 mb-3 mb-md-0 text-center text-md-start">
-                                        <div class="small text-muted text-uppercase mb-2 fw-bold" style="font-size: 11px;">Status Logistik</div>
+                                    <div class="col-12 col-md-3 my-3 my-md-0 text-center text-md-start">
+                                        <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 9px;">Status Logistik</div>
                                         <span class="badge rounded-pill badge-status ${statusConfig.class}">
-                                            ${statusConfig.icon} ${req.status.toUpperCase()}
+                                            ${statusConfig.icon} ${statusText}
                                         </span>
                                     </div>
-                                    <div class="col-md-4 text-md-end">
-                                        <div class="btn-group">
-                                            <button onclick="viewDetail(${req.id})" class="btn btn-outline-info rounded-pill px-3 me-2">
+                                    <div class="col-12 col-md-3 text-center text-md-end">
+                                        <div class="btn-group-mobile">
+                                            <button onclick="viewDetail('${req.id}')" class="btn btn-outline-info rounded-pill px-3">
                                                 <i class="bi bi-eye"></i> Detail
                                             </button>
 
-                                            ${(req.status === 'shipping' || req.status === 'completed') && deliveryId ? `
+                                            ${(statusName === 'Shipping' || statusName === 'Completed') && deliveryId ? `
                                                 <a href="/customer/tracking/${deliveryId}" class="btn btn-medinest shadow-sm">
                                                     <i class="bi bi-geo-alt"></i> Lacak
                                                 </a>
                                             ` : ''}
 
                                             ${canCancel ? `
-                                                <button onclick="cancelRequest(${req.id})" class="btn btn-outline-danger rounded-pill px-3 ms-1">
+                                                <button onclick="cancelRequest('${req.id}')" class="btn btn-outline-danger rounded-pill px-3">
                                                     <i class="bi bi-trash"></i> Batal
                                                 </button>
                                             ` : ''}
@@ -216,19 +220,14 @@
             })
             .catch(err => {
                 loading.classList.add('d-none');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Koneksi Terputus',
-                    text: 'Gagal sinkronisasi data dengan server logistik.',
-                    confirmButtonColor: '#3fbbc0'
-                });
+                console.error(err);
             });
     }
 
     function getStatusBadge(status) {
         switch(status) {
             case 'pending':   return { class: 'bg-warning text-dark', icon: '<i class="bi bi-hourglass-split me-1"></i>' };
-            case 'approved':  return { class: 'bg-info text-white', icon: '<i class="bi bi-check2-all me-1"></i>' };
+            case 'processed': return { class: 'bg-info text-white', icon: '<i class="bi bi-check2-all me-1"></i>' };
             case 'rejected':  return { class: 'bg-danger text-white', icon: '<i class="bi bi-x-octagon me-1"></i>' };
             case 'shipping':  return { class: 'bg-primary text-white', icon: '<i class="bi bi-truck me-1"></i>' };
             case 'completed': return { class: 'bg-success text-white', icon: '<i class="bi bi-check-circle-fill me-1"></i>' };
@@ -237,62 +236,59 @@
         }
     }
 
+    function viewDetail(id) {
+        const modalBody = document.getElementById('detailContent');
+        modalBody.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-info spinner-border-sm"></div></div>';
+        new bootstrap.Modal(document.getElementById('modalDetail')).show();
+
+        // Ganti ke /api/orders
+        axios.get(`/api/orders`).then(res => {
+            const order = res.data.find(r => r.id === id);
+            if(!order) return;
+
+            let itemsHtml = '<div class="list-group list-group-flush small">';
+            order.items.forEach(item => {
+                const name = item.product ? item.product.name : 'Produk tidak ditemukan';
+                itemsHtml += `
+                <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-0 border-light">
+                    <div>
+                        <div class="fw-bold text-dark">${name}</div>
+                        <small class="text-muted">Harga: Rp${Number(item.price_at_order).toLocaleString()}</small>
+                    </div>
+                    <span class="badge bg-light text-primary rounded-pill border px-2">Qty: ${item.quantity}</span>
+                </div>`;
+            });
+            itemsHtml += `
+                <div class="mt-3 pt-2 border-top">
+                    <div class="d-flex justify-content-between fw-bold text-indigo">
+                        <span>Total Pembayaran</span>
+                        <span>Rp${Number(order.total).toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+            itemsHtml += '</div>';
+            modalBody.innerHTML = itemsHtml;
+        });
+    }
+
     function cancelRequest(id) {
         Swal.fire({
             title: 'Batalkan Pesanan?',
-            text: "Permintaan stok akan dibatalkan secara permanen.",
+            text: 'Pesanan yang dibatalkan tidak dapat diproses kembali.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3fbbc0',
-            confirmButtonText: 'Ya, Batalkan!',
-            cancelButtonText: 'Kembali',
-            borderRadius: '15px'
+            confirmButtonText: 'Ya, Batalkan'
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-                axios.post(`/api/requests/${id}/cancel`)
-                    .then(res => {
-                        Swal.fire({ icon: 'success', title: 'Dibatalkan', text: res.data.message, confirmButtonColor: '#3fbbc0' });
-                        fetchHistory();
-                    })
-                    .catch(err => {
-                        Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error');
-                    });
+                // Ganti ke /api/orders
+                axios.post(`/api/orders/${id}/cancel`).then(() => {
+                    Swal.fire('Dibatalkan', 'Pesanan berhasil dibatalkan', 'success');
+                    fetchHistory();
+                });
             }
         });
-    }
-
-    function viewDetail(id) {
-        const modalBody = document.getElementById('detailContent');
-        modalBody.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-info"></div></div>';
-        new bootstrap.Modal(document.getElementById('modalDetail')).show();
-
-        axios.get(`/api/requests`)
-            .then(res => {
-                const request = res.data.find(r => r.id === id);
-                if (!request) return;
-
-                let itemsHtml = '<div class="list-group list-group-flush">';
-                request.items.forEach(item => {
-                    const name = item.drug ? item.drug.name : `<span class="text-danger font-italic">${item.custom_drug_name} (Manual)</span>`;
-                    const unit = item.drug ? item.drug.unit : (item.custom_unit || '-');
-                    itemsHtml += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-0">
-                        <div>
-                            <div class="fw-bold text-dark" style="font-family: 'Poppins', sans-serif;">${name}</div>
-                            <small class="text-muted">Kemasan: ${unit}</small>
-                        </div>
-                        <span class="badge bg-light text-info rounded-pill border px-3">Qty: ${item.quantity}</span>
-                    </div>`;
-                });
-                itemsHtml += '</div>';
-
-                if(request.notes) {
-                    itemsHtml += `<div class="mt-3 p-3 bg-light rounded-3 small border-start border-info border-3"><b>Catatan:</b> ${request.notes}</div>`;
-                }
-                modalBody.innerHTML = itemsHtml;
-            });
     }
 
     document.addEventListener('DOMContentLoaded', fetchHistory);

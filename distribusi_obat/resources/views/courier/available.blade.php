@@ -5,8 +5,8 @@
     <!-- Header Page -->
     <div class="d-flex align-items-center mb-3">
         <div class="flex-fill">
-            <h4 class="fw-bold mb-0">Bursa Tugas Tersedia</h4>
-            <div class="text-muted">Daftar paket yang siap dijemput di gudang pusat</div>
+            <h4 class="fw-bold mb-0 text-dark">Bursa Tugas Tersedia</h4>
+            <div class="text-muted small">Daftar paket yang siap dijemput di gudang pusat</div>
         </div>
         <div class="ms-3">
             <button onclick="fetchAvailable()" class="btn btn-light btn-icon shadow-sm rounded-circle" title="Refresh Bursa">
@@ -15,13 +15,13 @@
         </div>
     </div>
 
-    <!-- Statistik Ringkas (Optional for UX) -->
+    <!-- Statistik Ringkas Kurir -->
     <div class="row mb-3">
         <div class="col-12">
             <div class="alert bg-indigo text-white border-0 shadow-sm rounded-3 d-flex align-items-center mb-3">
                 <i class="ph-info ph-2x me-3"></i>
                 <div>
-                    <span class="fw-bold">Informasi:</span> Silakan pilih paket yang sesuai dengan rute Anda. Setelah menekan "Ambil Tugas", Anda bertanggung jawab penuh atas keamanan paket tersebut.
+                    <span class="fw-bold">Informasi Kendaraan:</span> Sistem otomatis memfilter paket yang sesuai dengan jenis kendaraan Anda. Silakan ambil tugas jika Anda sudah siap di lokasi gudang.
                 </div>
             </div>
         </div>
@@ -42,13 +42,13 @@
      ========================================== -->
 <div class="modal fade" id="modalItems" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
+        <div class="modal-content border-0 shadow-lg rounded-3">
             <div class="modal-header bg-indigo text-white border-0 py-3">
                 <h6 class="modal-title fw-bold"><i class="ph-package me-2"></i>Rincian Isi Paket</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0" id="modalItemsBody">
-                <!-- List obat diisi via JS -->
+                <!-- List produk diisi via JS -->
             </div>
             <div class="modal-footer bg-light border-0 py-2">
                 <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">TUTUP</button>
@@ -73,7 +73,7 @@
                             <div class="card-body">
                                 <i class="ph-package ph-4x text-muted opacity-25 mb-3"></i>
                                 <h5 class="fw-bold text-muted">Bursa Sedang Kosong</h5>
-                                <p class="text-muted mx-auto" style="max-width: 400px;">Belum ada paket baru yang disiapkan oleh operator gudang. Silakan refresh halaman beberapa saat lagi.</p>
+                                <p class="text-muted mx-auto" style="max-width: 400px;">Belum ada paket baru yang sesuai dengan kendaraan Anda. Silakan periksa kembali beberapa saat lagi.</p>
                                 <button onclick="fetchAvailable()" class="btn btn-indigo rounded-pill px-4 mt-2">
                                     <i class="ph-arrows-clockwise me-2"></i>Cek Lagi
                                 </button>
@@ -82,7 +82,11 @@
                     </div>`;
                 } else {
                     res.data.forEach(d => {
-                        const itemsJson = JSON.stringify(d.request.items).replace(/"/g, '&quot;');
+                        // Data dari backend sekarang menggunakan relasi d.order (sebelumnya d.request)
+                        const itemsJson = JSON.stringify(d.order.items).replace(/"/g, '&quot;');
+                        const vehicleName = d.order.type ? d.order.type.name : 'Motorcycle';
+                        const address = d.order.user.address || 'Alamat tidak tersedia';
+
                         html += `
                         <div class="col-md-6 col-lg-4">
                             <div class="card border-0 shadow-sm rounded-3 h-100 task-card">
@@ -92,24 +96,30 @@
                                             <i class="ph-hash-straight me-1"></i>${d.tracking_number}
                                         </span>
                                         <button onclick="showItems('${itemsJson}')" class="btn btn-sm btn-light text-indigo border-0 rounded-pill px-3 fw-bold">
-                                            <i class="ph-magnifying-glass me-1"></i>Detail
+                                            <i class="ph-magnifying-glass me-1"></i>Detail Isi
                                         </button>
                                     </div>
 
+                                    <div class="mb-2">
+                                        <div class="fs-xs text-muted text-uppercase fw-bold mb-1">Tujuan Faskes</div>
+                                        <h6 class="fw-bold text-dark mb-0">${d.order.user.name}</h6>
+                                    </div>
+
                                     <div class="mb-3">
-                                        <div class="fs-xs text-muted text-uppercase fw-bold mb-1">Penerima</div>
-                                        <h6 class="fw-bold text-dark mb-0">${d.request.user.name}</h6>
+                                        <span class="badge bg-light text-indigo border-indigo border-opacity-25 rounded-pill px-2">
+                                            <i class="ph-truck me-1"></i> ${vehicleName}
+                                        </span>
                                     </div>
 
                                     <div class="mb-4">
-                                        <div class="fs-xs text-muted text-uppercase fw-bold mb-1">Tujuan Pengiriman</div>
+                                        <div class="fs-xs text-muted text-uppercase fw-bold mb-1">Alamat Tujuan</div>
                                         <div class="small text-dark d-flex align-items-start">
                                             <i class="ph-map-pin text-danger me-2 mt-1"></i>
-                                            <span>${d.request.user.address || 'Alamat tidak lengkap'}</span>
+                                            <span class="text-limit-2-row">${address}</span>
                                         </div>
                                     </div>
 
-                                    <button onclick="claimTask(${d.id})" class="btn btn-indigo w-100 fw-bold shadow-sm py-2 rounded-pill">
+                                    <button onclick="claimTask('${d.id}')" class="btn btn-indigo w-100 fw-bold shadow-sm py-2 rounded-pill">
                                         <i class="ph-hand-pointing me-2"></i>AMBIL TUGAS INI
                                     </button>
                                 </div>
@@ -120,7 +130,8 @@
                 container.innerHTML = html;
             })
             .catch(err => {
-                container.innerHTML = '<div class="col-12 text-center text-danger py-5 fw-bold"><i class="ph-warning-octagon me-2"></i>Gagal terhubung ke server.</div>';
+                console.error(err);
+                container.innerHTML = '<div class="col-12 text-center text-danger py-5 fw-bold"><i class="ph-warning-octagon me-2"></i>Gagal memuat data. Periksa koneksi internet Anda.</div>';
             });
     }
 
@@ -128,8 +139,9 @@
         const items = JSON.parse(encoded);
         let html = '<div class="list-group list-group-flush">';
         items.forEach(i => {
-            const name = i.drug ? i.drug.name : `<span class="text-danger fw-bold">${i.custom_drug_name} (Manual)</span>`;
-            const unit = i.drug ? i.drug.unit : (i.custom_unit || 'Unit');
+            // Menggunakan i.product.name sesuai relasi terbaru
+            const name = i.product ? i.product.name : 'Produk Tidak Diketahui';
+            const unit = i.product ? i.product.unit : 'Unit';
             html += `
                 <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3">
                     <div class="d-flex align-items-center">
@@ -151,28 +163,32 @@
 
     function claimTask(id) {
         Swal.fire({
-            title: 'Ambil Tugas Ini?',
-            text: "Pastikan Anda sedang berada di gudang pusat untuk menjemput paket.",
+            title: 'Konfirmasi Tugas',
+            text: "Pastikan Anda sudah berada di lokasi gudang untuk mengambil paket ini.",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Ambil Tugas',
-            confirmButtonColor: '#4f46e5',
+            confirmButtonText: 'Ya, Ambil',
+            confirmButtonColor: '#5c68e2',
             cancelButtonText: 'Batal',
-            customClass: { confirmButton: 'btn btn-indigo px-4', cancelButton: 'btn btn-light px-4' },
-            buttonsStyling: true
+            customClass: {
+                confirmButton: 'btn btn-indigo px-4 rounded-pill',
+                cancelButton: 'btn btn-light px-4 rounded-pill'
+            }
         }).then(result => {
             if(result.isConfirmed) {
-                axios.post(`/api/deliveries/claim/${id}`).then(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Tugas Diambil!',
-                        text: 'Tugas telah dipindahkan ke daftar tugas aktif Anda.',
-                        confirmButtonColor: '#4f46e5'
-                    }).then(() => window.location.href = '/courier/active');
-                }).catch(() => {
-                    Swal.fire('Gagal', 'Maaf, tugas kemungkinan sudah diambil oleh kurir lain.', 'error');
-                    fetchAvailable();
-                });
+                axios.post(`/api/deliveries/claim/${id}`)
+                    .then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Tugas Diambil!',
+                            text: 'Segera lakukan pengiriman paket.',
+                            confirmButtonColor: '#5c68e2'
+                        }).then(() => window.location.href = '/courier/active');
+                    })
+                    .catch(err => {
+                        Swal.fire('Gagal', err.response?.data?.message || 'Tugas sudah diambil kurir lain.', 'error');
+                        fetchAvailable();
+                    });
             }
         });
     }
@@ -181,22 +197,25 @@
 </script>
 
 <style>
-    /* Styling Dasar Limitless */
+    /* Styling Indigo Limitless */
     .bg-indigo { background-color: #5c68e2 !important; }
     .text-indigo { color: #5c68e2 !important; }
     .btn-indigo { background-color: #5c68e2; color: #fff; border: none; }
     .btn-indigo:hover { background-color: #4e59cf; color: #fff; }
 
-    .card { border-radius: 0.5rem; transition: all 0.2s ease-in-out; }
-    .task-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+    /* Card & Animation */
+    .task-card { transition: all 0.3s ease; border: 1px solid rgba(0,0,0,.05) !important; }
+    .task-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
 
+    /* Text Helpers */
+    .text-limit-2-row {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .fs-xs { font-size: 0.7rem; }
     .ph-4x { font-size: 4rem; }
-    .fs-xs { font-size: 0.75rem; }
-    .fs-base { font-size: 1rem; }
-
-    .border-dashed { border-style: dashed !important; }
-
-    /* Custom scroll for modal body */
-    #modalItemsBody { max-height: 400px; overflow-y: auto; }
+    #modalItemsBody { max-height: 450px; overflow-y: auto; }
 </style>
 @endsection

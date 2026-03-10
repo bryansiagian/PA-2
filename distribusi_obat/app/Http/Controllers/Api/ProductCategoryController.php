@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProductCategory; // Gunakan model baru
+use App\Models\ProductCategory; // Pastikan model ini sudah ada
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,20 +11,24 @@ use Illuminate\Support\Facades\DB;
 class ProductCategoryController extends Controller
 {
     /**
-     * Menampilkan semua kategori produk beserta jumlah produk di dalamnya.
+     * Menampilkan daftar kategori beserta jumlah produk di dalamnya.
      */
     public function index() {
-        // Menggunakan withCount('products') sesuai relasi di model baru
-        return response()->json(ProductCategory::withCount('products')->where('active', 1)->latest()->get());
+        try {
+            // Menggunakan withCount('products') agar sinkron dengan tabel products
+            return response()->json(ProductCategory::withCount('products')->where('active', 1)->latest()->get());
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal memuat kategori: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
-     * Menyimpan kategori produk baru.
+     * Simpan kategori baru.
      */
     public function store(Request $request) {
         $request->validate([
-            'name' => 'required|unique:product_categories,name',
-            'code' => 'nullable|string|unique:product_categories,code' // Tambahan field code
+            'name' => 'required|string|unique:product_categories,name',
+            'code' => 'nullable|string|unique:product_categories,code'
         ]);
 
         return DB::transaction(function() use ($request) {
@@ -44,18 +48,21 @@ class ProductCategoryController extends Controller
         });
     }
 
+    /**
+     * Tampilkan detail satu kategori.
+     */
     public function show($id) {
         return ProductCategory::findOrFail($id);
     }
 
     /**
-     * Memperbarui data kategori.
+     * Update data kategori.
      */
     public function update(Request $request, $id) {
         $cat = ProductCategory::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|unique:product_categories,name,'.$id,
+            'name' => 'required|string|unique:product_categories,name,'.$id,
             'code' => 'nullable|string|unique:product_categories,code,'.$id
         ]);
 
@@ -67,17 +74,17 @@ class ProductCategoryController extends Controller
                 'action' => "INVENTORY: Memperbarui kategori produk - {$cat->name}"
             ]);
 
-            return response()->json(['message' => 'Kategori berhasil diubah']);
+            return response()->json(['message' => 'Kategori berhasil diperbarui']);
         });
     }
 
     /**
-     * Menghapus (mengarsipkan) kategori.
+     * Hapus (Arsipkan) kategori.
      */
     public function destroy($id) {
         $cat = ProductCategory::findOrFail($id);
 
-        // Proteksi: Jangan hapus jika kategori masih dipakai oleh produk aktif
+        // Proteksi: Cek apakah masih ada produk yang menggunakan kategori ini
         if($cat->products()->count() > 0) {
             return response()->json([
                 'message' => 'Gagal! Kategori ini masih digunakan oleh beberapa produk aktif.'
@@ -85,7 +92,7 @@ class ProductCategoryController extends Controller
         }
 
         return DB::transaction(function() use ($cat) {
-            // Sesuai standar proyek ini, gunakan sistem arsip (active = 0)
+            // Sesuai standar proyek, gunakan active = 0 alih-alih hapus permanen
             $cat->update(['active' => 0]);
 
             AuditLog::create([

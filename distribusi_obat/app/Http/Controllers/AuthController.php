@@ -4,12 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\AuditLog;
-use App\Models\CourierDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-// Import Model Role dari Spatie
 use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
@@ -21,9 +19,8 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        // CARA SPATIE: Ambil role dari tabel roles Spatie, kecuali admin
-        $roles = Role::where('name', '!=', 'admin')->get();
-        return view('auth.register', compact('roles'));
+        // Tidak perlu lagi mengambil semua role, karena register khusus customer
+        return view('auth.register');
     }
 
     public function login(Request $request)
@@ -63,12 +60,11 @@ class AuthController extends Controller
     }
 
     public function register(Request $request) {
-        // Validasi
+        // Validasi dihapus bagian role_id-nya
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed|min:6',
-            'role_id' => 'required|exists:roles,id',
         ]);
 
         return DB::transaction(function() use ($request) {
@@ -78,21 +74,17 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'address' => $request->address,
-                'status' => 0 // Pending
+                'status' => 0 // Tetap Pending menunggu Approve Admin
             ]);
 
-            // 2. Assign Role via Spatie
-            $role = \Spatie\Permission\Models\Role::findById($request->role_id);
-            $user->assignRole($role->name);
+            // 2. Kunci Role ke 'customer'
+            // Pastikan role 'customer' sudah dibuat di Seeder sebelumnya
+            $user->assignRole('customer');
 
-            // 3. Jika Role adalah Courier, simpan ke tabel detail
-            if ($role->name === 'courier') {
-                CourierDetail::create([
-                    'user_id' => $user->id,
-                    'vehicle_type' => $request->vehicle_type,
-                    'vehicle_plate' => $request->vehicle_plate,
-                ]);
-            }
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'REGISTER: Pendaftaran akun faskes baru (Customer)'
+            ]);
 
             return response()->json(['message' => 'Success'], 201);
         });

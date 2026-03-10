@@ -2,26 +2,23 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\DrugController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\RequestController;
+use App\Http\Controllers\Api\ProductController;         // Ganti dari DrugController
+use App\Http\Controllers\Api\ProductCategoryController; // Ganti dari CategoryController
+use App\Http\Controllers\Api\ProductOrderController;    // Ganti dari RequestController
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\CartApiController;
 use App\Http\Controllers\Api\CmsController;
+use App\Http\Controllers\Api\WarehouseController;       // Ganti dari InventoryController
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Rute API untuk Sistem Manajemen Logistik E-Pharma.
-| Menggunakan Laravel Sanctum untuk Autentikasi.
-|
 */
 
-// --- 1. RUTE PUBLIK (Bisa diakses tanpa login) ---
+// --- 1. RUTE PUBLIK ---
 Route::get('/public/landing-page', [CmsController::class, 'getLandingPageData']);
-Route::get('/public/drugs', [DrugController::class, 'index']);
+Route::get('/public/products', [ProductController::class, 'index']); // Ganti drugs ke products
 Route::get('/public/files', function() {
     return \App\Models\GeneralFile::where('active', 1)->latest()->get();
 });
@@ -30,7 +27,7 @@ Route::get('/public/files', function() {
 // --- 2. RUTE TERPROTEKSI (Wajib Login) ---
 Route::middleware('auth:sanctum')->group(function () {
 
-    // A. MANAJEMEN USER & VERIFIKASI (Admin & Operator - Revisi Dosen #3)
+    // A. MANAJEMEN USER & VERIFIKASI (Admin & Operator)
     Route::middleware(['permission:manage users'])->group(function () {
         Route::get('/users/pending', [AdminController::class, 'getPendingUsers']);
         Route::post('/users/{id}/approve', [AdminController::class, 'approveUser']);
@@ -56,6 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/cms/contact', [CmsController::class, 'updateContact']);
         Route::get('/cms/org', [CmsController::class, 'indexOrg']);
         Route::post('/cms/org', [CmsController::class, 'storeOrg']);
+        Route::put('/cms/org/{id}', [CmsController::class, 'updateOrg']);
+        Route::delete('/cms/org/{id}', [CmsController::class, 'deleteOrg']);
 
         // CMS Posts (Berita & Kegiatan)
         Route::get('/cms/posts', [CmsController::class, 'indexPosts']);
@@ -69,9 +68,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cms/post-categories', [CmsController::class, 'storePostCategory']);
         Route::put('/cms/post-categories/{id}', [CmsController::class, 'updatePostCategory']);
         Route::delete('/cms/post-categories/{id}', [CmsController::class, 'deletePostCategory']);
+
+        // CMS Galleries
         Route::get('/cms/galleries', [CmsController::class, 'indexGalleries']);
         Route::post('/cms/galleries', [CmsController::class, 'storeGallery']);
+        Route::put('/cms/galleries/{id}', [CmsController::class, 'updateGallery']);
         Route::delete('/cms/galleries/{id}', [CmsController::class, 'deleteGallery']);
+        Route::delete('/cms/gallery-files/{id}', [CmsController::class, 'deleteGalleryFile']);
 
         // CMS Contacts
         Route::get('/cms/contacts', [CmsController::class, 'indexContacts']);
@@ -87,21 +90,36 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // C. MANAJEMEN INVENTARIS (Admin & Operator)
     Route::middleware(['permission:manage inventory'])->group(function () {
-        // Drugs CRUD
-        Route::post('/drugs', [DrugController::class, 'store']);
-        Route::put('/drugs/{id}', [DrugController::class, 'update']);
-        Route::delete('/drugs/{id}', [DrugController::class, 'destroy']);
-        Route::post('/drugs/stock-in', [DrugController::class, 'updateStock']);
+        // Products CRUD
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{id}', [ProductController::class, 'update']);
+        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+        Route::post('/products/stock-in', [ProductController::class, 'updateStock']);
 
-        // Medicine Categories CRUD
-        Route::post('/categories', [CategoryController::class, 'store']);
-        Route::put('/categories/{id}', [CategoryController::class, 'update']);
-        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+        // Product Categories CRUD
+        Route::post('/product-categories', [ProductCategoryController::class, 'store']);
+        Route::put('/product-categories/{id}', [ProductCategoryController::class, 'update']);
+        Route::delete('/product-categories/{id}', [ProductCategoryController::class, 'destroy']);
 
-        // Transactional Approval
-        Route::post('/requests/{id}/approve', [RequestController::class, 'approve']);
-        Route::post('/requests/{id}/reject', [RequestController::class, 'reject']);
+        // Transactional Approval (Orders)
+        Route::post('/orders/{id}/approve', [ProductOrderController::class, 'approve']);
+        Route::post('/orders/{id}/reject', [ProductOrderController::class, 'reject']);
+        Route::post('/orders/{id}/complete-pickup', [ProductOrderController::class, 'completePickup']);
+
+        // Logistics Preparation
         Route::post('/deliveries/ready/{id}', [DeliveryController::class, 'makeReady']);
+
+        // Warehouses (Ganti dari storages)
+        Route::get('/inventory/warehouses', [WarehouseController::class, 'indexWarehouses']);
+        Route::post('/inventory/warehouses', [WarehouseController::class, 'storeWarehouse']);
+        Route::put('/inventory/warehouses/{id}', [WarehouseController::class, 'updateWarehouse']);
+        Route::delete('/inventory/warehouses/{id}', [WarehouseController::class, 'destroyWarehouse']);
+
+        // Racks (Jika diperlukan sesuai DBML baru)
+        Route::get('/inventory/racks', [WarehouseController::class, 'indexRacks']);
+        Route::post('/inventory/racks', [WarehouseController::class, 'storeRack']);
+        Route::put('/inventory/racks/{id}', [WarehouseController::class, 'updateRack']);
+        Route::delete('/inventory/racks/{id}', [WarehouseController::class, 'destroyRack']);
     });
 
     // D. KHUSUS CUSTOMER (Cart & Orders)
@@ -113,9 +131,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/cart/{id}', [CartApiController::class, 'destroy']);
         Route::delete('/cart-clear', [CartApiController::class, 'clear']);
 
-        // Request Process
-        Route::post('/requests', [RequestController::class, 'store']);
-        Route::post('/requests/{id}/cancel', [RequestController::class, 'cancel']);
+        // Order Process
+        Route::post('/orders', [ProductOrderController::class, 'store']);
+        Route::post('/orders/{id}/cancel', [ProductOrderController::class, 'cancel']);
     });
 
     // E. KHUSUS COURIER (Logistics)
@@ -130,11 +148,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // F. AKSES UMUM TERAUTENTIKASI (Common Routes)
-    Route::get('/drugs', [DrugController::class, 'index']);
-    Route::get('/drugs/{id}', [DrugController::class, 'show']);
-    Route::get('/categories', [CategoryController::class, 'index']);
-    Route::get('/requests', [RequestController::class, 'index']);
-    Route::get('/requests/{id}', [RequestController::class, 'show']);
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+    Route::get('/product-categories', [ProductCategoryController::class, 'index']);
+    Route::get('/orders', [ProductOrderController::class, 'index']);
+    Route::get('/orders/{id}', [ProductOrderController::class, 'show']);
     Route::get('/deliveries/{id}/tracking', [DeliveryController::class, 'getTracking']);
-    Route::get('/post-categories', [CmsController::class, 'indexPostCategories']); // Dropdown akses
+    Route::get('/post-categories', [CmsController::class, 'indexPostCategories']);
 });

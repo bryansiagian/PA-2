@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             CmsSeeder::class,
             WarehouseSeeder::class, // Induk untuk obat
             MasterDataSeeder::class, // Obat terakhir
+            SystemStatusSeeder::class
         ]);
     }
 }

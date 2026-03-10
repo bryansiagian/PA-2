@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Registrasi - Yayasan E-Pharma</title>
+  <title>Registrasi Mitra - Yayasan E-Pharma</title>
 
   <!-- Favicons -->
   <link href="{{ asset('assets/img/favicon.png') }}" rel="icon">
@@ -81,18 +81,10 @@
       transition: 0.3s;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus {
       border-color: var(--accent-color);
       box-shadow: 0 0 0 0.25rem rgba(63, 187, 192, 0.1);
       background-color: #fff;
-    }
-
-    .vehicle-box {
-      background-color: #f1f7f8;
-      border: 2px dashed var(--accent-color);
-      border-radius: 15px;
-      display: none;
-      transition: 0.4s;
     }
 
     .btn-register {
@@ -144,8 +136,8 @@
             <div class="card card-register">
                 <div class="register-header">
                     <a href="/" class="register-logo">E-<span>Pharma</span></a>
-                    <h4 class="fw-bold mb-1">Registrasi Akun Baru</h4>
-                    <p class="mb-0 opacity-75 small">Bergabunglah dalam jaringan distribusi farmasi digital kami</p>
+                    <h4 class="fw-bold mb-1">Registrasi Mitra Faskes</h4>
+                    <p class="mb-0 opacity-75 small">Khusus untuk Unit Kesehatan, Rumah Sakit, dan Klinik Mitra</p>
                 </div>
                 <div class="card-body p-4 p-md-5">
 
@@ -153,65 +145,28 @@
                         @csrf
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label text-uppercase">Nama Lengkap</label>
+                                <label class="form-label text-uppercase">Nama Unit / Petugas</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                    <input type="text" name="name" class="form-control form-with-icon" placeholder="Nama lengkap petugas" required>
+                                    <input type="text" name="name" class="form-control form-with-icon" placeholder="Contoh: Klinik Sehat / Budi Santoso" required>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label text-uppercase">Alamat Email</label>
+                                <label class="form-label text-uppercase">Alamat Email Resmi</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" name="email" class="form-control form-with-icon" placeholder="email@unitkesehatan.id" required>
+                                    <input type="email" name="email" class="form-control form-with-icon" placeholder="kontak@unitkesehatan.id" required>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label text-uppercase">Hak Akses Sistem (Role)</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
-                                <select name="role_id" id="roleSelect" class="form-select form-with-icon" onchange="toggleVehicleFields()" required>
-                                    <option value="" selected disabled>-- Pilih Peran Anda --</option>
-                                    @foreach($roles as $role)
-                                        <option value="{{ $role->id }}" data-name="{{ $role->name }}">
-                                            {{ strtoupper($role->name) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- SEKSI KENDARAAN (Khusus Kurir) -->
-                        <div id="vehicleSection" class="vehicle-box p-4 mb-4">
-                            <h6 class="fw-bold mb-3" style="color: var(--accent-color);">
-                                <i class="bi bi-truck-flatbed me-2"></i>Informasi Kendaraan Operasional
-                            </h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label small">Jenis Kendaraan</label>
-                                    <select name="vehicle_type" class="form-select border-0">
-                                        <option value="motorcycle">Sepeda Motor</option>
-                                        <option value="car">Mobil / Van Farmasi</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label small">Nomor Plat Kendaraan</label>
-                                    <input type="text" name="vehicle_plate" class="form-control border-0" placeholder="Contoh: B 1234 ABC">
-                                </div>
-                            </div>
-                            <p class="mb-0 text-muted" style="font-size: 11px;">
-                                <i class="bi bi-info-circle me-1"></i> Data kendaraan diperlukan untuk optimasi rute pengiriman obat.
-                            </p>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label text-uppercase">Alamat Lengkap Unit / Domisili</label>
+                            <label class="form-label text-uppercase">Alamat Lengkap Pengiriman</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                <textarea name="address" class="form-control form-with-icon" rows="2" placeholder="Sebutkan jalan, nomor, dan kota..."></textarea>
+                                <textarea name="address" class="form-control form-with-icon" rows="2" placeholder="Sebutkan jalan, nomor, dan kota lokasi unit kesehatan Anda..." required></textarea>
                             </div>
+                            <small class="text-muted" style="font-size: 11px;">Alamat ini akan digunakan sebagai tujuan utama distribusi obat.</small>
                         </div>
 
                         <div class="row">
@@ -232,11 +187,11 @@
                         </div>
 
                         <button type="submit" id="btnSubmit" class="btn btn-register shadow">
-                            Daftar Sekarang <i class="bi bi-arrow-right-circle ms-2"></i>
+                            Daftar Sebagai Mitra <i class="bi bi-arrow-right-circle ms-2"></i>
                         </button>
 
                         <div class="text-center mt-4">
-                            <p class="small text-muted">Sudah memiliki akun? <a href="/login" class="login-link">Masuk di sini</a></p>
+                            <p class="small text-muted">Sudah memiliki akun mitra? <a href="/login" class="login-link">Masuk di sini</a></p>
                             <hr class="my-4 opacity-25">
                             <a href="/" class="text-muted small text-decoration-none">
                                 <i class="bi bi-house-door me-1"></i> Kembali ke Beranda
@@ -254,41 +209,26 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    function toggleVehicleFields() {
-        const roleSelect = document.getElementById('roleSelect');
-        const selectedOption = roleSelect.options[roleSelect.selectedIndex];
-        const roleName = selectedOption.getAttribute('data-name');
-        const vehicleSection = document.getElementById('vehicleSection');
-
-        if (roleName === 'courier') {
-            vehicleSection.style.display = 'block';
-            document.getElementsByName('vehicle_plate')[0].required = true;
-        } else {
-            vehicleSection.style.display = 'none';
-            document.getElementsByName('vehicle_plate')[0].required = false;
-        }
-    }
-
     function submitRegister(event) {
         event.preventDefault();
         const btn = document.getElementById('btnSubmit');
         const formData = new FormData(document.getElementById('formRegister'));
 
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses Data...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses Pendaftaran...';
 
         axios.post('/register', formData)
             .then(res => {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Pendaftaran Berhasil',
-                    text: 'Akun Anda telah dibuat dan menunggu verifikasi admin.',
+                    title: 'Pendaftaran Mitra Berhasil',
+                    text: 'Akun mitra Anda telah dibuat dan menunggu verifikasi admin pusat.',
                     confirmButtonColor: '#3fbbc0',
                 }).then(() => window.location.href = '/login');
             })
             .catch(err => {
                 btn.disabled = false;
-                btn.innerHTML = 'Daftar Sekarang <i class="bi bi-arrow-right-circle ms-2"></i>';
+                btn.innerHTML = 'Daftar Sebagai Mitra <i class="bi bi-arrow-right-circle ms-2"></i>';
                 let msg = err.response.data.message || 'Terjadi kesalahan sistem.';
                 if(err.response.data.errors) msg = Object.values(err.response.data.errors)[0][0];
                 Swal.fire({

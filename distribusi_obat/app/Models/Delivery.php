@@ -4,40 +4,33 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Delivery extends Model
-{
-    protected $appends = ['proof_image_url'];
+class Delivery extends Model {
     protected $fillable = [
-        'drug_request_id',
+        'product_order_id',
         'courier_id',
         'tracking_number',
-        'status',
-        'proof_image',
-        'picked_up_at',
+        'delivery_status_id',
+        'image',
+        'receiver_name',
+        'receiver_relation',
+        'delivery_note',
         'delivered_at'
     ];
-
-    // Tambahkan 'drug_request_id' sebagai parameter kedua (Foreign Key)
-    public function request()
-    {
-        return $this->belongsTo(DrugRequest::class, 'drug_request_id');
-    }
-
-    public function courier()
-    {
-        return $this->belongsTo(User::class, 'courier_id');
-    }
 
     public function trackings()
     {
         return $this->hasMany(ShipmentTracking::class, 'delivery_id');
     }
 
-    public function getProofImageUrlAttribute()
-    {
-        if ($this->proof_image) {
-            return asset('storage/' . $this->proof_image);
-        }
-        return null;
+    public function order() {
+        return $this->belongsTo(ProductOrder::class, 'product_order_id');
+    }
+
+    public function status() {
+        return $this->belongsTo(DeliveryStatus::class, 'delivery_status_id');
+    }
+
+    public function courier() {
+        return $this->belongsTo(User::class, 'courier_id');
     }
 }

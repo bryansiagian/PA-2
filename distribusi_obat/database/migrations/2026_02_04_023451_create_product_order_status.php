@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('product_order_status', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name'); // Pending, Processed, Completed, Cancelled
+            $table->integer('active')->default(1);
             $table->timestamps();
         });
     }

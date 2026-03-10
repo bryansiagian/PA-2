@@ -2,11 +2,11 @@
 
 @section('content')
 <div class="container-fluid">
-    <div>
-        <h4 class="fw-bold mb-0">Dashboard</h4>
-        <div class="text-muted">Ringkasan data pada Website</div>
-        <br>
+    <div class="mb-3">
+        <h4 class="fw-bold mb-0 text-dark">Dashboard Admin</h4>
+        <div class="text-muted small">Ringkasan operasional logistik dan distribusi E-Pharma</div>
     </div>
+
     <!-- Quick stats boxes (Limitless Pattern) -->
     <div class="row">
         <div class="col-lg-3">
@@ -25,8 +25,8 @@
             <div class="card card-body bg-teal text-white shadow-sm border-0 mb-3">
                 <div class="d-flex align-items-center">
                     <div class="flex-fill">
-                        <h4 class="mb-0 fw-bold" id="totalDrugs">0</h4>
-                        <div class="text-uppercase fs-xs opacity-75">Sediaan Obat</div>
+                        <h4 class="mb-0 fw-bold" id="totalProducts">0</h4>
+                        <div class="text-uppercase fs-xs opacity-75">Katalog Produk</div>
                     </div>
                     <i class="ph-pill ph-2x opacity-75 ms-3"></i>
                 </div>
@@ -37,8 +37,8 @@
             <div class="card card-body bg-pink text-white shadow-sm border-0 mb-3">
                 <div class="d-flex align-items-center">
                     <div class="flex-fill">
-                        <h4 class="mb-0 fw-bold" id="totalRequests">0</h4>
-                        <div class="text-uppercase fs-xs opacity-75">Transaksi Request</div>
+                        <h4 class="mb-0 fw-bold" id="totalOrders">0</h4>
+                        <div class="text-uppercase fs-xs opacity-75">Total Pesanan</div>
                     </div>
                     <i class="ph-clipboard-text ph-2x opacity-75 ms-3"></i>
                 </div>
@@ -48,12 +48,12 @@
         <div class="col-lg-3">
             <div class="card card-body bg-warning text-white shadow-sm border-0 mb-3">
                 <div class="d-flex align-items-center">
-                    <h4 class="mb-0 fw-bold" id="totalDeliveries">0</h4>
+                    <h4 class="mb-0 fw-bold" id="totalShipping">0</h4>
                     <div class="ms-auto"><i class="ph-truck ph-2x opacity-75"></i></div>
                 </div>
                 <div>
                     Pengiriman Aktif
-                    <div class="fs-sm opacity-75">Dalam perjalanan</div>
+                    <div class="fs-sm opacity-75">Kurir di perjalanan</div>
                 </div>
             </div>
         </div>
@@ -79,7 +79,7 @@
         <div class="col-xl-4">
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header d-flex align-items-center bg-transparent border-bottom py-3">
-                    <h5 class="mb-0 fw-bold"><i class="ph-chart-pie me-2 text-success"></i>Komposisi Pengguna</h5>
+                    <h5 class="mb-0 fw-bold"><i class="ph-chart-pie me-2 text-success"></i>Komposisi Role</h5>
                 </div>
                 <div class="card-body">
                     <div class="chart-container" style="position: relative; height:300px; width:100%">
@@ -126,16 +126,16 @@
                 <div class="card-body">
                     <div class="list-group list-group-flush">
                         <div class="list-group-item d-flex px-0">
+                            Environment <span class="ms-auto fw-bold text-primary">Development</span>
+                        </div>
+                        <div class="list-group-item d-flex px-0">
+                            Status Database <span class="ms-auto text-success fw-bold">Connected</span>
+                        </div>
+                        <div class="list-group-item d-flex px-0">
                             Versi Laravel <span class="ms-auto fw-bold">v{{ app()->version() }}</span>
                         </div>
                         <div class="list-group-item d-flex px-0">
-                            Status Database <span class="ms-auto text-success fw-bold">Online</span>
-                        </div>
-                        <div class="list-group-item d-flex px-0">
                             PHP Version <span class="ms-auto">{{ PHP_VERSION }}</span>
-                        </div>
-                        <div class="list-group-item d-flex px-0">
-                            Server OS <span class="ms-auto">Windows / Development</span>
                         </div>
                     </div>
                 </div>
@@ -148,28 +148,33 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
+
     let trendChartObj = null;
     let roleChartObj = null;
 
     function initDashboard() {
+        // Update rute ke products dan orders
         const apiUsers = axios.get('/api/users');
-        const apiDrugs = axios.get('/api/drugs');
-        const apiRequests = axios.get('/api/requests');
+        const apiProducts = axios.get('/api/products');
+        const apiOrders = axios.get('/api/orders');
         const apiAnalytics = axios.get('/api/admin/analytics?period=daily');
 
-        Promise.all([apiUsers, apiDrugs, apiRequests, apiAnalytics])
+        Promise.all([apiUsers, apiProducts, apiOrders, apiAnalytics])
             .then(results => {
                 const users = results[0].data;
-                const drugs = results[1].data;
-                const requests = results[2].data;
+                const products = results[1].data;
+                const orders = results[2].data;
                 const analytics = results[3].data;
 
                 // 1. Update Counter Widgets
                 document.getElementById('totalUsers').innerText = users.length;
-                document.getElementById('totalDrugs').innerText = drugs.length;
-                document.getElementById('totalRequests').innerText = requests.length;
-                const activeShipping = requests.filter(r => r.status === 'shipping').length;
-                document.getElementById('totalDeliveries').innerText = activeShipping;
+                document.getElementById('totalProducts').innerText = products.length;
+                document.getElementById('totalOrders').innerText = orders.length;
+
+                // Cek status pengiriman dari tabel lookup status
+                const activeShipping = orders.filter(o => o.status && o.status.name === 'Shipping').length;
+                document.getElementById('totalShipping').innerText = activeShipping;
 
                 // 2. Render Grafik Tren Permintaan (Line Chart)
                 renderTrendChart(analytics.stats);
@@ -199,15 +204,17 @@
         const labels = stats.map(s => s.label);
         const data = stats.map(s => s.total_requests);
 
+        if (trendChartObj) trendChartObj.destroy();
+
         trendChartObj = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Permintaan Selesai',
+                    label: 'Pesanan Masuk',
                     data: data,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: '#5c6bc0',
+                    backgroundColor: 'rgba(92, 107, 192, 0.1)',
                     fill: true,
                     tension: 0.4,
                     borderWidth: 3,
@@ -232,9 +239,11 @@
         // Menghitung jumlah per role secara dinamis
         const roles = {};
         users.forEach(u => {
-            const roleName = u.roles[0] ? u.roles[0].name : 'unknown';
+            const roleName = (u.roles && u.roles[0]) ? u.roles[0].name : 'unknown';
             roles[roleName] = (roles[roleName] || 0) + 1;
         });
+
+        if (roleChartObj) roleChartObj.destroy();
 
         roleChartObj = new Chart(ctx, {
             type: 'doughnut',
@@ -242,7 +251,7 @@
                 labels: Object.keys(roles).map(r => r.toUpperCase()),
                 datasets: [{
                     data: Object.values(roles),
-                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'],
+                    backgroundColor: ['#5c6bc0', '#26a69a', '#ffa726', '#ef5350', '#06b6d4'],
                     borderWidth: 0
                 }]
             },
@@ -252,7 +261,7 @@
                 plugins: {
                     legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6 } }
                 },
-                cutout: '70%'
+                cutout: '75%'
             }
         });
     }

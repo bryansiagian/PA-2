@@ -2,104 +2,105 @@
 
 @section('content')
 <style>
-    /* Styling khusus menyelaraskan dengan MediNest */
+    /* MODIFIKASI: Mengubah header agar menyatu secara natural */
     .page-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 40px 0;
-        border-bottom: 1px solid #dee2e6;
-        margin-bottom: 40px;
+        background: transparent;
+        padding: 30px 0;
+        border-bottom: none;
+        margin-bottom: 20px;
     }
     .section-heading {
         color: #2c4964;
         font-weight: 700;
         position: relative;
         padding-bottom: 15px;
-        margin-bottom: 0;
+        font-family: 'Poppins', sans-serif;
+        font-size: 2rem;
     }
     .section-heading::after {
         content: "";
         position: absolute;
-        display: block;
         width: 50px;
-        height: 3px;
+        height: 4px;
         background: #3fbbc0;
         bottom: 0;
         left: 0;
+        border-radius: 2px;
     }
+
+    /* Card Styling */
     .card-cart {
         border: none;
         border-radius: 15px;
-        transition: all 0.3s ease;
         background: #fff;
         border-left: 5px solid #3fbbc0;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        transition: 0.3s;
+        margin-bottom: 15px;
     }
-    .card-summary {
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-    }
-    .summary-header {
-        background: #f8f9fa;
-        border-radius: 20px 20px 0 0;
-        padding: 20px;
-        border-bottom: 1px solid #eee;
-    }
+    .card-cart:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+
+    /* Quantity Controls */
     .qty-control {
-        background: #f1f7f8;
-        border-radius: 25px;
+        background: #f8f9fa;
+        border-radius: 30px;
         padding: 5px;
-        border: 1px solid #deebec;
+        border: 1px solid #eee;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     .btn-qty {
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         background: #fff;
-        border: 1px solid #deebec;
+        border: 1px solid #dee2e6;
         color: #3fbbc0;
-        transition: 0.3s;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+        padding: 0;
     }
-    .btn-qty:hover {
-        background: #3fbbc0;
-        color: #fff;
+    .btn-qty:hover { background: #3fbbc0; color: #fff; border-color: #3fbbc0; }
+
+    .card-summary {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        overflow: hidden;
+        z-index: 10;
     }
+
     .btn-medinest {
         background: #3fbbc0;
         color: white;
-        border-radius: 25px;
-        padding: 12px 20px;
+        border-radius: 30px;
+        padding: 12px 25px;
         font-weight: 600;
-        transition: 0.3s;
         border: none;
+        width: 100%;
+        transition: 0.3s;
     }
-    .btn-medinest:hover {
-        background: #329ea2;
-        color: white;
-        box-shadow: 0 5px 15px rgba(63, 187, 192, 0.3);
-    }
-    .btn-medinest:disabled {
-        background: #ccc;
-    }
-    .empty-cart-icon {
-        color: #3fbbc0;
-        opacity: 0.15;
-    }
+    .btn-medinest:hover:not(:disabled) { background: #329ea2; transform: translateY(-2px); }
+    .btn-medinest:disabled { background: #a5d8da; cursor: not-allowed; }
+
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 </style>
 
-<!-- Header Section -->
 <div class="page-header">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-7">
                 <h2 class="section-heading">Keranjang Permintaan</h2>
-                <p class="text-muted">Tinjau daftar obat yang akan diajukan ke gudang farmasi pusat.</p>
+                <p class="text-muted">Tinjau daftar sediaan farmasi sebelum dikirim ke pusat logistik.</p>
             </div>
             <div class="col-md-5 text-md-end">
-                <button id="btnClearCart" onclick="clearCart()" class="btn btn-outline-danger rounded-pill px-4" style="display: none;">
-                    <i class="bi bi-trash3 me-1"></i> Kosongkan Keranjang
+                <button id="btnClearCart" onclick="clearCart()" class="btn btn-outline-danger rounded-pill px-4 bg-white shadow-sm" style="display: none;">
+                    <i class="bi bi-trash3 me-1"></i> Kosongkan
                 </button>
             </div>
         </div>
@@ -108,54 +109,52 @@
 
 <div class="container mb-5">
     <div class="row g-4">
-        <!-- SISI KIRI: DAFTAR ITEM -->
+        <!-- LIST ITEM -->
         <div class="col-lg-8">
             <div id="cartItemsContainer">
                 <div class="text-center py-5">
-                    <div class="spinner-border text-info" role="status"></div>
-                    <p class="text-muted small mt-3">Menyinkronkan data medis...</p>
+                    <div class="spinner-border text-info"></div>
                 </div>
             </div>
         </div>
 
-        <!-- SISI KANAN: RINGKASAN & CHECKOUT -->
+        <!-- SUMMARY -->
         <div class="col-lg-4">
             <div class="card card-summary sticky-top" style="top: 100px;">
-                <div class="summary-header">
-                    <h5 class="fw-bold m-0 text-dark"><i class="bi bi-receipt me-2 text-info"></i>Ringkasan Pesanan</h5>
+                <div class="p-4 bg-light border-bottom text-center">
+                    <h5 class="fw-bold m-0">Ringkasan Permintaan</h5>
                 </div>
                 <div class="card-body p-4">
-                    <!-- PILIHAN METODE PENGAMBILAN -->
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted text-uppercase">Metode Pengambilan</label>
-                        <select id="request_type" class="form-select rounded-3 py-2 shadow-none border-1">
-                            <option value="delivery" selected>🚚 Kirim via Kurir Logistik</option>
-                            <option value="self_pickup">🏢 Ambil Mandiri ke Gudang</option>
+                        <select id="request_type" class="form-select border-light shadow-sm bg-light">
+                            <option value="delivery">🚚 Kurir Logistik Internal</option>
+                            <option value="self_pickup">🏢 Ambil Sendiri di Gudang</option>
                         </select>
                     </div>
 
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted small">Jenis Item</span>
+                        <span class="text-muted small">Total Jenis</span>
                         <span class="fw-bold" id="totalKinds">0</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-3">
+                    <div class="d-flex justify-content-between mb-3 align-items-center">
                         <span class="text-muted small">Total Kuantitas</span>
-                        <span class="fw-bold text-info fs-5" id="totalQty">0</span>
+                        <span class="fw-bold text-info fs-4" id="totalQty">0</span>
                     </div>
 
                     <hr class="my-4 opacity-25">
 
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted text-uppercase">Catatan Tambahan</label>
-                        <textarea id="checkoutNotes" class="form-control rounded-3 bg-light border-0 small" rows="3" placeholder="Contoh: Unit Gawat Darurat, Gedung B..."></textarea>
+                        <textarea id="checkoutNotes" class="form-control bg-light border-0 small" rows="3" placeholder="Contoh: Titip di resepsionis..."></textarea>
                     </div>
 
-                    <button id="btnCheckout" onclick="processCheckout()" class="btn btn-medinest w-100 shadow-sm mb-3" disabled>
-                        Kirim Permintaan <i class="bi bi-send-fill ms-2"></i>
+                    <button id="btnCheckout" onclick="processCheckout()" class="btn btn-medinest shadow-sm mb-3" disabled>
+                        Proses Pengajuan <i class="bi bi-send-fill ms-2"></i>
                     </button>
 
-                    <a href="/#katalog" class="btn btn-light w-100 rounded-pill text-muted small">
-                        <i class="bi bi-plus-lg me-1"></i> Tambah Obat Lain
+                    <a href="/#katalog" class="btn btn-link w-100 text-muted text-decoration-none small">
+                        <i class="bi bi-plus-lg me-1"></i> Tambah Item Lain
                     </a>
                 </div>
             </div>
@@ -164,8 +163,6 @@
 </div>
 
 <script>
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
-
     function fetchCart() {
         const container = document.getElementById('cartItemsContainer');
         const btnClear = document.getElementById('btnClearCart');
@@ -180,55 +177,49 @@
                 if (!carts || carts.length === 0) {
                     btnClear.style.display = 'none';
                     btnCheckout.disabled = true;
-                    html = `
-                        <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-dashed">
-                            <i class="bi bi-cart-x empty-cart-icon" style="font-size: 6rem;"></i>
-                            <h4 class="fw-bold mt-4">Keranjang Masih Kosong</h4>
-                            <p class="text-muted mx-auto" style="max-width: 350px;">Anda belum memilih obat apapun untuk diajukan permintaan stoknya.</p>
-                            <a href="/#katalog" class="btn btn-medinest px-5 mt-3 shadow">Lihat Katalog</a>
-                        </div>`;
+                    html = `<div class="text-center py-5 bg-white rounded-4 border border-dashed shadow-sm">
+                                <i class="bi bi-cart-x text-muted opacity-25" style="font-size: 5rem;"></i>
+                                <h4 class="fw-bold mt-3">Keranjang Kosong</h4>
+                                <a href="/#katalog" class="btn btn-medinest px-5 mt-2 w-auto">Lihat Katalog</a>
+                            </div>`;
                 } else {
                     btnClear.style.display = 'inline-block';
                     btnCheckout.disabled = false;
 
                     carts.forEach(item => {
-                        const drug = item.drug || {};
-                        const img = drug.image ? `/${drug.image}` : 'https://placehold.co/400x300?text=Produk+Obat';
-                        totalQuantity += item.quantity;
+                        const product = item.product || {}; // Perubahan dari item.drug ke item.product
+                        const img = product.image ? `/${product.image}` : 'https://placehold.co/200x200?text=Produk';
+                        const currentQty = parseInt(item.quantity);
+                        totalQuantity += currentQty;
 
                         html += `
-                        <div class="card card-cart mb-3 shadow-sm overflow-hidden">
+                        <div class="card card-cart">
                             <div class="card-body p-3">
-                                <div class="row align-items-center">
-                                    <div class="col-3 col-md-2">
-                                        <img src="${img}" class="rounded-3 border" style="width: 100%; height: 80px; object-fit: cover;">
+                                <div class="row align-items-center text-center text-md-start">
+                                    <div class="col-md-2">
+                                        <img src="${img}" class="img-fluid rounded-3" style="max-height: 80px;">
                                     </div>
-                                    <div class="col-9 col-md-5">
-                                        <h6 class="fw-bold text-dark mb-1" style="font-family: 'Poppins', sans-serif;">${drug.name || 'Obat Tidak Diketahui'}</h6>
-                                        <div class="badge bg-light text-info border px-2 py-1 mb-1" style="font-size: 10px;">
-                                            Stok Tersedia: ${drug.stock} ${drug.unit || ''}
-                                        </div>
-                                        <div class="text-muted small">Kemasan: ${drug.unit || '-'}</div>
+                                    <div class="col-md-5">
+                                        <h6 class="fw-bold text-dark mb-1">${product.name || 'Produk'}</h6>
+                                        <div class="text-muted small">Kemasan: ${product.unit || '-'}</div>
+                                        <span class="badge bg-light text-primary border mt-1">Stok Gudang: ${product.stock}</span>
                                     </div>
-                                    <div class="col-7 col-md-3 mt-3 mt-md-0">
-                                        <div class="qty-control d-flex align-items-center justify-content-between">
-                                            <button class="btn btn-qty" onclick="changeQty(${item.id}, ${parseInt(item.quantity) - 1}, ${drug.stock})">
+                                    <div class="col-md-3 mt-3 mt-md-0">
+                                        <div class="qty-control">
+                                            <button type="button" class="btn-qty" onclick="changeQty(${item.id}, ${currentQty - 1}, ${product.stock})">
                                                 <i class="bi bi-dash"></i>
                                             </button>
-                                            <input type="number"
-                                                   class="form-control text-center border-0 bg-transparent fw-bold p-0 shadow-none"
-                                                   style="width: 50px;"
-                                                   value="${item.quantity}"
-                                                   onblur="changeQty(${item.id}, this.value, ${drug.stock})"
-                                                   onkeyup="if(event.keyCode === 13) changeQty(${item.id}, this.value, ${drug.stock})">
-                                            <button class="btn btn-qty" onclick="changeQty(${item.id}, ${parseInt(item.quantity) + 1}, ${drug.stock})">
+                                            <input type="number" class="form-control text-center border-0 bg-transparent fw-bold"
+                                                   style="width: 60px;" value="${currentQty}"
+                                                   onchange="changeQty(${item.id}, this.value, ${product.stock})">
+                                            <button type="button" class="btn-qty" onclick="changeQty(${item.id}, ${currentQty + 1}, ${product.stock})">
                                                 <i class="bi bi-plus"></i>
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="col-5 col-md-2 mt-3 mt-md-0 text-end">
-                                        <button class="btn btn-sm text-danger fw-600" onclick="deleteItem(${item.id})">
-                                            <i class="bi bi-trash me-1"></i> Hapus
+                                    <div class="col-md-2 text-md-end mt-3 mt-md-0">
+                                        <button class="btn btn-link text-danger p-0" onclick="deleteItem(${item.id})">
+                                            <i class="bi bi-trash fs-5"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -246,44 +237,28 @@
 
     function changeQty(cartId, newQty, maxStock) {
         const qty = parseInt(newQty);
+        if (qty < 1) { deleteItem(cartId); return; }
         if (qty > maxStock) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Stok Terbatas',
-                text: `Persediaan di gudang saat ini hanya ${maxStock} item.`,
-                confirmButtonColor: '#3fbbc0'
-            });
+            Swal.fire({ icon: 'warning', title: 'Stok Terbatas', text: `Sisa stok hanya ${maxStock} unit.`, confirmButtonColor: '#3fbbc0' });
             fetchCart(); return;
         }
-        if (isNaN(qty) || qty < 1) return deleteItem(cartId);
-
         axios.put(`/api/cart/${cartId}`, { quantity: qty }).then(() => fetchCart());
     }
 
     function deleteItem(cartId) {
-        axios.delete(`/api/cart/${cartId}`).then(() => {
-            fetchCart();
-            if(typeof updateCartBadge === 'function') updateCartBadge();
-        });
+        axios.delete(`/api/cart/${cartId}`).then(() => fetchCart());
     }
 
     function clearCart() {
         Swal.fire({
             title: 'Kosongkan Keranjang?',
-            text: 'Semua item yang Anda pilih akan dihapus.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3fbbc0',
-            confirmButtonText: 'Ya, Kosongkan!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Ya, Kosongkan!'
         }).then((result) => {
-            if (result.isConfirmed) {
-                axios.delete('/api/cart-clear').then(() => {
-                    fetchCart();
-                    if(typeof updateCartBadge === 'function') updateCartBadge();
-                });
-            }
+            if (result.isConfirmed) axios.delete('/api/cart-clear').then(() => fetchCart());
         });
     }
 
@@ -292,35 +267,30 @@
         const reqType = document.getElementById('request_type').value;
 
         Swal.fire({
-            title: 'Kirim Permintaan?',
-            text: "Daftar permintaan akan dikirimkan ke petugas gudang farmasi pusat untuk diproses.",
+            title: 'Kirim Pengajuan?',
+            text: "Daftar permintaan akan dikirim ke petugas gudang.",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3fbbc0',
-            confirmButtonText: 'Ya, Kirim Sekarang'
+            confirmButtonText: 'Ya, Kirim'
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-                axios.post('/api/requests', { notes: notes, request_type: reqType })
-                    .then(res => {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil Terkirim',
-                            text: 'Permintaan stok sedang dalam proses verifikasi petugas.',
-                            confirmButtonColor: '#3fbbc0'
-                        }).then(() => window.location.href = '/customer/history');
+                Swal.fire({ title: 'Mengirim...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                // PERBAIKAN: Ganti URL dari /api/requests menjadi /api/orders
+                axios.post('/api/orders', { notes: notes, request_type: reqType })
+                    .then(() => {
+                        Swal.fire({ icon: 'success', title: 'Berhasil', confirmButtonColor: '#3fbbc0' })
+                            .then(() => window.location.href = '/customer/history');
                     })
-                    .catch(err => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan pada sistem logistik.', confirmButtonColor: '#3fbbc0' }));
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Gagal', err.response?.data?.message || 'Terjadi kesalahan sistem.', 'error');
+                    });
             }
         });
     }
 
     document.addEventListener('DOMContentLoaded', fetchCart);
 </script>
-
-<style>
-    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
-    .border-dashed { border-style: dashed !important; border-width: 2px !important; }
-</style>
 @endsection

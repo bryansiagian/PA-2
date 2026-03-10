@@ -1,10 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Api\CmsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,7 +10,7 @@ use App\Http\Controllers\Api\CmsController;
 |--------------------------------------------------------------------------
 */
 
-// Rute Root: Langsung cek autentikasi
+// Rute Root: Landing Page
 Route::get('/', function () {
     return view('welcome');
 });
@@ -32,52 +30,69 @@ Route::middleware(['auth'])->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // RUTE PROFILE (Baru ditambahkan)
+    // Rute Profile
     Route::get('/profile', function () {
-    return view('admin.cms.profile'); // Mengarah ke admin/cms/profile.blade.php
+        return view('admin.cms.profile');
     })->name('profile.index');
 
-    // VERIFIKASI USER (Admin & Operator - Revisi Dosen)
+    // VERIFIKASI USER (Admin & Operator)
     Route::middleware(['permission:manage users'])->group(function() {
-        Route::get('/admin/users/pending', function () { return view('admin.pending_users'); });
-        Route::get('/reports', function() { return view('admin.reports'); })->name('reports');
+        Route::get('/admin/users/pending', function () {
+            return view('admin.pending_users');
+        });
+        Route::get('/reports', function() {
+            return view('admin.reports');
+        })->name('reports');
     });
 
     // MANAJEMEN AKUN & CMS (Hanya Admin)
     Route::middleware(['role:admin'])->group(function() {
-        Route::get('/admin/cms/post-categories', function() { return view('admin.cms.post_categories'); });
-        Route::get('/admin/cms/profile', function() { return view('admin.cms.profile'); });
-        Route::get('/admin/cms/posts', function() { return view('admin.cms.posts'); });
-        Route::get('/admin/cms/org', function() { return view('admin.cms.org'); });
-        Route::get('/admin/cms/gallery', function() { return view('admin.cms.gallery'); });
+        Route::prefix('admin/cms')->group(function() {
+            Route::get('/post-categories', function() { return view('admin.cms.post_categories'); });
+            Route::get('/profile', function() { return view('admin.cms.profile'); });
+            Route::get('/posts', function() { return view('admin.cms.posts'); });
+            Route::get('/org', function() { return view('admin.cms.org'); });
+            Route::get('/gallery', function() { return view('admin.cms.gallery'); });
+            Route::get('/contacts', function() { return view('admin.cms.contacts'); });
+            Route::get('/files', function() { return view('admin.cms.general_files'); });
+        });
+
         Route::get('/admin/users', function() { return view('admin.users'); });
         Route::get('/admin/logs', function() { return view('admin.logs'); });
-        Route::get('/admin/cms/contacts', function() { return view('admin.cms.contacts'); });
-        Route::get('/admin/cms/files', function() { return view('admin.cms.general_files'); });
     });
 
-    // INVENTORY (Operator & Admin)
+    // INVENTORY & WAREHOUSING (Operator & Admin)
     Route::middleware(['permission:manage inventory'])->group(function() {
-        Route::get('/operator/drugs', function() { return view('operator.drugs'); });
-        Route::get('/operator/categories', function() { return view('operator.categories'); });
-        Route::get('/operator/requests', function() { return view('operator.requests'); });
-        Route::get('/operator/tracking/{id}', function ($id) { return view('operator.tracking', ['id' => $id]); })->name('operator.tracking');
+        Route::prefix('operator')->group(function() {
+            Route::get('/products', function() { return view('operator.products'); }); // Ganti drugs ke products
+            Route::get('/categories', function() { return view('operator.categories'); });
+            Route::get('/orders', function() { return view('operator.orders'); }); // Ganti requests ke orders
+            Route::get('/warehouses', function() { return view('admin.inventory.warehouses'); }); // Ganti storages ke warehouses
+            Route::get('/racks', function() { return view('admin.inventory.racks'); });
+            Route::get('/tracking/{id}', function ($id) {
+                return view('operator.tracking', ['id' => $id]);
+            })->name('operator.tracking');
+        });
     });
 
     // CUSTOMER MODULE
     Route::middleware(['role:customer'])->group(function() {
-        Route::get('/customer/requests', function() { return view('customer.requests'); });
-        Route::get('/customer/history', function () { return view('customer.history'); })->name('customer.history');
-        Route::get('/customer/cart', function() { return view('customer.cart'); })->name('customer.cart');
-        Route::get('/customer/request-new', function() { return view('customer.manual_request'); })->name('customer.manual_request');
-        Route::get('/customer/tracking/{id}', function ($id) { return view('customer.tracking', ['id' => $id]); })->name('customer.tracking');
+        Route::prefix('customer')->group(function() {
+            Route::get('/history', function () { return view('customer.history'); })->name('customer.history');
+            Route::get('/cart', function() { return view('customer.cart'); })->name('customer.cart');
+            Route::get('/request-new', function() { return view('customer.manual_request'); })->name('customer.manual_request');
+            Route::get('/tracking/{id}', function ($id) {
+                return view('customer.tracking', ['id' => $id]);
+            })->name('customer.tracking');
+        });
     });
 
     // COURIER MODULE
     Route::middleware(['role:courier'])->group(function() {
-        Route::get('/courier/tasks', function() { return view('courier.tasks'); });
-        Route::get('/courier/available', function () { return view('courier.available'); })->name('courier.available');
-        Route::get('/courier/active', function () { return view('courier.active'); })->name('courier.active');
-        Route::get('/courier/history', function () { return view('courier.history'); })->name('courier.history');
+        Route::prefix('courier')->group(function() {
+            Route::get('/available', function () { return view('courier.available'); })->name('courier.available');
+            Route::get('/active', function () { return view('courier.active'); })->name('courier.active');
+            Route::get('/history', function () { return view('courier.history'); })->name('courier.history');
+        });
     });
 });

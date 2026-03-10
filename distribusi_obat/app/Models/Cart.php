@@ -6,9 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
-    protected $fillable = ['user_id', 'drug_id', 'quantity'];
+    protected $fillable = ['user_id', 'product_id', 'quantity'];
 
-    public function drug() {
-        return $this->belongsTo(Drug::class);
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
