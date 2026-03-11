@@ -618,7 +618,7 @@
                             <i class="ph-dots-three sidebar-resize-show"></i>
                         </li>
                         <li class="nav-item">
-                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
+                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users') ? 'active' : '' }}">
                                 <i class="ph-users-three"></i>
                                 <span>Kelola Pengguna</span>
                             </a>
