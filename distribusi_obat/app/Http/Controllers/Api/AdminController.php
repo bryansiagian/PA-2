@@ -38,12 +38,14 @@ class AdminController extends Controller
     }
 
     /**
-     * Ambil daftar user yang baru mendaftar (Status 0).
+     * MODIFIKASI: Ambil daftar user yang baru mendaftar (Status 0)
+     * DAN sudah memverifikasi email (email_verified_at tidak null).
      */
     public function getPendingUsers() {
         try {
             return User::with('roles', 'courierDetail')
                 ->where('status', 0)
+                ->whereNotNull('email_verified_at') // <--- Filter PENTING
                 ->latest()
                 ->get();
         } catch (\Exception $e) {
@@ -55,7 +57,6 @@ class AdminController extends Controller
      * Tampilkan detail satu user.
      */
     public function showUser($id) {
-        // Spatie menggunakan relasi 'roles' (jamak)
         return User::with('roles')->findOrFail($id);
     }
 
@@ -68,32 +69,27 @@ class AdminController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6',
             'role_id'  => 'required|exists:roles,id',
-            'address'  => 'nullable|string', // Tambahkan validasi alamat
-            // Gunakan nullable agar tidak error saat role bukan courier
+            'address'  => 'nullable|string',
             'vehicle_type' => 'nullable|required_if:role_name,courier|in:motorcycle,car',
             'vehicle_plate' => 'nullable|required_if:role_name,courier|string',
         ]);
 
         try {
             return DB::transaction(function() use ($request) {
-                // PERBAIKAN: Tambahkan 'web' sebagai parameter kedua findById
-                // Atau gunakan query manual jika Role::findById tetap bermasalah
+                // Pastikan mencari role pada guard 'web'
                 $role = Role::where('id', $request->role_id)->where('guard_name', 'web')->firstOrFail();
 
-                // 2. Create User
                 $user = User::create([
                     'name'     => $request->name,
                     'email'    => $request->email,
                     'password' => Hash::make($request->password),
                     'address'  => $request->address,
-                    'status'   => 1
+                    'status'   => 1, // Langsung Aktif
+                    'email_verified_at' => now() // Langsung terverifikasi
                 ]);
 
-                // 3. Assign Role
-                // Secara otomatis Spatie akan menyesuaikan role 'web' ke user ini
                 $user->assignRole($role->name);
 
-                // 4. Jika Courier, simpan detail kendaraan
                 if ($role->name === 'courier') {
                     \App\Models\CourierDetail::create([
                         'user_id' => $user->id,
@@ -156,15 +152,17 @@ class AdminController extends Controller
      * Update Data/Role User.
      */
     public function updateUser(Request $request, $id) {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
+            $role = Role::where('id', $request->role_id)->where('guard_name', 'web')->firstOrFail();
 
-        // PERBAIKAN: Cari role di guard 'web'
-        $role = Role::where('id', $request->role_id)->where('guard_name', 'web')->firstOrFail();
+            $user->update(['name' => $request->name]);
+            $user->syncRoles([$role->name]);
 
-        $user->update(['name' => $request->name]);
-        $user->syncRoles([$role->name]);
-
-        return response()->json(['message' => 'Success']);
+            return response()->json(['message' => 'Success']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal update role'], 500);
+        }
     }
 
     /**
@@ -200,7 +198,7 @@ class AdminController extends Controller
             $logs = AuditLog::with(['user.roles'])->latest()->get();
             return response()->json($logs);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal mengambil log: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Gagal mengambil log'], 500);
         }
     }
 
@@ -218,20 +216,16 @@ class AdminController extends Controller
         try {
             $period = $request->query('period', 'daily');
 
-            // Ambil ID Status 'Completed' dari tabel lookup
             $completedStatus = ProductOrderStatus::where('name', 'Completed')->first();
             $completedId = $completedStatus ? $completedStatus->id : 0;
 
-            // 1. Hitung Total Pesanan Selesai
             $totalCompleted = ProductOrder::where('product_order_status_id', $completedId)->count();
 
-            // 2. Hitung Total Produk Terdistribusi
             $totalItems = DB::table('product_order_details')
                 ->join('product_orders', 'product_order_details.product_order_id', '=', 'product_orders.id')
                 ->where('product_orders.product_order_status_id', $completedId)
                 ->sum('product_order_details.quantity');
 
-            // 3. Statistik Grafik (7 Hari Terakhir atau 6 Bulan Terakhir)
             if ($period == 'daily') {
                 $stats = ProductOrder::select(
                         DB::raw('DATE_FORMAT(created_at, "%d %b") as label'),
@@ -252,7 +246,6 @@ class AdminController extends Controller
                     ->get();
             }
 
-            // 4. Top 5 Produk Berdasarkan Distribusi
             $topProducts = DB::table('product_order_details')
                 ->join('products', 'products.id', '=', 'product_order_details.product_id')
                 ->join('product_orders', 'product_orders.id', '=', 'product_order_details.product_order_id')
@@ -265,7 +258,7 @@ class AdminController extends Controller
 
             return response()->json([
                 'stats' => $stats,
-                'top_drugs' => $topProducts, // Key tetap 'top_drugs' agar frontend tidak pecah
+                'top_drugs' => $topProducts,
                 'summary' => [
                     'total_completed' => (int)$totalCompleted,
                     'total_items_distributed' => (int)$totalItems
@@ -273,7 +266,7 @@ class AdminController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Analitik Error: ' . $e->getMessage()], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 }

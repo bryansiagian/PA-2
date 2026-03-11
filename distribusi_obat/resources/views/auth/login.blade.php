@@ -19,6 +19,10 @@
   <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
 
+  <!-- Core Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <style>
     body {
       background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)),
@@ -134,7 +138,8 @@
 
         <h5 class="fw-bold mb-4 text-dark text-center">Silakan Masuk</h5>
 
-        <form action="{{ route('login') }}" method="POST">
+        <!-- Perubahan: Menggunakan id form dan onsubmit JavaScript -->
+        <form id="formLogin" onsubmit="submitLogin(event)">
           @csrf
 
           <!-- Email Field -->
@@ -142,12 +147,9 @@
             <label class="form-label small fw-bold text-muted">ALAMAT EMAIL</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-              <input type="email" name="email" class="form-control form-control-with-icon @error('email') is-invalid @enderror"
-                     placeholder="nama@unitkesehatan.id" value="{{ old('email') }}" required autofocus>
+              <input type="email" name="email" class="form-control form-control-with-icon"
+                     placeholder="nama@unitkesehatan.id" required autofocus>
             </div>
-            @error('email')
-              <div class="text-danger small mt-1">{{ $message }}</div>
-            @enderror
           </div>
 
           <!-- Password Field -->
@@ -161,7 +163,7 @@
           </div>
 
           <!-- Login Button -->
-          <button type="submit" class="btn btn-login shadow-sm mb-3">
+          <button type="submit" id="btnLogin" class="btn btn-login shadow-sm mb-3">
             Masuk ke Sistem <i class="bi bi-box-arrow-in-right ms-1"></i>
           </button>
 
@@ -185,6 +187,38 @@
 
   <!-- Vendor JS Files -->
   <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  <script>
+    function submitLogin(event) {
+        event.preventDefault();
+        const btn = document.getElementById('btnLogin');
+        const formData = new FormData(event.target);
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses...';
+
+        axios.post('/login', formData)
+            .then(res => {
+                window.location.href = res.data.redirect;
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = 'Masuk ke Sistem';
+
+                const status = err.response.status;
+                const msg = err.response.data.message;
+
+                if (status === 403) { // Belum OTP
+                    Swal.fire({ icon: 'warning', title: 'Verifikasi Email', text: msg, confirmButtonColor: '#3fbbc0' })
+                        .then(() => window.location.href = err.response.data.redirect);
+                } else if (status === 401) { // Menunggu Admin
+                    Swal.fire({ icon: 'info', title: 'Menunggu Persetujuan', text: msg, confirmButtonColor: '#2c4964' });
+                } else { // Email tidak ada (404) atau Password salah (422)
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: msg, confirmButtonColor: '#3fbbc0' });
+                }
+            });
+    }
+  </script>
 
 </body>
 

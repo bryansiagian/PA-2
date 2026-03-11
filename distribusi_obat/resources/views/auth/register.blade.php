@@ -221,16 +221,27 @@
             .then(res => {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Pendaftaran Mitra Berhasil',
-                    text: 'Akun mitra Anda telah dibuat dan menunggu verifikasi admin pusat.',
+                    title: 'Pendaftaran Berhasil',
+                    text: 'Kode OTP telah dikirim ke email Anda. Silakan masukkan kode tersebut pada halaman berikutnya.',
                     confirmButtonColor: '#3fbbc0',
-                }).then(() => window.location.href = '/login');
+                }).then(() => {
+                    // MENGARAHKAN KE HALAMAN VERIFIKASI OTP SESUAI RESPON SERVER
+                    window.location.href = res.data.redirect;
+                });
             })
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = 'Daftar Sebagai Mitra <i class="bi bi-arrow-right-circle ms-2"></i>';
-                let msg = err.response.data.message || 'Terjadi kesalahan sistem.';
-                if(err.response.data.errors) msg = Object.values(err.response.data.errors)[0][0];
+
+                let msg = 'Terjadi kesalahan sistem.';
+                if (err.response && err.response.data) {
+                    msg = err.response.data.message || msg;
+                    if (err.response.data.errors) {
+                        // Ambil pesan error validasi pertama jika ada
+                        msg = Object.values(err.response.data.errors)[0][0];
+                    }
+                }
+
                 Swal.fire({
                     icon: 'error',
                     title: 'Pendaftaran Gagal',

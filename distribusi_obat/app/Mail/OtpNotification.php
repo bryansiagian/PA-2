@@ -8,24 +8,23 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OrderNotification extends Mailable
+class OtpNotification extends Mailable
 {
     use Queueable, SerializesModels;
 
-    // Ubah variabel agar sesuai dengan Model terbaru
-    public function __construct(public $productOrder, public $statusLabel) {}
+    public function __construct(public $userName, public $otpCode) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Update Pesanan E-Pharma: #' . $this->productOrder->id,
+            subject: $this->otpCode . ' adalah kode verifikasi E-Pharma Anda',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.order_notification',
+            view: 'emails.otp_notification',
         );
     }
 }

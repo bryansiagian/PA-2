@@ -26,7 +26,10 @@ class User extends Authenticatable
         'password',
         'phone',
         'address',
-        'status'
+        'status',
+        'otp_code',
+        'otp_expires_at',
+        'email_verified_at'
     ];
 
     public function requests() { return $this->hasMany(DrugRequest::class); }
