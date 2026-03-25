@@ -134,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Order Process
         Route::post('/orders', [ProductOrderController::class, 'store']);
         Route::post('/orders/{id}/cancel', [ProductOrderController::class, 'cancel']);
+        Route::post('/orders/quick', [ProductOrderController::class, 'quickStore']);
     });
 
     // E. KHUSUS COURIER (Logistics)

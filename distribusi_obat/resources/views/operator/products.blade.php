@@ -76,13 +76,14 @@
                         <th class="ps-3">Produk & SKU</th>
                         <th>Kategori</th>
                         <th>Gudang</th>
+                        <th class="text-center">Harga (Rp)</th>
                         <th class="text-center">Stok</th>
                         <th class="text-center">Status</th>
                         <th class="text-center pe-3">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="productTableBody">
-                    <tr><td colspan="6" class="text-center py-5 text-muted">Memuat data...</td></tr>
+                    <tr><td colspan="7" class="text-center py-5 text-muted">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -106,8 +107,12 @@
                             <input type="text" name="name" id="form_name" class="form-control" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small text-muted">SKU / Kode</label>
-                            <input type="text" name="sku" id="form_sku" class="form-control" required>
+                            <label class="form-label fw-bold small text-muted">SKU (Stock Keeping Unit)</label>
+                            <input type="text" name="sku" id="form_sku" class="form-control" placeholder="Contoh: SKU-001" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-muted">Kode Produk Internal</label>
+                            <input type="text" name="product_code" id="form_product_code" class="form-control" placeholder="Contoh: P-1002">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold small text-muted">Kategori</label>
@@ -118,20 +123,24 @@
                             <input type="text" name="unit" id="form_unit" class="form-control" placeholder="Box/Botol/Pcs" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small text-primary">Pilih Gudang</label>
+                            <label class="form-label fw-bold small text-primary">Gudang Penyimpanan</label>
                             <select name="warehouse_id" id="form_warehouse_id" class="form-select border-primary border-opacity-25" required></select>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small text-muted">Harga Satuan</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold small text-muted">Harga Estimasi (Rp)</label>
                             <input type="number" name="price" id="form_price" class="form-control" value="0" required>
                         </div>
-                        <div class="col-md-6 mb-3" id="initialStockSection">
+                        <div class="col-md-4 mb-3" id="initialStockSection">
                             <label class="form-label fw-bold small text-muted">Stok Awal</label>
                             <input type="number" name="stock" id="form_stock" class="form-control" value="0">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small text-muted">Min. Stok</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold small text-muted">Batas Stok Rendah</label>
                             <input type="number" name="min_stock" id="form_min_stock" class="form-control" value="5" required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold small text-muted">Deskripsi Singkat</label>
+                            <textarea name="description" id="form_description" class="form-control" rows="2"></textarea>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold small text-muted">Foto Produk</label>
@@ -182,15 +191,17 @@
 
     const modalProduct = new bootstrap.Modal(document.getElementById('modalProduct'));
 
+    document.addEventListener('DOMContentLoaded', initPage);
+
     function initPage() {
-        // Load Categories (Updated Endpoint)
+        // Load Categories
         axios.get('/api/product-categories').then(res => {
             let opt = '<option value="" selected disabled>-- Pilih Kategori --</option>';
             res.data.forEach(c => opt += `<option value="${c.id}">${c.name}</option>`);
             document.getElementById('form_category_id').innerHTML = opt;
         });
 
-        // Load Warehouses (Updated Endpoint)
+        // Load Warehouses
         axios.get('/api/inventory/warehouses').then(res => {
             let opt = '<option value="" selected disabled>-- Pilih Gudang --</option>';
             res.data.forEach(w => opt += `<option value="${w.id}">${w.name} (${w.code})</option>`);
@@ -211,7 +222,7 @@
             let low = 0, out = 0;
 
             if (products.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-5">Katalog kosong.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-5">Katalog kosong.</td></tr>';
                 return;
             }
 
@@ -226,13 +237,14 @@
                         <div class="d-flex align-items-center">
                             <img src="${imgUrl}" class="rounded shadow-sm me-3 border" style="width: 45px; height: 45px; object-fit: cover;">
                             <div>
-                                <div class="fw-bold text-dark">${p.name}</div>
-                                <div class="fs-xs text-muted font-monospace">#${p.sku}</div>
+                                <div class="fw-bold text-dark text-truncate" style="max-width: 180px;">${p.name}</div>
+                                <div class="fs-xs text-muted font-monospace">SKU: ${p.sku} | CODE: ${p.product_code || '-'}</div>
                             </div>
                         </div>
                     </td>
                     <td><span class="badge bg-light text-primary border-0">${p.category?.name || '-'}</span></td>
-                    <td><div class="small fw-bold"><i class="ph-warehouse me-1"></i>${p.warehouse?.name || 'N/A'}</div></td>
+                    <td><div class="small fw-bold"><i class="ph-warehouse me-1 text-muted"></i>${p.warehouse?.name || 'N/A'}</div></td>
+                    <td class="text-center fw-semibold">Rp ${Number(p.price).toLocaleString('id-ID')}</td>
                     <td class="text-center fw-bold text-indigo fs-base">${p.stock}</td>
                     <td class="text-center"><span class="badge ${badge} px-2 py-1 rounded-pill">${p.stock <= 0 ? 'HABIS' : (p.stock <= p.min_stock ? 'RENDAH' : 'AMAN')}</span></td>
                     <td class="text-center pe-3">
@@ -268,20 +280,20 @@
             document.getElementById('product_id').value = p.id;
             document.getElementById('form_name').value = p.name;
             document.getElementById('form_sku').value = p.sku;
+            document.getElementById('form_product_code').value = p.product_code || '';
             document.getElementById('form_category_id').value = p.product_category_id;
             document.getElementById('form_warehouse_id').value = p.warehouse_id;
             document.getElementById('form_unit').value = p.unit;
             document.getElementById('form_price').value = p.price;
             document.getElementById('form_min_stock').value = p.min_stock;
+            document.getElementById('form_description').value = p.description || '';
 
             document.getElementById('modalTitle').innerText = 'Edit Informasi Produk';
-            document.getElementById('initialStockSection').classList.add('d-none'); // Sembunyikan stok awal saat edit
+            document.getElementById('initialStockSection').classList.add('d-none');
             document.getElementById('editImageNote').classList.remove('d-none');
 
             modalProduct.show();
-        }).catch(err => {
-            Swal.fire('Gagal', 'Data tidak ditemukan', 'error');
-        });
+        }).catch(() => Swal.fire('Error', 'Gagal memuat data produk.', 'error'));
     }
 
     function submitProduct(event) {
@@ -296,15 +308,15 @@
         let url = '/api/products';
         if (id) {
             url = `/api/products/${id}`;
-            formData.append('_method', 'PUT'); // Laravel trick for file upload on PUT
+            formData.append('_method', 'PUT');
         }
 
         axios.post(url, formData).then(() => {
             modalProduct.hide();
-            Swal.fire('Berhasil', id ? 'Data diperbarui' : 'Produk ditambahkan', 'success');
+            Swal.fire({ icon: 'success', title: 'Berhasil', text: id ? 'Data diperbarui' : 'Produk ditambahkan', timer: 1500, showConfirmButton: false });
             fetchProducts();
         }).catch(err => {
-            Swal.fire('Error', err.response?.data?.message || 'Terjadi kesalahan', 'error');
+            Swal.fire('Gagal', err.response?.data?.message || 'Lengkapi seluruh data.', 'error');
         }).finally(() => {
             btn.disabled = false;
             btn.innerHTML = 'SIMPAN DATA';
@@ -315,11 +327,11 @@
         const productId = document.getElementById('selectProductStock').value;
         const qty = document.getElementById('inputQty').value;
 
-        if(!productId || !qty) return Swal.fire('Peringatan', 'Lengkapi data', 'warning');
+        if(!productId || !qty) return Swal.fire('Peringatan', 'Lengkapi produk dan jumlah.', 'warning');
 
         axios.post('/api/products/stock-in', { product_id: productId, quantity: qty }).then(() => {
             bootstrap.Modal.getInstance(document.getElementById('modalStockIn')).hide();
-            Swal.fire('Berhasil', 'Stok berhasil ditambahkan', 'success');
+            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Stok berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
             document.getElementById('stockInForm').reset();
             fetchProducts();
         });
@@ -328,24 +340,30 @@
     function confirmDelete(id, name) {
         Swal.fire({
             title: 'Hapus Produk?',
-            text: `Apakah Anda yakin ingin menghapus ${name}?`,
+            text: `Hapus ${name} dari katalog? Tindakan ini permanen.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
             confirmButtonText: 'Ya, Hapus!',
             cancelButtonText: 'Batal'
         }).then(result => {
             if (result.isConfirmed) {
                 axios.delete(`/api/products/${id}`).then(() => {
-                    Swal.fire('Terhapus', 'Produk telah dihapus dari sistem', 'success');
+                    Swal.fire('Terhapus', 'Produk telah dihapus.', 'success');
                     fetchProducts();
                 });
             }
         });
     }
 
-    document.addEventListener('DOMContentLoaded', initPage);
+    // Live Search Logic
+    document.getElementById('tableSearch').addEventListener('keyup', function() {
+        let val = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#productTableBody tr');
+        rows.forEach(row => {
+            row.style.display = (row.innerText.toLowerCase().includes(val)) ? "" : "none";
+        });
+    });
 </script>
 
 <style>
@@ -356,5 +374,6 @@
     .btn-indigo:hover { background-color: #3f51b5; color: #fff; }
     .spinner { animation: rotation 2s infinite linear; display: inline-block; }
     @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
+    .fs-base { font-size: 1rem; }
 </style>
 @endsection

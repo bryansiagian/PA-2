@@ -116,6 +116,59 @@ class ProductOrderController extends Controller {
         });
     }
 
+    public function quickStore(Request $request) {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'notes' => 'nullable|string'
+        ]);
+
+        return DB::transaction(function() use ($request) {
+            $userId = auth()->id();
+            $product = Product::findOrFail($request->product_id);
+
+            // 1. Cek Stok
+            if ($product->stock < 1) {
+                return response()->json(['message' => 'Stok produk habis'], 422);
+            }
+
+            // 2. Tentukan Kendaraan (1 item pasti Motorcycle)
+            $statusPending = ProductOrderStatus::where('name', 'Pending')->first();
+
+            // Default untuk pesanan langsung: Delivery & Routine
+            $deliveryMethod = ProductOrderDelivery::where('name', 'Delivery')->first();
+
+            // 3. Simpan Header Order
+            $order = ProductOrder::create([
+                'user_id'                    => $userId,
+                'product_order_status_id'    => $statusPending->id,
+                'product_order_type_id'      => 1, // ID 1 = Motorcycle
+                'product_order_delivery_id'  => $deliveryMethod->id,
+                'product_order_delivery_cost'=> 0,
+                'product_order_discount'     => 0,
+                'notes'                      => $request->notes ?? 'Pesanan Instan',
+                'total'                      => $product->price
+            ]);
+
+            // 4. Simpan Detail Order
+            ProductOrderDetail::create([
+                'product_order_id' => $order->id,
+                'product_id'       => $product->id,
+                'quantity'         => 1,
+                'price_at_order'   => $product->price,
+            ]);
+
+            AuditLog::create([
+                'user_id' => $userId,
+                'action'  => "QUICK ORDER: Pesanan instan #{$order->id} (Produk: {$product->name})"
+            ]);
+
+            return response()->json([
+                'message' => 'Pesanan instan berhasil dibuat!',
+                'order_id' => $order->id
+            ], 201);
+        });
+    }
+
     /**
      * Menyetujui Pesanan & Potong Stok.
      */

@@ -83,9 +83,8 @@ Route::middleware(['auth'])->group(function() {
             Route::get('/history', function () { return view('customer.history'); })->name('customer.history');
             Route::get('/cart', function() { return view('customer.cart'); })->name('customer.cart');
             Route::get('/request-new', function() { return view('customer.manual_request'); })->name('customer.manual_request');
-            Route::get('/tracking/{id}', function ($id) {
-                return view('customer.tracking', ['id' => $id]);
-            })->name('customer.tracking');
+            Route::get('/tracking/{id}', function ($id) { return view('customer.tracking', ['id' => $id]); })->name('customer.tracking');
+            Route::get('/products', function () { return view('customer.product'); })->name('customer.product');
         });
     });
 
