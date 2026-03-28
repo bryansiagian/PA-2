@@ -27,16 +27,21 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    :root { --primary: #3fbbc0; --secondary: #2c4964; --light-bg: #f1f7f8; }
+    :root {
+        --primary: #3fbbc0; /* Hijau Toska / Teal */
+        --secondary: #2c4964; /* Navy MediNest */
+        --light-bg: #f1f7f8;
+        --hover-color: #329ea2; /* Hijau Toska Tua */
+    }
 
     body {
       background-color: var(--light-bg);
-      padding-top: 100px; /* Offset agar konten tidak tertutup header */
+      padding-top: 100px;
       font-family: 'Roboto', sans-serif;
       color: #444;
     }
 
-    /* HEADER FIX agar identik dengan Welcome */
+    /* HEADER */
     .header {
       background: #fff;
       box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
@@ -53,22 +58,103 @@
     /* Navmenu Styling */
     .navmenu ul { margin: 0; padding: 0; display: flex; list-style: none; align-items: center; }
 
+    /* Tombol Profil Hijau Toska */
+    .btn-profile {
+        background: var(--primary);
+        color: white;
+        border-radius: 25px;
+        padding: 8px 18px;
+        font-weight: 600;
+        border: none;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-profile:hover {
+        background: var(--hover-color);
+        color: white;
+        box-shadow: 0 4px 12px rgba(63, 187, 192, 0.3);
+    }
+
     /* Dropdown Profile Styling */
-    .dropdown-menu-profile { border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 12px; padding: 10px; min-width: 180px; }
-    .btn-profile { background: var(--primary); color: white; border-radius: 25px; padding: 8px 15px; font-weight: 600; border: none; transition: 0.3s; }
-    .btn-profile:hover { background: #329ea2; }
+    .dropdown-menu-profile {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        padding: 10px;
+        min-width: 200px;
+        margin-top: 15px !important;
+    }
+    .dropdown-item {
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-weight: 500;
+        color: var(--secondary);
+        transition: 0.2s;
+    }
+    .dropdown-item i {
+        color: var(--primary);
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    .dropdown-item:hover {
+        background-color: var(--light-bg);
+        color: var(--primary);
+    }
 
     /* Badge Alignment */
-    #cartBadge, #mobileCartBadge { font-size: 10px; background-color: #ff4d4d; border: 2px solid #fff; }
+    #cartBadge, #mobileCartBadge {
+        font-size: 10px;
+        background-color: #ff4d4d;
+        border: 2px solid #fff;
+    }
 
     /* Sidebar Mobile (Offcanvas) */
-    .mobile-nav-toggle { font-size: 28px; color: var(--secondary); cursor: pointer; line-height: 0; border: none; background: none; }
-    .offcanvas { width: 280px !important; }
-    .offcanvas-body .nav-link { color: var(--secondary); font-weight: 600; padding: 15px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; text-decoration: none; }
+    .mobile-nav-toggle { font-size: 28px; color: var(--secondary); cursor: pointer; border: none; background: none; }
+    .offcanvas { width: 280px !important; border-right: none; }
+    .offcanvas-header { background: #fff; border-bottom: 1px solid #eee; }
+    .offcanvas-title { font-weight: 700; color: var(--secondary); }
+    .offcanvas-title span { color: var(--primary); }
+
+    .offcanvas-body .nav-link {
+        color: var(--secondary);
+        font-weight: 600;
+        padding: 15px 10px;
+        border-bottom: 1px solid #f8f9fa;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        transition: 0.3s;
+    }
     .offcanvas-body .nav-link i { margin-right: 15px; color: var(--primary); font-size: 1.2rem; }
+    .offcanvas-body .nav-link:hover {
+        background: var(--light-bg);
+        color: var(--primary);
+        padding-left: 15px;
+    }
 
     /* Search Box (Desktop Only) */
-    .search-box .input-group { background: #f0f4f4; border-radius: 25px; padding: 2px 15px; border: 1px solid transparent; }
+    .search-box .input-group {
+        background: #f0f4f4;
+        border-radius: 25px;
+        padding: 2px 15px;
+        border: 1px solid transparent;
+        transition: 0.3s;
+    }
+    .search-box .input-group:focus-within {
+        border-color: var(--primary);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(63, 187, 192, 0.1);
+    }
+
+    footer { background: #fff; border-top: 1px solid #dee2e6; padding: 25px 0; }
+
+    @keyframes bounceCart {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+    .animate-cart { animation: bounceCart 0.5s ease-in-out; }
 
     @media (max-width: 768px) {
         body { padding-top: 85px; }
@@ -103,25 +189,26 @@
 
       <!-- ACTION BUTTONS -->
       <div class="d-flex align-items-center">
-        <!-- Cart Icon (Hidden on Mobile, moved to Sidebar) -->
+        <!-- Cart Icon (Desktop Only) -->
         <a href="{{ route('customer.cart') }}" class="position-relative p-2 me-2 d-none d-md-inline-block">
-          <i class="bi bi-cart3 fs-4 text-secondary"></i>
+          <i class="bi bi-cart3 fs-4" style="color: var(--secondary);"></i>
           <span id="cartBadge" class="badge rounded-pill position-absolute top-0 start-100 translate-middle" style="display: none;">0</span>
         </a>
 
         <!-- Profile Dropdown -->
         <div class="dropdown">
-          <button class="btn-profile dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
-            <i class="bi bi-person-circle"></i> <span class="d-none d-sm-inline ms-1">{{ Auth::user()->name }}</span>
+          <button class="btn-profile shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle fs-5"></i>
+            <span class="d-none d-sm-inline">{{ Auth::user()->name }}</span>
           </button>
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-3">
-            <li><a class="dropdown-item py-2" href="/dashboard"><i class="bi bi-speedometer2 text-primary me-2"></i> Dashboard</a></li>
-            <li><a class="dropdown-item py-2" href="/customer/history"><i class="bi bi-clock-history text-primary me-2"></i> Riwayat</a></li>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile">
+            <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+            <li><a class="dropdown-item" href="/customer/history"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
               <form action="/logout" method="POST">
                 @csrf
-                <button type="submit" class="dropdown-item py-2 text-danger fw-bold"><i class="bi bi-box-arrow-right me-2"></i> Keluar</button>
+                <button type="submit" class="dropdown-item text-danger fw-bold"><i class="bi bi-box-arrow-right"></i> Keluar</button>
               </form>
             </li>
           </ul>
@@ -138,11 +225,11 @@
 
   <!-- Sidebar Mobile (Offcanvas) -->
   <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebarPortal">
-    <div class="offcanvas-header border-bottom">
+    <div class="offcanvas-header">
       <h5 class="offcanvas-title">E-<span>Pharma</span> Menu</h5>
       <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
     </div>
-    <div class="offcanvas-body">
+    <div class="offcanvas-body p-0">
       <nav class="nav flex-column">
         <a class="nav-link" href="/dashboard"><i class="bi bi-house"></i> Dashboard</a>
         <a class="nav-link" href="/"><i class="bi bi-grid"></i> Katalog Produk</a>
@@ -165,9 +252,9 @@
   </main>
 
   <!-- FOOTER -->
-  <footer class="mt-5">
-    <div class="container text-center py-4">
-      <p class="text-muted small mb-0">© 2026 <strong style="color: var(--secondary);">Yayasan Satriabudi Dharma Setia</strong></p>
+  <footer>
+    <div class="container text-center">
+      <p class="text-muted small mb-0">© 2026 <strong style="color: var(--secondary);">Yayasan Satriabudi Dharma Setia</strong> | <span style="color: var(--primary);">E-Pharma Logistics</span></p>
     </div>
   </footer>
 
@@ -181,7 +268,7 @@
         axios.get('/api/cart').then(res => {
             const count = res.data.length;
             if (count > 0) {
-                if(bD){ bD.innerText = count; bD.style.display = 'block'; }
+                if(bD){ bD.innerText = count; bD.style.display = 'block'; bD.classList.add('animate-cart'); }
                 if(bM){ bM.innerText = count; bM.style.display = 'inline-block'; }
             } else {
                 if(bD) bD.style.display = 'none';
