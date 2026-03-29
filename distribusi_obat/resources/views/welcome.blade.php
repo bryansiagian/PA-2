@@ -344,10 +344,10 @@
             <div class="section-title"><h2>Katalog Produk</h2><p>Pilih sediaan farmasi yang dibutuhkan oleh unit kesehatan Anda.</p></div>
             <div id="productsContainer" class="row gx-3 gy-4"></div>
             <div class="text-center mt-5">
-            <a href="/customer/products" class="btn btn-medinest px-5 py-3 shadow">Lihat Semua Produk di Katalog</a>
+                <a href="/customer/products" class="btn btn-medinest px-5 py-3 shadow">Lihat Semua Produk di Katalog</a>
+            </div>
         </div>
-        </div>
-        
+
     </section>
 
     <!-- Berita -->
@@ -355,6 +355,9 @@
         <div class="container">
             <div class="section-title"><h2>Berita & Kegiatan</h2><p>Informasi terbaru seputar kegiatan logistik farmasi nasional.</p></div>
             <div id="postsContainer" class="row gy-4"></div>
+            <div class="text-center mt-5">
+                <a href="/posts" class="btn btn-medinest px-5 py-3 shadow">Lihat Postingan Lainnya</a>
+            </div>
         </div>
     </section>
 

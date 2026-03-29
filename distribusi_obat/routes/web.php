@@ -15,6 +15,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/posts', function () { return view('customer.posts'); })->name('customer.posts');
+
+
 // Guest Routes (Login & Register)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

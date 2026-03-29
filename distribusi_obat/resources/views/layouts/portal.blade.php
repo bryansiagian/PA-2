@@ -195,6 +195,7 @@
           <span id="cartBadge" class="badge rounded-pill position-absolute top-0 start-100 translate-middle" style="display: none;">0</span>
         </a>
 
+        @auth
         <!-- Profile Dropdown -->
         <div class="dropdown">
           <button class="btn-profile shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -213,7 +214,12 @@
             </li>
           </ul>
         </div>
-
+        @else
+        <!-- Tampilkan tombol Masuk jika guest -->
+        <a href="/login" class="btn-profile text-decoration-none px-4">
+            <i class="bi bi-box-arrow-in-right me-2"></i> Masuk
+        </a>
+        @endauth
         <!-- Mobile Toggle Button -->
         <button class="mobile-nav-toggle d-md-none ms-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebarPortal">
           <i class="bi bi-list"></i>
