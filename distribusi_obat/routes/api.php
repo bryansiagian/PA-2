@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/products/stock-in', [ProductController::class, 'updateStock']);
 
         // Product Categories CRUD
+        Route::get('/product-categories/{id}', [ProductCategoryController::class, 'show']); 
         Route::post('/product-categories', [ProductCategoryController::class, 'store']);
         Route::put('/product-categories/{id}', [ProductCategoryController::class, 'update']);
         Route::delete('/product-categories/{id}', [ProductCategoryController::class, 'destroy']);

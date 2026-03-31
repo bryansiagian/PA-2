@@ -52,7 +52,11 @@ class ProductCategoryController extends Controller
      * Tampilkan detail satu kategori.
      */
     public function show($id) {
-        return ProductCategory::findOrFail($id);
+        try {
+            return ProductCategory::findOrFail($id);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Kategori tidak ditemukan'], 404);
+        }
     }
 
     /**

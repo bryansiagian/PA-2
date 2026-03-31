@@ -161,8 +161,9 @@
                     </td>
                     <td class="text-center pe-3">
                         <div class="d-inline-flex">
-                            <button onclick="openEditModal(${c.id})" class="btn btn-sm btn-light text-primary border-0 me-2 shadow-sm"><i class="ph-note-pencil"></i></button>
-                            <button onclick="confirmDelete(${c.id}, '${c.name}')" class="btn btn-sm btn-light text-danger border-0 shadow-sm"><i class="ph-trash"></i></button>
+                            <!-- ID dibungkus tanda petik untuk keamanan UUID -->
+                            <button onclick="openEditModal('${c.id}')" class="btn btn-sm btn-light text-primary border-0 me-2 shadow-sm"><i class="ph-note-pencil"></i></button>
+                            <button onclick="confirmDelete('${c.id}', '${c.name}')" class="btn btn-sm btn-light text-danger border-0 shadow-sm"><i class="ph-trash"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -179,18 +180,23 @@
         document.getElementById('formCategory').reset();
         document.getElementById('category_id').value = '';
         document.getElementById('modalTitle').innerText = 'Tambah Kategori Baru';
+        document.getElementById('btnSave').innerText = 'SIMPAN DATA';
         modalCategory.show();
     }
 
     function openEditModal(id) {
+        // Tampilkan loading swal sebentar
         axios.get(`/api/product-categories/${id}`).then(res => {
             const c = res.data;
             document.getElementById('category_id').value = c.id;
             document.getElementById('form_name').value = c.name;
-            document.getElementById('form_code').value = c.code;
+            document.getElementById('form_code').value = c.code || '';
 
             document.getElementById('modalTitle').innerText = 'Edit Kategori Produk';
+            document.getElementById('btnSave').innerText = 'UPDATE DATA';
             modalCategory.show();
+        }).catch(err => {
+            Swal.fire('Error', 'Gagal mengambil data kategori', 'error');
         });
     }
 
@@ -198,6 +204,7 @@
         event.preventDefault();
         const id = document.getElementById('category_id').value;
         const btn = document.getElementById('btnSave');
+
         const data = {
             name: document.getElementById('form_name').value,
             code: document.getElementById('form_code').value
@@ -206,22 +213,28 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="ph-spinner spinner me-2"></i> Memproses...';
 
-        let request;
+        let url = '/api/product-categories';
+        let method = 'post';
+
         if (id) {
-            request = axios.put(`/api/product-categories/${id}`, data);
-        } else {
-            request = axios.post('/api/product-categories', data);
+            url = `/api/product-categories/${id}`;
+            method = 'put'; // Menggunakan method PUT untuk update
         }
 
-        request.then(() => {
+        axios({
+            method: method,
+            url: url,
+            data: data
+        }).then(res => {
             modalCategory.hide();
-            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data kategori diperbarui', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Berhasil', text: res.data.message, timer: 1500, showConfirmButton: false });
             fetchCategories();
         }).catch(err => {
-            Swal.fire('Error', err.response?.data?.message || 'Terjadi kesalahan', 'error');
+            let msg = err.response?.data?.message || 'Terjadi kesalahan';
+            Swal.fire('Gagal', msg, 'error');
         }).finally(() => {
             btn.disabled = false;
-            btn.innerHTML = 'SIMPAN DATA';
+            btn.innerHTML = id ? 'UPDATE DATA' : 'SIMPAN DATA';
         });
     }
 
@@ -241,7 +254,7 @@
                     Swal.fire('Berhasil', 'Kategori telah diarsipkan', 'success');
                     fetchCategories();
                 }).catch(err => {
-                    Swal.fire('Gagal', err.response?.data?.message || 'Kategori masih digunakan oleh produk aktif', 'error');
+                    Swal.fire('Gagal', err.response?.data?.message || 'Kategori sedang digunakan', 'error');
                 });
             }
         });
@@ -254,7 +267,10 @@
         let value = this.value.toLowerCase();
         let rows = document.querySelectorAll('#categoryTableBody tr');
         rows.forEach(row => {
-            row.style.display = (row.innerText.toLowerCase().indexOf(value) > -1) ? "" : "none";
+            // Pastikan tidak menyembunyikan row "Memuat..." atau "Kosong"
+            if(row.cells.length > 1) {
+                row.style.display = (row.innerText.toLowerCase().indexOf(value) > -1) ? "" : "none";
+            }
         });
     });
 </script>
