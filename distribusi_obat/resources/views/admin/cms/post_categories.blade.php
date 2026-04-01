@@ -111,8 +111,8 @@
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill px-3 py-2 border border-indigo border-opacity-25" style="font-size: 11px;">
-                                    <i class="ph-file-text me-1"></i> ${jumlahPost} Postingan
+                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background:#eef2ff; color:#1e293b; border:1px solid #c7d2fe; font-size: 11px;">
+                                <i class="ph-file-text me-1"></i> ${jumlahPost} Postingan
                                 </span>
                             </td>
                             <td>
@@ -205,15 +205,77 @@
 </script>
 
 <style>
-    .bg-indigo { background-color: #5c6bc0 !important; }
-    .text-indigo { color: #5c6bc0 !important; }
-    .btn-indigo { background-color: #5c6bc0; color: #fff; border: none; }
-    .btn-indigo:hover { background-color: #3f51b5; color: #fff; }
-    .btn-outline-indigo { color: #5c6bc0; border-color: #5c6bc0; }
-    .bg-opacity-10 { --bs-bg-opacity: 0.1; }
-    .fs-xs { font-size: 0.7rem; }
-    .form-control-feedback-start .form-control { padding-left: 2.75rem; }
-    /* Limitless spacing style */
-    .table td { padding: 0.75rem 1.25rem; }
+/* PRIMARY COLOR */
+.bg-indigo {
+    background: linear-gradient(135deg, #5c6bc0, #3f51b5) !important;
+}
+.text-indigo {
+    color: #5c6bc0 !important;
+}
+
+/* BUTTON */
+.btn-indigo {
+    background: linear-gradient(135deg, #5c6bc0, #3f51b5);
+    color: #fff;
+    border: none;
+}
+.btn-indigo:hover {
+    background: linear-gradient(135deg, #3f51b5, #303f9f);
+    color: #fff;
+}
+
+/* BADGE FIX (INI YANG PENTING) */
+.badge {
+    font-weight: 600;
+}
+
+.badge.bg-indigo {
+    color: #fff !important;
+}
+
+.badge i {
+    color: #1e293b !important;
+}
+
+/* FIX BADGE JUMLAH POST */
+.badge.text-indigo {
+    background-color: rgba(92, 107, 192, 0.1) !important;
+    color: #3f51b5 !important;
+    border: 1px solid rgba(92, 107, 192, 0.25);
+}
+
+/* ICON BUTTON */
+.btn.text-indigo i {
+    color: #5c6bc0 !important;
+}
+
+.btn.text-danger i {
+    color: #dc3545 !important;
+}
+
+/* TABLE IMPROVEMENT */
+.table td {
+    padding: 0.75rem 1.25rem;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* TEXT GLOBAL BIAR GA PUDAR */
+.card,
+.table {
+    color: #2c3e50;
+}
+
+/* INPUT MODAL */
+.form-control {
+    color: #2c3e50 !important;
+}
+
+/* PLACEHOLDER */
+::placeholder {
+    color: #999 !important;
+}
 </style>
 @endsection
