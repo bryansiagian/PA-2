@@ -25,6 +25,15 @@ class ProductController extends Controller
         }
     }
 
+    public function public()
+{
+    return \App\Models\Product::where('active', 1)
+        ->select('id','name','price','stock','unit','image','sku','description','product_category_id')
+        ->with('category:id,name')
+        ->latest()
+        ->get();
+}
+
     /**
      * MENDAFTARKAN PRODUK BARU.
      */
