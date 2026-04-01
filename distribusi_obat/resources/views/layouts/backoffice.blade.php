@@ -713,12 +713,12 @@
                                 <span>Daftar Gudang</span>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a href="/operator/racks" class="nav-link {{ request()->is('operator/racks*') ? 'active' : '' }}">
                                 <i class="ph-squares-four"></i>
                                 <span>Daftar Rak</span>
                             </a>
-                        </li>
+                        </li> --}}
                         @endcan
 
                         <!-- COURIER MODULE -->

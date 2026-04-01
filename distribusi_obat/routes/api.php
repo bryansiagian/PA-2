@@ -89,6 +89,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/cms/general-files', [CmsController::class, 'indexGeneralFiles']);
         Route::post('/cms/general-files', [CmsController::class, 'storeGeneralFile']);
         Route::delete('/cms/general-files/{id}', [CmsController::class, 'deleteGeneralFile']);
+
+        // PDF & Excel
+        // Route::get('/admin/export/excel', [AdminController::class, 'exportExcel']);
+        // Route::get('/admin/export/pdf', [AdminController::class, 'exportPdf']);
     });
 
     // C. MANAJEMEN INVENTARIS (Admin & Operator)
@@ -100,7 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/products/stock-in', [ProductController::class, 'updateStock']);
 
         // Product Categories CRUD
-        Route::get('/product-categories/{id}', [ProductCategoryController::class, 'show']); 
+        Route::get('/product-categories/{id}', [ProductCategoryController::class, 'show']);
         Route::post('/product-categories', [ProductCategoryController::class, 'store']);
         Route::put('/product-categories/{id}', [ProductCategoryController::class, 'update']);
         Route::delete('/product-categories/{id}', [ProductCategoryController::class, 'destroy']);

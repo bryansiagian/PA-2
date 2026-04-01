@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\Api\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +80,8 @@ Route::middleware(['auth'])->group(function() {
 
         Route::get('/admin/users', fn() => view('admin.users'));
         Route::get('/admin/logs', fn() => view('admin.logs'));
+        Route::get('/admin/export/excel', [AdminController::class, 'exportExcel'])->name('admin.export.excel');
+        Route::get('/admin/export/pdf', [AdminController::class, 'exportPdf'])->name('admin.export.pdf');
     });
 
 

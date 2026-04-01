@@ -38,7 +38,7 @@
             <div id="proofSection" class="card border-0 shadow-sm rounded-4 mb-4 d-none">
                 <div class="card-body p-4 text-center">
                     <h6 class="fw-bold mb-3 text-start"><i class="bi bi-camera-fill me-2 text-success"></i>Konfirmasi Foto Penerimaan</h6>
-                    <div class="bg-light p-2 rounded-4 d-inline-block">
+                    <div class="bg-light p-2 rounded-4 d-inline-block border">
                         <img id="proofImg" src="" class="img-fluid rounded-4 shadow-sm" style="max-height: 350px; cursor: zoom-in;" onclick="window.open(this.src)">
                     </div>
                     <p class="text-muted small mt-3 mb-0 italic">Paket telah diterima dengan sukses di lokasi tujuan.</p>
@@ -64,12 +64,7 @@
 </div>
 
 <style>
-    /* Styling Timeline Medinest */
-    #timelineContainer {
-        border-left: 2px solid #e0ebec;
-        padding-left: 35px;
-        position: relative;
-    }
+    #timelineContainer { border-left: 2px solid #e0ebec; padding-left: 35px; position: relative; }
     .timeline-node { position: relative; padding-bottom: 2.5rem; }
     .timeline-node::before {
         content: ''; position: absolute; left: -46px; top: 0;
@@ -89,44 +84,39 @@
 </style>
 
 <script>
-    // PENTING: Gunakan API Token dari session
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
 
     function fetchTracking() {
-        const id = "{{ $id }}"; // Diambil dari rute web
-        console.log("Fetching tracking for ID:", id);
+        const id = "{{ $id }}";
 
         axios.get(`/api/deliveries/${id}/tracking`)
             .then(res => {
                 const d = res.data;
-                console.log("Data diterima:", d);
 
                 // 1. Update Info Card
-                document.getElementById('trackNum').innerText = d.tracking_number || 'TRK-UNKNOWN';
+                document.getElementById('trackNum').innerText = d.tracking_number || 'N/A';
                 document.getElementById('courierName').innerText = `Kurir: ${d.courier ? d.courier.name : 'Mencari Kurir...'}`;
                 document.getElementById('lastUpdate').innerText = `Update: ${new Date(d.updated_at).toLocaleTimeString('id-ID')} WIB`;
 
-                // 2. Handle Foto Bukti
-                const proofSection = document.getElementById('proofSection');
-                if (d.status === 'delivered' && d.proof_image_url) {
-                    proofSection.classList.remove('d-none');
-                    document.getElementById('proofImg').src = d.proof_image_url;
-                }
-
-                // 3. Update Badge Status
+                // 2. Perbaikan Logika Status (Sekarang d.status.name adalah Objek)
+                const currentStatus = d.status ? d.status.name.toLowerCase() : '';
                 const badge = document.getElementById('badgeStatus');
-                const statusStr = d.status.toUpperCase().replace('_', ' ');
-                badge.innerText = statusStr;
+                badge.innerText = currentStatus.toUpperCase();
 
-                if(d.status === 'delivered') {
+                if (currentStatus === 'delivered') {
                     badge.className = "badge bg-success rounded-pill px-4 py-2";
-                } else if(d.status === 'in_transit') {
+                    // Tampilkan Bukti Foto
+                    if (d.proof_image_url) {
+                        document.getElementById('proofSection').classList.remove('d-none');
+                        document.getElementById('proofImg').src = d.proof_image_url;
+                    }
+                } else if (currentStatus === 'in transit' || currentStatus === 'claimed') {
                     badge.className = "badge bg-info text-white rounded-pill px-4 py-2";
                 } else {
                     badge.className = "badge bg-warning text-dark rounded-pill px-4 py-2";
                 }
 
-                // 4. Render Timeline
+                // 3. Render Timeline
                 let html = '';
                 if (d.trackings && d.trackings.length > 0) {
                     d.trackings.forEach((t, index) => {
@@ -146,18 +136,17 @@
                     html = '<div class="text-center py-4 text-muted small italic">Belum ada riwayat pergerakan paket.</div>';
                 }
                 document.getElementById('timelineContainer').innerHTML = html;
-
             })
             .catch(err => {
-                console.error("Gagal memuat tracking:", err);
+                console.error("Detail Error JS:", err); // Lihat di console F12 untuk detail baris yang error
                 document.getElementById('timelineContainer').innerHTML = `
-                    <div class="alert alert-danger border-0 shadow-sm">
-                        Gagal mengambil data dari server. Pastikan rute API sudah benar.
+                    <div class="alert alert-danger border-0 shadow-sm text-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Gagal memproses data pelacakan.
                     </div>`;
             });
     }
 
-    // Jalankan saat halaman dimuat
     document.addEventListener('DOMContentLoaded', fetchTracking);
 </script>
 @endsection

@@ -8,7 +8,7 @@ use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class ProductCategoryController extends Controller
+class CategoryController extends Controller
 {
     /**
      * Menampilkan semua kategori produk beserta jumlah produk di dalamnya.

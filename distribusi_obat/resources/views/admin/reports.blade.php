@@ -12,10 +12,10 @@
         <div class="mt-3 mt-sm-0">
             <!-- TOMBOL EKSPOR (REVISI DOSEN: HARUS BISA PDF/EXCEL) -->
             <div class="btn-group shadow-sm rounded-pill overflow-hidden">
-                <a href="/api/admin/export/excel" class="btn btn-success border-0 px-3">
+                <a href="/admin/export/excel" class="btn btn-success border-0 px-3">
                     <i class="ph-file-xls me-2"></i> Excel
                 </a>
-                <a href="/api/admin/export/pdf" class="btn btn-danger border-0 px-3">
+                <a href="/admin/export/pdf" class="btn btn-danger border-0 px-3">
                     <i class="ph-file-pdf me-2"></i> PDF
                 </a>
             </div>
