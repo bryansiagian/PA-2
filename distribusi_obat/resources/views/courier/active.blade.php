@@ -54,19 +54,18 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="small fw-bold text-muted mb-1">Foto Bukti Terima (Proof of Delivery)</label>
+                        <label class="small fw-bold text-muted mb-1">Foto Bukti Terima</label>
                         <input type="file" name="image" class="form-control border-light-subtle" accept="image/*" required>
-                        <small class="text-muted">Pastikan wajah penerima atau gedung terlihat jelas.</small>
                     </div>
 
                     <div class="mb-0">
                         <label class="small fw-bold text-muted mb-1">Catatan Tambahan (Opsional)</label>
-                        <textarea name="delivery_note" class="form-control border-light-subtle" rows="2" placeholder="Contoh: Paket diletakkan di meja resepsionis..."></textarea>
+                        <textarea name="delivery_note" class="form-control border-light-subtle" rows="2" placeholder="Catatan lokasi penyerahan..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0 py-2">
                     <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">BATAL</button>
-                    <button type="submit" id="btnSubmitComplete" class="btn btn-indigo px-4 fw-bold shadow-sm rounded-pill">SELESAIKAN TUGAS</button>
+                    <button type="submit" id="btnSubmitComplete" class="btn btn-indigo px-4 fw-bold shadow-sm rounded-pill">KONFIRMASI SELESAI</button>
                 </div>
             </form>
         </div>
@@ -82,46 +81,47 @@
         axios.get('/api/deliveries/active')
             .then(res => {
                 let html = '';
-                if (res.data.length === 0) {
+                const data = res.data;
+                console.log("Data Aktif Kurir:", data); // DEBUG: Cek isi data di F12 Console
+
+                if (data.length === 0) {
                     html = `
                     <div class="col-12">
                         <div class="card border-0 shadow-sm rounded-3 py-5 text-center border-2 border-dashed border-light">
                             <div class="card-body">
                                 <i class="ph-bicycle ph-4x text-muted opacity-25 mb-3"></i>
                                 <h5 class="fw-bold text-muted">Tidak Ada Tugas Aktif</h5>
-                                <p class="text-muted mx-auto" style="max-width: 400px;">Anda belum mengambil tugas dari bursa. Silakan cek menu "Bursa Tugas" untuk memulai pengiriman.</p>
-                                <a href="/courier/available" class="btn btn-indigo rounded-pill px-4 mt-2">
-                                    <i class="ph-hand-pointing me-2"></i>Cari Tugas
-                                </a>
+                                <p class="text-muted mx-auto" style="max-width: 400px;">Anda belum memproses paket apapun. Silakan cek menu "Bursa Tugas".</p>
+                                <a href="/courier/available" class="btn btn-indigo rounded-pill px-4 mt-2">Cari Tugas</a>
                             </div>
                         </div>
                     </div>`;
                 } else {
-                    res.data.forEach(d => {
-                        // FIX: Gunakan d.order (bukan d.request) sesuai relasi terbaru
-                        const statusName = d.status ? d.status.name : 'Unknown';
-                        const address = d.order.user.address || 'Alamat tidak tersedia';
+                    data.forEach(d => {
+                        // Pastikan status dibaca dengan aman
+                        const rawStatus = d.status ? d.status.name : 'Unknown';
+                        const statusName = rawStatus.toLowerCase(); // Kita paksa kecil semua untuk pengecekan
+                        const address = d.order?.user?.address || 'Alamat tidak tersedia';
 
                         html += `
                         <div class="col-md-6 col-lg-4">
-                            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-start-width-5 ${statusName === 'In Transit' ? 'border-start-primary' : 'border-start-warning'}">
+                            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-start-width-5 ${statusName === 'in transit' ? 'border-start-primary' : 'border-start-warning'}">
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between mb-3">
                                         <span class="badge bg-light text-indigo border-indigo border-opacity-25 px-2">
                                             <i class="ph-hash me-1"></i>${d.tracking_number}
                                         </span>
-                                        <span class="badge ${statusName === 'In Transit' ? 'bg-primary' : 'bg-warning text-dark'} rounded-pill">
-                                            ${statusName.toUpperCase()}
+                                        <span class="badge ${statusName === 'in transit' ? 'bg-primary' : 'bg-warning text-dark'} rounded-pill">
+                                            ${rawStatus.toUpperCase()}
                                         </span>
                                     </div>
 
                                     <div class="mb-3">
-                                        <div class="fs-xs text-muted text-uppercase fw-bold mb-1">Penerima (Tujuan)</div>
-                                        <h6 class="fw-bold text-dark mb-0">${d.order.user.name}</h6>
+                                        <div class="fs-xs text-muted text-uppercase fw-bold mb-1">Tujuan Pengiriman</div>
+                                        <h6 class="fw-bold text-dark mb-0">${d.order?.user?.name || 'Customer'}</h6>
                                     </div>
 
                                     <div class="mb-4">
-                                        <div class="fs-xs text-muted text-uppercase fw-bold mb-1">Alamat Pengantaran</div>
                                         <div class="small text-dark d-flex align-items-start">
                                             <i class="ph-map-pin text-danger me-2 mt-1"></i>
                                             <span style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
@@ -131,12 +131,13 @@
                                     </div>
 
                                     <div class="d-grid gap-2">
-                                        ${statusName === 'Claimed' ? `
-                                            <button onclick="startShipping(${d.id})" class="btn btn-indigo fw-bold py-2 rounded-pill">
+                                        <!-- PENGECEKAN STATUS LOGIC -->
+                                        ${statusName === 'claimed' ? `
+                                            <button onclick="startShipping('${d.id}')" class="btn btn-indigo fw-bold py-2 rounded-pill shadow">
                                                 <i class="ph-navigation-arrow me-2"></i>MULAI PERJALANAN
                                             </button>
                                         ` : `
-                                            <button onclick="openCompleteModal(${d.id})" class="btn btn-success fw-bold py-2 rounded-pill shadow-sm">
+                                            <button onclick="openCompleteModal('${d.id}')" class="btn btn-success fw-bold py-2 rounded-pill shadow">
                                                 <i class="ph-check-circle me-2"></i>KONFIRMASI SAMPAI
                                             </button>
                                         `}
@@ -149,17 +150,22 @@
                 container.innerHTML = html;
             })
             .catch(err => {
-                console.error(err);
-                container.innerHTML = '<div class="col-12 text-center text-danger py-5 fw-bold"><i class="ph-warning-octagon me-2"></i>Gagal memuat data aktif.</div>';
+                console.error("Error Fetch Active:", err);
+                container.innerHTML = '<div class="col-12 text-center text-danger py-5 fw-bold">Gagal memuat data.</div>';
             });
     }
 
     function startShipping(id) {
-        axios.post(`/api/deliveries/start/${id}`)
-            .then(() => {
-                Swal.fire({ icon: 'success', title: 'Perjalanan Dimulai!', timer: 1500, showConfirmButton: false });
-                fetchActive();
-            });
+        Swal.fire({ title: 'Mulai Perjalanan?', text: "Status paket akan berubah menjadi Dalam Perjalanan.", icon: 'info', showCancelButton: true, confirmButtonColor: '#5c68e2' })
+        .then(res => {
+            if(res.isConfirmed) {
+                axios.post(`/api/deliveries/start/${id}`)
+                .then(() => {
+                    Swal.fire({ icon: 'success', title: 'Hati-hati di jalan!', timer: 1500, showConfirmButton: false });
+                    fetchActive();
+                });
+            }
+        });
     }
 
     function openCompleteModal(id) {
@@ -180,15 +186,12 @@
         axios.post(`/api/deliveries/complete/${id}`, formData)
             .then(() => {
                 bootstrap.Modal.getInstance(document.getElementById('modalComplete')).hide();
-                Swal.fire({ icon: 'success', title: 'Pengiriman Selesai!', text: 'Tugas telah dipindahkan ke riwayat.', confirmButtonColor: '#5c68e2' });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Laporan pengiriman telah disimpan.', confirmButtonColor: '#5c68e2' });
                 fetchActive();
             })
             .catch(err => {
-                Swal.fire('Error', err.response?.data?.message || 'Gagal mengirim data.', 'error');
-            })
-            .finally(() => {
+                Swal.fire('Error', 'Gagal mengirim laporan.', 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'SELESAIKAN TUGAS';
             });
     }
 
@@ -197,10 +200,8 @@
 
 <style>
     .bg-indigo { background-color: #5c68e2 !important; }
-    .text-indigo { color: #5c68e2 !important; }
     .btn-indigo { background-color: #5c68e2; color: #fff; border: none; }
     .btn-indigo:hover { background-color: #4e59cf; color: #fff; }
-    .border-start-width-5 { border-start-width: 5px !important; }
     .border-start-primary { border-left: 5px solid #5c68e2 !important; }
     .border-start-warning { border-left: 5px solid #ffb300 !important; }
     .spinner { animation: rotation 2s infinite linear; display: inline-block; }

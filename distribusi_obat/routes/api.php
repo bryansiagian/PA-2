@@ -113,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/orders/{id}/approve', [ProductOrderController::class, 'approve']);
         Route::post('/orders/{id}/reject', [ProductOrderController::class, 'reject']);
         Route::post('/orders/{id}/complete-pickup', [ProductOrderController::class, 'completePickup']);
+        Route::post('/admin/orders', [ProductOrderController::class, 'adminStore']);
 
         // Logistics Preparation
         Route::post('/deliveries/ready/{id}', [DeliveryController::class, 'makeReady']);

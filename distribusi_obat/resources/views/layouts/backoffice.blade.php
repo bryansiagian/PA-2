@@ -583,7 +583,7 @@
                         </li>
                         <li class="nav-item">
                             <a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
-                                <i class="ph-layout"></i>
+                                <i class="ph-house"></i>
                                 <span>Dashboard</span>
                             </a>
                         </li>
@@ -591,7 +591,7 @@
                         @can('view reports')
                         <li class="nav-item">
                             <a href="/reports" class="nav-link {{ request()->is('reports') ? 'active' : '' }}">
-                                <i class="ph-chart-bar"></i>
+                                <i class="ph-chart-line"></i>
                                 <span>Analytics</span>
                             </a>
                         </li>
@@ -605,7 +605,7 @@
                         </li>
                         <li class="nav-item">
                             <a href="/admin/users/pending" class="nav-link {{ request()->is('admin/users/pending') ? 'active' : '' }}">
-                                <i class="ph-user-circle-plus"></i>
+                                <i class="ph-user-plus"></i>
                                 <span>Permintaan Akun</span>
                             </a>
                         </li>
@@ -618,14 +618,14 @@
                             <i class="ph-dots-three sidebar-resize-show"></i>
                         </li>
                         <li class="nav-item">
-                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users') ? 'active' : '' }}">
+                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
                                 <i class="ph-users-three"></i>
                                 <span>Kelola Pengguna</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/logs" class="nav-link {{ request()->is('admin/logs') ? 'active' : '' }}">
-                                <i class="ph-terminal-window"></i>
+                                <i class="ph-scroll"></i>
                                 <span>Log Sistem</span>
                             </a>
                         </li>
@@ -637,43 +637,43 @@
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/profile" class="nav-link {{ request()->is('admin/cms/profile') ? 'active' : '' }}">
-                                <i class="ph-briefcase"></i>
+                                <i class="ph-buildings"></i>
                                 <span>Profile Yayasan</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/org" class="nav-link {{ request()->is('admin/cms/org') ? 'active' : '' }}">
-                                <i class="ph-hierarchy"></i>
+                                <i class="ph-users"></i> <!-- DIGANTI: dari hierarchy ke users (pasti ada) -->
                                 <span>Struktur Organisasi</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/post-categories" class="nav-link {{ request()->is('admin/cms/post-categories') ? 'active' : '' }}">
-                                <i class="ph-list-dashes"></i>
+                                <i class="ph-bookmarks"></i>
                                 <span>Kategori Post</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/posts" class="nav-link {{ request()->is('admin/cms/posts*') ? 'active' : '' }}">
-                                <i class="ph-newspaper"></i>
+                                <i class="ph-article"></i>
                                 <span>Berita & Kegiatan</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/contacts" class="nav-link {{ request()->is('admin/cms/contacts') ? 'active' : '' }}">
-                                <i class="ph-address-book"></i>
+                                <i class="ph-phone"></i>
                                 <span>Kontak & Sosmed</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/gallery" class="nav-link {{ request()->is('admin/cms/gallery') ? 'active' : '' }}">
-                                <i class="ph-image"></i>
+                                <i class="ph-camera"></i> <!-- DIGANTI: dari images ke camera (pasti ada) -->
                                 <span>Galeri</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/admin/cms/files" class="nav-link {{ request()->is('admin/cms/files') ? 'active' : '' }}">
-                                <i class="ph-file-text"></i>
+                                <i class="ph-file-arrow-up"></i>
                                 <span>Dokumen & File</span>
                             </a>
                         </li>
@@ -687,38 +687,33 @@
                         </li>
                         <li class="nav-item">
                             <a href="/operator/products" class="nav-link {{ request()->is('operator/products*') ? 'active' : '' }}">
-                                <i class="ph-pill"></i>
+                                <i class="ph-package"></i>
                                 <span>Katalog Produk</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/operator/categories" class="nav-link {{ request()->is('operator/categories*') ? 'active' : '' }}">
-                                <i class="ph-unite"></i>
+                                <i class="ph-list"></i> <!-- DIGANTI: dari tags ke list (pasti ada) -->
                                 <span>Kategori Produk</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/operator/orders" class="nav-link {{ request()->is('operator/orders*') ? 'active' : '' }}">
-                                <i class="ph-git-pull-request"></i>
+                                <i class="ph-shopping-cart"></i>
                                 <span>Antrian Pesanan</span>
                             </a>
                         </li>
 
                         <li class="nav-item-header">
                             <div class="text-uppercase fs-sm lh-sm opacity-50 sidebar-resize-hide">Infrastruktur</div>
+                            <i class="ph-dots-three sidebar-resize-show"></i>
                         </li>
                         <li class="nav-item">
                             <a href="/operator/warehouses" class="nav-link {{ request()->is('operator/warehouses*') ? 'active' : '' }}">
-                                <i class="ph-warehouse"></i>
+                                <i class="ph-buildings"></i> <!-- DIGANTI: disamakan dengan Profile Yayasan (pasti muncul) -->
                                 <span>Daftar Gudang</span>
                             </a>
                         </li>
-                        {{-- <li class="nav-item">
-                            <a href="/operator/racks" class="nav-link {{ request()->is('operator/racks*') ? 'active' : '' }}">
-                                <i class="ph-squares-four"></i>
-                                <span>Daftar Rak</span>
-                            </a>
-                        </li> --}}
                         @endcan
 
                         <!-- COURIER MODULE -->
@@ -729,7 +724,7 @@
                         </li>
                         <li class="nav-item">
                             <a href="/courier/available" class="nav-link {{ request()->is('courier/available') ? 'active' : '' }}">
-                                <i class="ph-hand-grabbing"></i>
+                                <i class="ph-megaphone"></i>
                                 <span>Bursa Tugas</span>
                             </a>
                         </li>
@@ -741,7 +736,7 @@
                         </li>
                         <li class="nav-item">
                             <a href="/courier/history" class="nav-link {{ request()->is('courier/history') ? 'active' : '' }}">
-                                <i class="ph-clock-afternoon"></i>
+                                <i class="ph-clock-counter-clockwise"></i>
                                 <span>Riwayat Selesai</span>
                             </a>
                         </li>
