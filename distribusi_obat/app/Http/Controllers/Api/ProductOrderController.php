@@ -46,74 +46,8 @@ class ProductOrderController extends Controller {
     }
 
     /**
-     * FITUR BARU: Admin/Operator Membuat Pesanan Manual
+     * Proses Checkout Keranjang (Standard Store)
      */
-    public function adminStore(Request $request) {
-        $request->validate([
-            'customer_id' => 'required|exists:users,id',
-            'product_id'  => 'required|exists:products,id',
-            'quantity'    => 'required|integer|min:1',
-            'request_type'=> 'required|in:delivery,self_pickup',
-            'courier_id'  => 'nullable|exists:users,id', // Opsional
-        ]);
-
-        return DB::transaction(function() use ($request) {
-            $product = Product::findOrFail($request->product_id);
-
-            // 1. Cek Stok
-            if($product->stock < $request->quantity) {
-                return response()->json(['message' => "Stok {$product->name} tidak mencukupi"], 422);
-            }
-
-            // 2. Logika Kendaraan (sama dengan store biasa)
-            $typeId = ($request->quantity > 50) ? 2 : 1;
-
-            $statusPending = ProductOrderStatus::where('name', 'Pending')->first();
-            $deliveryMethodName = ($request->request_type == 'self_pickup') ? 'Self Pickup' : 'Delivery';
-            $deliveryMethod = ProductOrderDelivery::where('name', $deliveryMethodName)->first();
-
-            // 3. Simpan Header Order (user_id adalah ID Customer yang dipilih)
-            $order = ProductOrder::create([
-                'user_id'                    => $request->customer_id,
-                'product_order_status_id'    => $statusPending->id,
-                'product_order_type_id'      => $typeId,
-                'product_order_delivery_id'  => $deliveryMethod->id,
-                'product_order_delivery_cost'=> 0,
-                'product_order_discount'     => 0,
-                'notes'                      => $request->notes ?? 'Dibuat oleh Admin/Operator',
-                'total'                      => $product->price * $request->quantity
-            ]);
-
-            // 4. Simpan Detail
-            ProductOrderDetail::create([
-                'product_order_id' => $order->id,
-                'product_id'       => $product->id,
-                'quantity'         => $request->quantity,
-                'price_at_order'   => $product->price,
-            ]);
-
-            // 5. Jika Admin langsung menunjuk Kurir (Opsional)
-            if ($request->courier_id && $request->request_type === 'delivery') {
-                $readyStatus = DeliveryStatus::where('name', 'Ready')->first();
-                Delivery::create([
-                    'product_order_id'   => $order->id,
-                    'courier_id'         => $request->courier_id,
-                    'delivery_status_id' => $readyStatus->id,
-                    'tracking_number'    => 'TRK-' . strtoupper(bin2hex(random_bytes(4)))
-                ]);
-                // Langsung set status ke shipping karena sudah ada kurirnya
-                $order->update(['product_order_status_id' => ProductOrderStatus::where('name', 'Shipping')->first()->id]);
-            }
-
-            AuditLog::create([
-                'user_id' => auth()->id(),
-                'action'  => "ADMIN CREATE ORDER: Membuat pesanan manual #{$order->id} untuk Customer ID: {$request->customer_id}"
-            ]);
-
-            return response()->json(['message' => 'Pesanan manual berhasil dibuat!', 'order_id' => $order->id], 201);
-        });
-    }
-
     public function store(Request $request) {
         return DB::transaction(function() use ($request) {
             $userId = auth()->id();
@@ -125,14 +59,20 @@ class ProductOrderController extends Controller {
 
             $totalQuantity = 0;
             $subTotal = 0;
+            $anyBulky = false;
             $limitMotor = 50;
 
             foreach($cartItems as $item) {
                 $totalQuantity += (int)$item->quantity;
                 $subTotal += ($item->product->price * $item->quantity);
+                if ($item->product->is_bulky) $anyBulky = true;
             }
 
-            $typeId = ($totalQuantity > $limitMotor) ? 2 : 1;
+            // LOGIKA PENENTUAN KENDARAAN
+            $typeId = ($totalQuantity > $limitMotor || $anyBulky) ? 2 : 1;
+            // TAMBAHKAN INI: Konversi ID ke string untuk kolom required_vehicle
+            $vehicleName = ($typeId == 2) ? 'car' : 'motorcycle';
+
             $statusPending = ProductOrderStatus::where('name', 'Pending')->first();
             $deliveryMethodName = ($request->request_type == 'self_pickup') ? 'Self Pickup' : 'Delivery';
             $deliveryMethod = ProductOrderDelivery::where('name', $deliveryMethodName)->first();
@@ -144,6 +84,7 @@ class ProductOrderController extends Controller {
                 'product_order_delivery_id'  => $deliveryMethod->id,
                 'product_order_delivery_cost'=> 0,
                 'product_order_discount'     => 0,
+                'required_vehicle'           => $vehicleName, // SEKARANG DISIMPAN KE DATABASE
                 'notes'                      => $request->notes,
                 'total'                      => $subTotal
             ]);
@@ -159,12 +100,70 @@ class ProductOrderController extends Controller {
 
             Cart::where('user_id', $userId)->delete();
 
-            AuditLog::create([
-                'user_id' => $userId,
-                'action'  => "CREATE ORDER: Membuat pesanan #{$order->id}"
+            return response()->json(['message' => 'Pesanan berhasil dibuat!', 'order_id' => $order->id], 201);
+        });
+    }
+
+    /**
+     * Proses Pembuatan Pesanan Manual oleh Admin/Operator (Admin Store)
+     */
+    public function adminStore(Request $request) {
+        $request->validate([
+            'customer_id' => 'required|exists:users,id',
+            'product_id'  => 'required|exists:products,id',
+            'quantity'    => 'required|integer|min:1',
+            'request_type'=> 'required|in:delivery,self_pickup',
+            'courier_id'  => 'nullable|exists:users,id',
+        ]);
+
+        return DB::transaction(function() use ($request) {
+            $product = Product::findOrFail($request->product_id);
+
+            if($product->stock < $request->quantity) {
+                return response()->json(['message' => "Stok tidak mencukupi"], 422);
+            }
+
+            // LOGIKA KENDARAAN
+            $typeId = ($request->quantity > 50 || $product->is_bulky) ? 2 : 1;
+            // TAMBAHKAN INI: Konversi ID ke string untuk kolom required_vehicle
+            $vehicleName = ($typeId == 2) ? 'car' : 'motorcycle';
+
+            $statusPending = ProductOrderStatus::where('name', 'Pending')->first();
+            $deliveryMethodName = ($request->request_type == 'self_pickup') ? 'Self Pickup' : 'Delivery';
+            $deliveryMethod = ProductOrderDelivery::where('name', $deliveryMethodName)->first();
+
+            $order = ProductOrder::create([
+                'user_id'                    => $request->customer_id,
+                'product_order_status_id'    => $statusPending->id,
+                'product_order_type_id'      => $typeId,
+                'product_order_delivery_id'  => $deliveryMethod->id,
+                'product_order_delivery_cost'=> 0,
+                'product_order_discount'     => 0,
+                'required_vehicle'           => $vehicleName, // SEKARANG DISIMPAN KE DATABASE
+                'notes'                      => $request->notes ?? 'Dibuat secara manual oleh Admin/Operator',
+                'total'                      => $product->price * $request->quantity
             ]);
 
-            return response()->json(['message' => 'Pesanan berhasil dibuat!', 'order_id' => $order->id], 201);
+            ProductOrderDetail::create([
+                'product_order_id' => $order->id,
+                'product_id'       => $product->id,
+                'quantity'         => $request->quantity,
+                'price_at_order'   => $product->price,
+            ]);
+
+            // Logika Penunjukan Kurir Langsung (Tetap sama)
+            if ($request->courier_id && $request->request_type === 'delivery') {
+                $claimedStatus = DeliveryStatus::where('name', 'Claimed')->first();
+                $delivery = Delivery::create([
+                    'product_order_id'   => $order->id,
+                    'courier_id'         => $request->courier_id,
+                    'delivery_status_id' => $claimedStatus->id,
+                    'tracking_number'    => 'TRK-' . strtoupper(bin2hex(random_bytes(4)))
+                ]);
+                $order->update(['product_order_status_id' => ProductOrderStatus::where('name', 'Shipping')->first()->id]);
+            }
+
+            return response()->json(['message' => 'Pesanan manual berhasil dibuat!'], 201);
         });
     }
 
