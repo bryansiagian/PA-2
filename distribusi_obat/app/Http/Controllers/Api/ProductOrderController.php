@@ -168,51 +168,56 @@ class ProductOrderController extends Controller {
     }
 
     public function quickStore(Request $request) {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'notes' => 'nullable|string'
+    $request->validate([
+        'product_id' => 'required|exists:products,id',
+        'notes' => 'nullable|string'
+    ]);
+
+    return DB::transaction(function() use ($request) {
+        $userId = auth()->id();
+
+        // 🔒 LOCK PRODUK (ANTI TABRAKAN REQUEST)
+        $product = Product::where('id', $request->product_id)->lockForUpdate()->firstOrFail();
+
+        // ❗ VALIDASI STOK (FINAL)
+        if ($product->stock <= 0) {
+            return response()->json([
+                'message' => 'Stok produk habis, tidak bisa memesan'
+            ], 422);
+        }
+
+        $statusPending = ProductOrderStatus::where('name', 'Pending')->first();
+        $deliveryMethod = ProductOrderDelivery::where('name', 'Delivery')->first();
+
+        $order = ProductOrder::create([
+            'user_id'                    => $userId,
+            'product_order_status_id'    => $statusPending->id,
+            'product_order_type_id'      => 1,
+            'product_order_delivery_id'  => $deliveryMethod->id,
+            'product_order_delivery_cost'=> 0,
+            'product_order_discount'     => 0,
+            'notes'                      => $request->notes ?? 'Pesanan Instan',
+            'total'                      => $product->price
         ]);
 
-        return DB::transaction(function() use ($request) {
-            $userId = auth()->id();
-            $product = Product::findOrFail($request->product_id);
+        ProductOrderDetail::create([
+            'product_order_id' => $order->id,
+            'product_id'       => $product->id,
+            'quantity'         => 1,
+            'price_at_order'   => $product->price,
+        ]);
 
-            if ($product->stock < 1) {
-                return response()->json(['message' => 'Stok produk habis'], 422);
-            }
+        AuditLog::create([
+            'user_id' => $userId,
+            'action'  => "QUICK ORDER: Pesanan instan #{$order->id} (Produk: {$product->name})"
+        ]);
 
-            $statusPending = ProductOrderStatus::where('name', 'Pending')->first();
-            $deliveryMethod = ProductOrderDelivery::where('name', 'Delivery')->first();
-
-            $order = ProductOrder::create([
-                'user_id'                    => $userId,
-                'product_order_status_id'    => $statusPending->id,
-                'product_order_type_id'      => 1,
-                'product_order_delivery_id'  => $deliveryMethod->id,
-                'product_order_delivery_cost'=> 0,
-                'product_order_discount'     => 0,
-                'notes'                      => $request->notes ?? 'Pesanan Instan',
-                'total'                      => $product->price
-            ]);
-
-            ProductOrderDetail::create([
-                'product_order_id' => $order->id,
-                'product_id'       => $product->id,
-                'quantity'         => 1,
-                'price_at_order'   => $product->price,
-            ]);
-
-            AuditLog::create([
-                'user_id' => $userId,
-                'action'  => "QUICK ORDER: Pesanan instan #{$order->id} (Produk: {$product->name})"
-            ]);
-
-            return response()->json([
-                'message' => 'Pesanan instan berhasil dibuat!',
-                'order_id' => $order->id
-            ], 201);
-        });
-    }
+        return response()->json([
+            'message' => 'Pesanan instan berhasil dibuat!',
+            'order_id' => $order->id
+        ], 201);
+    });
+}
 
     public function approve($id) {
         return DB::transaction(function() use ($id) {

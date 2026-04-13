@@ -546,126 +546,172 @@
         });
     }
 
-    function fetchCatalog() {
-        axios.get('/api/public/products').then(res => {
-            allProducts = res.data;
-            let html = ''; res.data.forEach(product => {
-                const isCustomer = @auth @if(auth()->user()->hasRole('customer')) true @else false @endif @else false @endauth;
-                const img = product.image ? `/${product.image}` : 'https://placehold.co/400x300';
+function fetchCatalog() {
+    axios.get('/api/public/products').then(res => {
+        allProducts = res.data;
+        let html = '';
 
-                html += `
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up">
-                    <div class="medinest-card p-2 p-md-3 text-center h-100 d-flex flex-column justify-content-between">
-                        <div class="cursor-pointer" onclick="openDetail('${product.id}')">
-                            <div class="bg-light rounded-4 mb-2 p-1">
-                                <img src="${img}" class="img-fluid rounded-3" style="height:120px; object-fit:contain; width:100%;">
-                            </div>
-                            <h6 class="fw-bold card-catalog-text mb-1">${product.name}</h6>
-                            <p class="text-muted mb-2 card-catalog-stock">Stok: <span class="badge bg-light text-dark border p-1">${product.stock} ${product.unit}</span></p>
+        res.data.forEach(product => {
+            const isCustomer = @auth @if(auth()->user()->hasRole('customer')) true @else false @endif @else false @endauth;
+            const img = product.image ? `/${product.image}` : 'https://placehold.co/400x300';
+
+            html += `
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="medinest-card p-2 p-md-3 text-center h-100 d-flex flex-column justify-content-between">
+
+                    <div class="cursor-pointer" onclick="openDetail(${product.id})">
+                        <div class="bg-light rounded-4 mb-2 p-1">
+                            <img src="${img}" class="img-fluid rounded-3" style="height:120px; object-fit:contain; width:100%;">
                         </div>
-
-                        ${isCustomer
-                            ? `<div class="d-flex align-items-center justify-content-center gap-2 mt-2">
-                                <button type="button" onclick="addToCart('${product.id}', '${product.name}')" class="btn-cart-outline" title="Tambah ke Keranjang">
-                                    <i class="bi bi-cart-plus"></i>
-                                </button>
-                                <button type="button" onclick="quickOrder('${product.id}', '${product.name}')" class="btn-medinest flex-grow-1 py-2">
-                                    Pesan
-                                </button>
-                               </div>`
-                            : `<a href="/login" class="btn btn-outline-secondary btn-sm w-100 rounded-pill text-decoration-none py-1">Login</a>`
-                        }
+                        <h6 class="fw-bold mb-1">${product.name}</h6>
+                        <p class="text-muted mb-2">
+                            Stok: <span class="badge bg-light text-dark border p-1">
+                                ${product.stock} ${product.unit}
+                            </span>
+                        </p>
                     </div>
-                </div>`;
-            });
-            document.getElementById('productsContainer').innerHTML = html;
-            updateCartBadge();
+
+                    ${isCustomer
+                        ? `<div class="d-flex align-items-center justify-content-center gap-2 mt-2">
+
+                            <button onclick="addToCart(${product.id}, ${JSON.stringify(product.name)})"
+                                class="btn-cart-outline">
+                                <i class="bi bi-cart-plus"></i>
+                            </button>
+
+                            ${product.stock > 0
+                                ? `<button onclick="quickOrder(${product.id}, ${JSON.stringify(product.name)}, ${product.stock})"
+                                    class="btn-medinest flex-grow-1 py-2">
+                                    Pesan
+                                   </button>`
+                                : `<button class="btn btn-secondary flex-grow-1 py-2" disabled>
+                                    Stok Habis
+                                   </button>`
+                            }
+
+                        </div>`
+                        : `<a href="/login" class="btn btn-outline-secondary btn-sm w-100 rounded-pill">
+                            Login
+                           </a>`
+                    }
+
+                </div>
+            </div>`;
         });
-    }
 
-    function openDetail(id) {
-        const p = allProducts.find(item => item.id === id);
-        if(!p) return;
+        document.getElementById('productsContainer').innerHTML = html;
+        updateCartBadge();
+    });
+}
 
-        document.getElementById('modalDetailImg').src = p.image ? `/${p.image}` : 'https://placehold.co/400x300';
-        document.getElementById('modalDetailName').innerText = p.name;
-        document.getElementById('modalDetailSku').innerText = `SKU: ${p.sku}`;
-        document.getElementById('modalDetailCategory').innerText = p.category?.name || 'Umum';
-        document.getElementById('modalDetailStock').innerText = `${p.stock} ${p.unit}`;
-        document.getElementById('modalDetailUnit').innerText = p.unit;
-        document.getElementById('modalDetailPrice').innerText = `Rp${Number(p.price).toLocaleString()}`;
-        document.getElementById('modalDetailDesc').innerText = p.description || 'Tidak ada deskripsi tambahan.';
+function openDetail(id) {
+    const p = allProducts.find(item => item.id == id);
+    if (!p) return;
 
-        const isCustomer = @auth @if(auth()->user()->hasRole('customer')) true @else false @endif @else false @endauth;
-        const actionContainer = document.getElementById('modalActionButtons');
+    document.getElementById('modalDetailImg').src = p.image ? `/${p.image}` : 'https://placehold.co/400x300';
+    document.getElementById('modalDetailName').innerText = p.name;
+    document.getElementById('modalDetailSku').innerText = `SKU: ${p.sku}`;
+    document.getElementById('modalDetailCategory').innerText = p.category?.name || 'Umum';
+    document.getElementById('modalDetailStock').innerText = `${p.stock} ${p.unit}`;
+    document.getElementById('modalDetailUnit').innerText = p.unit;
+    document.getElementById('modalDetailPrice').innerText = `Rp${Number(p.price).toLocaleString()}`;
+    document.getElementById('modalDetailDesc').innerText = p.description || '-';
 
-        if(isCustomer) {
-            actionContainer.innerHTML = `
-                <button onclick="addToCart('${p.id}', '${p.name}')" class="btn btn-outline-info rounded-pill px-4 fw-bold"><i class="bi bi-cart-plus me-2"></i>Keranjang</button>
-                <button onclick="quickOrder('${p.id}', '${p.name}')" class="btn btn-medinest flex-grow-1 rounded-pill shadow">Pesan Langsung</button>
-            `;
-        } else {
-            actionContainer.innerHTML = `<a href="/login" class="btn btn-outline-secondary w-100 rounded-pill">Login untuk Memesan</a>`;
-        }
+    const isCustomer = @auth @if(auth()->user()->hasRole('customer')) true @else false @endif @else false @endauth;
+    const actionContainer = document.getElementById('modalActionButtons');
 
-        new bootstrap.Modal(document.getElementById('productDetailModal')).show();
-    }
+    if (isCustomer) {
+        actionContainer.innerHTML = `
+            <button onclick="addToCart(${p.id}, ${JSON.stringify(p.name)})"
+                class="btn btn-outline-info rounded-pill px-4 fw-bold">
+                <i class="bi bi-cart-plus me-2"></i>Keranjang
+            </button>
 
-    function showGallery(index) {
-        const gallery = allGalleries[index]; if (!gallery) return;
-        document.getElementById('galleryModalTitle').innerText = gallery.title;
-        let photoHtml = '';
-        gallery.files.forEach(f => {
-            photoHtml += `<div class="col-md-4 col-6"><div class="medinest-card shadow-none border"><a href="/${f.file_path}" target="_blank"><img src="/${f.file_path}" class="img-fluid rounded-3" style="height:150px; width:100%; object-fit:cover"></a></div></div>`;
-        });
-        document.getElementById('galleryModalBody').innerHTML = photoHtml;
-        new bootstrap.Modal(document.getElementById('galleryModal')).show();
-    }
-
-    function showFullContent(key) {
-        const data = globalProfiles[key]; if(!data) return;
-        document.getElementById('modalContentTitle').innerText = data.title;
-        document.getElementById('modalContentBody').innerHTML = data.content;
-        new bootstrap.Modal(document.getElementById('contentModal')).show();
-    }
-
-    function addToCart(id, name) {
-        axios.post('/api/cart', { product_id: id }).then(() => {
-            Swal.fire({ toast:true, position:'bottom-end', icon:'success', title:name+' masuk keranjang', showConfirmButton:false, timer:2000 });
-            updateCartBadge();
-        }).catch(err => Swal.fire('Gagal', err.response?.data?.message || 'Sistem error', 'error'));
-    }
-
-    function quickOrder(id, name) {
-        Swal.fire({
-            title: 'Pesan Sekarang?',
-            text: `Kirim permintaan 1 unit ${name}?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#00838f',
-            confirmButtonText: 'Ya, Kirim'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                axios.post('/api/orders/quick', { product_id: id }).then(() => {
-                    Swal.fire('Berhasil!', 'Pesanan diproses.', 'success').then(() => window.location.href = '/customer/history');
-                });
+            ${p.stock > 0
+                ? `<button onclick="quickOrder(${p.id}, ${JSON.stringify(p.name)}, ${p.stock})"
+                    class="btn btn-medinest flex-grow-1 rounded-pill">
+                    Pesan Langsung
+                   </button>`
+                : `<button class="btn btn-secondary flex-grow-1 rounded-pill" disabled>
+                    Stok Habis
+                   </button>`
             }
-        });
+        `;
+    } else {
+        actionContainer.innerHTML = `
+            <a href="/login" class="btn btn-outline-secondary w-100 rounded-pill">
+                Login untuk Memesan
+            </a>`;
     }
+
+    new bootstrap.Modal(document.getElementById('productDetailModal')).show();
+}
+
+function addToCart(id, name) {
+    axios.post('/api/cart', { product_id: id }).then(() => {
+        Swal.fire({
+            toast:true,
+            position:'bottom-end',
+            icon:'success',
+            title: name + ' masuk keranjang',
+            showConfirmButton:false,
+            timer:2000
+        });
+        updateCartBadge();
+    }).catch(err => Swal.fire('Gagal', err.response?.data?.message || 'Sistem error', 'error'));
+}
+
+function quickOrder(id, name, stock) {
+
+    if (stock <= 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Stok Kosong',
+            text: 'Tidak bisa memesan karena stok habis'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Pesan Sekarang?',
+        text: `Kirim permintaan 1 unit ${name}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Kirim'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            axios.post('/api/orders/quick', { product_id: id })
+                .then(() => {
+                    Swal.fire('Berhasil!', 'Pesanan diproses.', 'success')
+                        .then(() => window.location.reload());
+                })
+                .catch(err => {
+                    Swal.fire('Error', err.response?.data?.message || 'Gagal memesan', 'error');
+                });
+        }
+    });
+}
 
     function updateCartBadge() {
-        axios.get('/api/cart').then(res => {
-            const count = res.data.length;
-            const bD = document.getElementById('cartBadge');
-            const bM = document.getElementById('mobileCartBadge');
-            if (count > 0) {
-                if(bD){ bD.innerText = count; bD.style.display = 'inline-block'; }
-                if(bM){ bM.innerText = count; bM.style.display = 'inline-block'; }
-            } else {
-                if(bD) bD.style.display = 'none';
-                if(bM) bM.style.display = 'none';
+    axios.get('/api/cart').then(res => {
+        const count = res.data.length;
+        const bD = document.getElementById('cartBadge');
+        const bM = document.getElementById('mobileCartBadge');
+
+        if (count > 0) {
+            if (bD) {
+                bD.innerText = count;
+                bD.style.display = 'inline-block';
             }
-        }).catch(() => {});
+            if (bM) {
+                bM.innerText = count;
+                bM.style.display = 'inline-block';
+            }
+        } else {
+            if (bD) bD.style.display = 'none';
+            if (bM) bM.style.display = 'none';
+        }
+    }).catch(() => {});
     }
   </script>
 </body>
