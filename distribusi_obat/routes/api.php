@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Logs & Analytics
         Route::get('/admin/logs', [AdminController::class, 'getLogs']);
         Route::get('/admin/analytics', [AdminController::class, 'getAnalytics']);
+        Route::get('/admin/reports', [AdminController::class, 'getReportData']);
 
         // CMS Content Management
         Route::put('/cms/profile', [CmsController::class, 'updateProfile']);

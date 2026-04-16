@@ -13,7 +13,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-// Import Model Role dari Spatie
 use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -22,7 +21,7 @@ use App\Exports\OrdersExport;
 class AdminController extends Controller
 {
     /**
-     * Ambil daftar user Aktif (Status 1) selain Admin.
+     * Menampilkan daftar pengguna aktif (selain admin).
      */
     public function getUsers() {
         try {
@@ -41,14 +40,13 @@ class AdminController extends Controller
     }
 
     /**
-     * MODIFIKASI: Ambil daftar user yang baru mendaftar (Status 0)
-     * DAN sudah memverifikasi email (email_verified_at tidak null).
+     * Mengambil daftar pengguna yang baru mendaftar dan sudah verifikasi OTP.
      */
     public function getPendingUsers() {
         try {
             return User::with('roles', 'courierDetail')
                 ->where('status', 0)
-                ->whereNotNull('email_verified_at') // <--- Filter PENTING
+                ->whereNotNull('email_verified_at')
                 ->latest()
                 ->get();
         } catch (\Exception $e) {
@@ -56,15 +54,12 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Tampilkan detail satu user.
-     */
     public function showUser($id) {
         return User::with('roles')->findOrFail($id);
     }
 
     /**
-     * Tambah User Baru secara manual oleh Admin.
+     * Menambahkan User/Operator/Kurir secara manual.
      */
     public function storeUser(Request $request) {
         $request->validate([
@@ -79,7 +74,6 @@ class AdminController extends Controller
 
         try {
             return DB::transaction(function() use ($request) {
-                // Pastikan mencari role pada guard 'web'
                 $role = Role::where('id', $request->role_id)->where('guard_name', 'web')->firstOrFail();
 
                 $user = User::create([
@@ -87,8 +81,8 @@ class AdminController extends Controller
                     'email'    => $request->email,
                     'password' => Hash::make($request->password),
                     'address'  => $request->address,
-                    'status'   => 1, // Langsung Aktif
-                    'email_verified_at' => now() // Langsung terverifikasi
+                    'status'   => 1,
+                    'email_verified_at' => now()
                 ]);
 
                 $user->assignRole($role->name);
@@ -113,160 +107,128 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Menyetujui pendaftaran akun baru.
-     */
     public function approveUser($id) {
         try {
             $user = User::findOrFail($id);
             $user->update(['status' => 1]);
-
-            AuditLog::create([
-                'user_id' => auth()->id(),
-                'action'  => "APPROVE USER: Menyetujui pendaftaran akun {$user->name}"
-            ]);
-
+            AuditLog::create(['user_id' => auth()->id(), 'action' => "APPROVE USER: Menyetujui akun {$user->name}"]);
             return response()->json(['message' => 'Pendaftaran akun telah disetujui']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal memproses persetujuan'], 500);
         }
     }
 
-    /**
-     * Menolak pendaftaran akun baru.
-     */
     public function rejectUser($id) {
         try {
             $user = User::findOrFail($id);
             $user->update(['status' => 2]);
-
-            AuditLog::create([
-                'user_id' => auth()->id(),
-                'action'  => "REJECT USER: Menolak pendaftaran akun {$user->name}"
-            ]);
-
+            AuditLog::create(['user_id' => auth()->id(), 'action' => "REJECT USER: Menolak akun {$user->name}"]);
             return response()->json(['message' => 'Pendaftaran akun telah ditolak']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal memproses penolakan'], 500);
         }
     }
 
-    /**
-     * Update Data/Role User.
-     */
     public function updateUser(Request $request, $id) {
         try {
             $user = User::findOrFail($id);
             $role = Role::where('id', $request->role_id)->where('guard_name', 'web')->firstOrFail();
-
             $user->update(['name' => $request->name]);
             $user->syncRoles([$role->name]);
-
             return response()->json(['message' => 'Success']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal update role'], 500);
         }
     }
 
-    /**
-     * Hapus User secara permanen.
-     */
     public function destroyUser($id) {
         try {
             $user = User::findOrFail($id);
-            $userName = $user->name;
-
-            if ($user->id === auth()->id()) {
-                return response()->json(['message' => 'Anda tidak bisa menghapus akun Anda sendiri'], 403);
-            }
-
+            if ($user->id === auth()->id()) return response()->json(['message' => 'Aksi dilarang'], 403);
             $user->delete();
-
-            AuditLog::create([
-                'user_id' => auth()->id(),
-                'action'  => "DELETE USER: Menghapus akun {$userName} secara permanen"
-            ]);
-
             return response()->json(['message' => 'User berhasil dihapus']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal menghapus user'], 500);
         }
     }
 
-    /**
-     * Ambil daftar audit logs terbaru.
-     */
     public function getLogs() {
-        try {
-            $logs = AuditLog::with(['user.roles'])->latest()->get();
-            return response()->json($logs);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal mengambil log'], 500);
-        }
+        return response()->json(AuditLog::with(['user.roles'])->latest()->limit(100)->get());
     }
 
-    /**
-     * Ambil daftar Role selain Admin.
-     */
     public function getRoles() {
         return Role::where('name', '!=', 'admin')->get();
     }
 
     /**
-     * Dashboard Analytics.
+     * Dashboard Analytics & Rekapitulasi Umum.
      */
     public function getAnalytics(Request $request) {
         try {
             $period = $request->query('period', 'daily');
 
+            // Ambil ID Status dari tabel lookup
             $completedStatus = ProductOrderStatus::where('name', 'Completed')->first();
             $completedId = $completedStatus ? $completedStatus->id : 0;
 
-            $totalCompleted = ProductOrder::where('product_order_status_id', $completedId)->count();
+            $shippingStatus = ProductOrderStatus::where('name', 'Shipping')->first();
+            $shippingId = $shippingStatus ? $shippingStatus->id : 0;
 
-            $totalItems = DB::table('product_order_details')
-                ->join('product_orders', 'product_order_details.product_order_id', '=', 'product_orders.id')
-                ->where('product_orders.product_order_status_id', $completedId)
-                ->sum('product_order_details.quantity');
+            // 1. Hitung Statistik Utama
+            $totalUsers = User::role('customer')->count(); // Total Mitra
+            $totalProducts = Product::where('active', 1)->count(); // Total Katalog
+            $totalOrders = ProductOrder::count(); // Total Transaksi Pembelian
 
+            // Pesanan yang belum sampai (Status selain Completed dan Cancelled)
+            $cancelledStatus = ProductOrderStatus::where('name', 'Cancelled')->first();
+            $cancelledId = $cancelledStatus ? $cancelledStatus->id : 0;
+            $notShippedCount = ProductOrder::whereNotIn('product_order_status_id', [$completedId, $cancelledId])->count();
+
+            // 2. Statistik Grafik Tren
             if ($period == 'daily') {
                 $stats = ProductOrder::select(
                         DB::raw('DATE_FORMAT(created_at, "%d %b") as label'),
                         DB::raw('COUNT(*) as total_requests')
                     )
                     ->where('created_at', '>=', now()->subDays(7))
-                    ->groupBy('label')
-                    ->orderBy('created_at', 'ASC')
-                    ->get();
+                    ->groupBy('label')->orderBy('created_at', 'ASC')->get();
             } else {
                 $stats = ProductOrder::select(
                         DB::raw('DATE_FORMAT(created_at, "%b %Y") as label'),
                         DB::raw('COUNT(*) as total_requests')
                     )
                     ->where('created_at', '>=', now()->subMonths(6))
-                    ->groupBy('label')
-                    ->orderBy('created_at', 'ASC')
-                    ->get();
+                    ->groupBy('label')->orderBy('created_at', 'ASC')->get();
             }
 
+            // 3. Produk Terlaris
             $topProducts = DB::table('product_order_details')
                 ->join('products', 'products.id', '=', 'product_order_details.product_id')
                 ->join('product_orders', 'product_orders.id', '=', 'product_order_details.product_order_id')
                 ->where('product_orders.product_order_status_id', $completedId)
                 ->select('products.name', DB::raw('SUM(product_order_details.quantity) as total_qty'))
-                ->groupBy('products.name')
-                ->orderBy('total_qty', 'DESC')
-                ->limit(5)
-                ->get();
+                ->groupBy('products.id', 'products.name')
+                ->orderBy('total_qty', 'DESC')->limit(5)->get();
+
+            // 4. Data Rasio Pengiriman
+            $shippedCount = ProductOrder::where('product_order_status_id', $completedId)->count();
 
             return response()->json([
                 'stats' => $stats,
                 'top_drugs' => $topProducts,
+                'delivery_ratio' => [
+                    'shipped' => $shippedCount,
+                    'not_shipped' => $notShippedCount
+                ],
                 'summary' => [
-                    'total_completed' => (int)$totalCompleted,
-                    'total_items_distributed' => (int)$totalItems,
-                    'total_products' => Product::where('active', 1)->count(),
-                    'low_stock_products' => Product::where('active', 1)->whereRaw('stock <= min_stock')->count(),
+                    'total_users' => $totalUsers,
+                    'total_products' => $totalProducts,
+                    'total_orders' => $totalOrders,
+                    'not_shipped' => $notShippedCount,
+                    'total_items_distributed' => (int)DB::table('product_order_details')
+                        ->join('product_orders', 'product_order_details.product_order_id', '=', 'product_orders.id')
+                        ->where('product_orders.product_order_status_id', $completedId)->sum('quantity'),
+                    'low_stock_products' => Product::where('active', 1)->whereRaw('stock <= min_stock')->count()
                 ]
             ]);
 
@@ -275,13 +237,30 @@ class AdminController extends Controller
         }
     }
 
-    public function exportExcel()
-    {
+    /**
+     * Mengambil data untuk halaman Reports (Laporan).
+     */
+    public function getReportData(Request $request) {
+        $query = ProductOrder::with(['user', 'status', 'items.product']);
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($request->start_date)->startOfDay(),
+                Carbon::parse($request->end_date)->endOfDay()
+            ]);
+        }
+
+        return response()->json($query->latest()->get());
+    }
+
+    /**
+     * Export Laporan.
+     */
+    public function exportExcel() {
         return Excel::download(new OrdersExport, 'Laporan_Distribusi_EPharma_' . date('Ymd') . '.xlsx');
     }
 
-    public function exportPdf()
-    {
+    public function exportPdf() {
         $orders = ProductOrder::with(['user', 'status', 'type', 'items'])->latest()->get();
         $pdf = Pdf::loadView('pdf.orders_report', compact('orders'));
         return $pdf->download('Laporan_Distribusi_EPharma_' . date('Ymd') . '.pdf');
