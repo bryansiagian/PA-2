@@ -110,45 +110,55 @@
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
 
     function loadSummary() {
-        const apiRequests = axios.get('/api/requests');
-        const apiDrugs = axios.get('/api/drugs');
-        const apiCategories = axios.get('/api/categories');
+        // DISESUAIKAN DENGAN api.php:
+        // /api/requests -> /api/orders
+        // /api/drugs    -> /api/products
+        // /api/categories -> /api/product-categories
+        const apiRequests = axios.get('/api/orders');
+        const apiProducts = axios.get('/api/products');
+        const apiCategories = axios.get('/api/product-categories');
 
-        Promise.all([apiRequests, apiDrugs, apiCategories])
+        Promise.all([apiRequests, apiProducts, apiCategories])
             .then(results => {
-                const requests = results[0].data;
-                const drugs = results[1].data;
-                const categories = results[2].data;
+                // Ekstraksi data (mengantisipasi jika Laravel menggunakan API Resource/data: [])
+                const requests = results[0].data.data || results[0].data || [];
+                const products = results[1].data.data || results[1].data || [];
+                const categories = results[2].data.data || results[2].data || [];
 
-                // Update Angka Statistik
+                // 1. Update Angka Statistik
                 document.getElementById('countRequests').innerText = requests.length;
-                document.getElementById('countDrugs').innerText = drugs.length;
+                document.getElementById('countDrugs').innerText = products.length;
                 document.getElementById('countCategories').innerText = categories.length;
 
-                // Filter & Render Low Stock Preview (Stok <= Min Stock)
-                const lowStock = drugs.filter(d => d.stock <= d.min_stock);
+                // 2. Filter & Render Low Stock Preview
+                // Pastikan nama kolom di database sesuai (stock & min_stock)
+                const lowStock = products.filter(p => parseInt(p.stock) <= parseInt(p.min_stock));
                 let html = '';
 
                 if(lowStock.length === 0) {
                     html = '<tr><td colspan="3" class="text-center py-4 text-success">Stok semua obat aman.</td></tr>';
                 } else {
-                    lowStock.slice(0, 5).forEach(d => { // Ambil 5 teratas
+                    lowStock.slice(0, 5).forEach(p => {
                         html += `
                         <tr>
                             <td class="ps-4">
-                                <span class="fw-bold small d-block">${d.name}</span>
-                                <code class="text-muted" style="font-size:10px">${d.sku}</code>
+                                <span class="fw-bold small d-block">${p.name}</span>
+                                <code class="text-muted" style="font-size:10px">${p.sku || '-'}</code>
                             </td>
-                            <td><span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">${d.stock} ${d.unit}</span></td>
-                            <td><a href="/operator/drugs" class="btn btn-sm btn-light rounded-circle"><i class="bi bi-arrow-right"></i></a></td>
+                            <td><span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">${p.stock} ${p.unit || ''}</span></td>
+                            <td><a href="/operator/products" class="btn btn-sm btn-light rounded-circle"><i class="bi bi-arrow-right"></i></a></td>
                         </tr>`;
                     });
                 }
                 document.getElementById('lowStockPreview').innerHTML = html;
             })
             .catch(err => {
-                console.error(err);
-                Swal.fire('Error', 'Gagal memuat ringkasan data.', 'error');
+                console.error("Detail Error:", err.response);
+                let msg = 'Gagal memuat ringkasan data.';
+                if (err.response && err.response.status === 404) {
+                    msg = 'Error 404: Route API tidak ditemukan. Pastikan URL di JS sesuai dengan api.php';
+                }
+                Swal.fire('Error', msg, 'error');
             });
     }
 
