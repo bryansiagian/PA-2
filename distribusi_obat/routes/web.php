@@ -49,6 +49,10 @@ Route::middleware(['auth'])->group(function() {
         return view('admin.cms.profile');
     })->name('profile.index');
 
+    Route::get('/customer/profile', function () {
+        return view('customer.profile');
+    })->name('customer.profile');
+
 
     // =====================
     // ADMIN & OPERATOR

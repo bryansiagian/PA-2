@@ -150,6 +150,7 @@
               <i class="bi bi-person-circle me-1"></i> <span class="d-none d-sm-inline">{{ Auth::user()->name }}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-3">
+              <li><a class="dropdown-item py-2" href="{{ route('customer.profile') }}"><i class="bi bi-person-badge me-2"></i> Profil Saya</a></li>
               <li><a class="dropdown-item py-2" href="/dashboard"><i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard</a></li>
               @role('customer')
                 <li><a class="dropdown-item py-2" href="/customer/history"><i class="bi bi-clock-history me-2 text-primary"></i> Pesanan Saya</a></li>

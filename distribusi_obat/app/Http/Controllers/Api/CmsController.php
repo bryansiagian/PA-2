@@ -138,7 +138,15 @@ class CmsController extends Controller {
 
     // --- Manajemen Berita & Kegiatan (Admin) ---
     public function indexPosts() {
-        return Post::with(['category', 'author'])->where('active', 1)->latest()->get();
+        try {
+            // Kita ambil data yang aktif saja, dan pastikan kolom status & active ikut terkirim
+            return Post::with(['category', 'author'])
+                ->where('active', 1)
+                ->latest()
+                ->get();
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 
     public function showPost($id) {
