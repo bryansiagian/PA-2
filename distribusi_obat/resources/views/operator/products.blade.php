@@ -107,12 +107,12 @@
                             <input type="text" name="name" id="form_name" class="form-control" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold small text-muted">SKU (Stock Keeping Unit)</label>
-                            <input type="text" name="sku" id="form_sku" class="form-control" placeholder="Contoh: SKU-001" required>
+                            <label class="form-label fw-bold small text-muted">SKU / Kode</label>
+                            <input type="text" name="sku" id="form_sku" class="form-control" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold small text-muted">Kode Produk Internal</label>
-                            <input type="text" name="product_code" id="form_product_code" class="form-control" placeholder="Contoh: P-1002">
+                            <input type="text" name="product_code" id="form_product_code" class="form-control">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold small text-muted">Kategori</label>
@@ -120,23 +120,23 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold small text-muted">Satuan (Unit)</label>
-                            <input type="text" name="unit" id="form_unit" class="form-control" placeholder="Box/Botol/Pcs" required>
+                            <input type="text" name="unit" id="form_unit" class="form-control" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold small text-primary">Gudang Penyimpanan</label>
                             <select name="warehouse_id" id="form_warehouse_id" class="form-select border-primary border-opacity-25" required></select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold small text-muted">Harga Estimasi (Rp)</label>
-                            <input type="number" name="price" id="form_price" class="form-control" value="0" required>
+                            <label class="form-label fw-bold small text-muted">Harga Satuan (Rp)</label>
+                            <input type="number" name="price" id="form_price" class="form-control" required>
                         </div>
                         <div class="col-md-4 mb-3" id="initialStockSection">
                             <label class="form-label fw-bold small text-muted">Stok Awal</label>
                             <input type="number" name="stock" id="form_stock" class="form-control" value="0">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold small text-muted">Batas Stok Rendah</label>
-                            <input type="number" name="min_stock" id="form_min_stock" class="form-control" value="5" required>
+                            <label class="form-label fw-bold small text-muted">Min. Stok</label>
+                            <input type="number" name="min_stock" id="form_min_stock" class="form-control" required>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold small text-muted">Deskripsi Singkat</label>
@@ -222,7 +222,7 @@
             let low = 0, out = 0;
 
             if (products.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-5">Katalog kosong.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted small">Katalog masih kosong.</td></tr>';
                 return;
             }
 
@@ -289,7 +289,7 @@
             document.getElementById('form_description').value = p.description || '';
 
             document.getElementById('modalTitle').innerText = 'Edit Informasi Produk';
-            document.getElementById('initialStockSection').classList.add('d-none');
+            document.getElementById('initialStockSection').classList.add('d-none'); // Sembunyikan stok saat edit
             document.getElementById('editImageNote').classList.remove('d-none');
 
             modalProduct.show();
@@ -309,6 +309,8 @@
         if (id) {
             url = `/api/products/${id}`;
             formData.append('_method', 'PUT');
+            // PERBAIKAN: Hapus field stock dari payload saat update agar tidak menimpa ke 0
+            formData.delete('stock');
         }
 
         axios.post(url, formData).then(() => {
@@ -316,7 +318,7 @@
             Swal.fire({ icon: 'success', title: 'Berhasil', text: id ? 'Data diperbarui' : 'Produk ditambahkan', timer: 1500, showConfirmButton: false });
             fetchProducts();
         }).catch(err => {
-            Swal.fire('Gagal', err.response?.data?.message || 'Lengkapi seluruh data.', 'error');
+            Swal.fire('Gagal', err.response?.data?.message || 'Terjadi kesalahan sistem.', 'error');
         }).finally(() => {
             btn.disabled = false;
             btn.innerHTML = 'SIMPAN DATA';
@@ -327,11 +329,11 @@
         const productId = document.getElementById('selectProductStock').value;
         const qty = document.getElementById('inputQty').value;
 
-        if(!productId || !qty) return Swal.fire('Peringatan', 'Lengkapi produk dan jumlah.', 'warning');
+        if(!productId || !qty) return Swal.fire('Peringatan', 'Lengkapi data.', 'warning');
 
         axios.post('/api/products/stock-in', { product_id: productId, quantity: qty }).then(() => {
             bootstrap.Modal.getInstance(document.getElementById('modalStockIn')).hide();
-            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Stok berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Stok telah diperbarui.', timer: 1500, showConfirmButton: false });
             document.getElementById('stockInForm').reset();
             fetchProducts();
         });
@@ -340,29 +342,25 @@
     function confirmDelete(id, name) {
         Swal.fire({
             title: 'Hapus Produk?',
-            text: `Hapus ${name} dari katalog? Tindakan ini permanen.`,
+            text: `Apakah Anda yakin ingin menghapus ${name}?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Ya, Hapus'
         }).then(result => {
             if (result.isConfirmed) {
                 axios.delete(`/api/products/${id}`).then(() => {
-                    Swal.fire('Terhapus', 'Produk telah dihapus.', 'success');
+                    Swal.fire('Terhapus', 'Produk berhasil dihapus.', 'success');
                     fetchProducts();
                 });
             }
         });
     }
 
-    // Live Search Logic
     document.getElementById('tableSearch').addEventListener('keyup', function() {
         let val = this.value.toLowerCase();
         let rows = document.querySelectorAll('#productTableBody tr');
-        rows.forEach(row => {
-            row.style.display = (row.innerText.toLowerCase().includes(val)) ? "" : "none";
-        });
+        rows.forEach(row => { row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none"; });
     });
 </script>
 
@@ -374,6 +372,5 @@
     .btn-indigo:hover { background-color: #3f51b5; color: #fff; }
     .spinner { animation: rotation 2s infinite linear; display: inline-block; }
     @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
-    .fs-base { font-size: 1rem; }
 </style>
 @endsection

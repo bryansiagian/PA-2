@@ -19,20 +19,24 @@ class ProductController extends Controller
     public function index() {
         try {
             // Relasi disesuaikan dengan skema baru: category dan warehouse
-            return Product::with('category', 'warehouse')->where('active', 1)->get();
+            return Product::with('category', 'warehouse')
+                ->where('active', 1)
+                ->latest()
+                ->get();
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal di server: ' . $e->getMessage()], 500);
         }
     }
 
-    public function public()
-{
-    return \App\Models\Product::where('active', 1)
-        ->select('id','name','price','stock','unit','image','sku','description','product_category_id')
-        ->with('category:id,name')
-        ->latest()
-        ->get();
-}
+    public function publicProducts()
+    {
+        return Product::with('category')
+            ->where('active', 1)
+            ->where('stock', '>', 0)
+            ->latest()
+            ->take(8)
+            ->get();
+    }
 
     /**
      * MENDAFTARKAN PRODUK BARU.
@@ -49,7 +53,7 @@ class ProductController extends Controller
             'min_stock'           => 'required|integer|min:0',
             'stock'               => 'required|integer|min:0',
             'description'         => 'nullable|string',
-            'image'               => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
         ]);
 
         try {
@@ -112,11 +116,13 @@ class ProductController extends Controller
             'price'               => 'required|numeric|min:0',
             'unit'                => 'required|string',
             'min_stock'           => 'required|integer',
-            'image'               => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
         ]);
 
         try {
-            $data = $request->except(['image']);
+            // PERBAIKAN: Tambahkan 'stock' ke dalam daftar except
+            // Ini mencegah nilai stok tertimpa secara tidak sengaja saat edit informasi
+            $data = $request->except(['image', 'stock']);
 
             if ($request->hasFile('image')) {
                 if ($product->image) {

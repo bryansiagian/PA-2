@@ -180,12 +180,12 @@
       </a>
 
       <!-- SEARCH BOX (HIDDEN ON MOBILE) -->
-      <div class="search-box d-none d-lg-block mx-4 flex-grow-1" style="max-width: 400px;">
+      {{-- <div class="search-box d-none d-lg-block mx-4 flex-grow-1" style="max-width: 400px;">
         <div class="input-group">
             <span class="input-group-text bg-transparent border-0 pe-0"><i class="bi bi-search text-muted"></i></span>
             <input id="globalSearchInput" class="form-control border-0 shadow-none bg-transparent" type="search" placeholder="Cari sediaan obat...">
         </div>
-      </div>
+      </div> --}}
 
       <!-- ACTION BUTTONS -->
       <div class="d-flex align-items-center">

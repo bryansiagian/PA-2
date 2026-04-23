@@ -18,7 +18,8 @@ use App\Http\Controllers\Api\WarehouseController;       // Ganti dari InventoryC
 
 // --- 1. RUTE PUBLIK ---
 Route::get('/public/landing-page', [CmsController::class, 'getLandingPageData']);
-Route::get('/public/products', [ProductController::class, 'index']); // Ganti drugs ke products
+Route::get('/products', [ProductController::class, 'index']); // Ganti drugs ke products
+Route::get('/public/products', [ProductController::class, 'publicProducts']); // Ganti drugs ke products
 Route::get('/public/posts', [CmsController::class, 'indexPosts']); // <--- TAMBAHKAN INI
 Route::get('/public/posts/{id}', [CmsController::class, 'showPost']); // <--- TAMBAHKAN INI
 Route::get('/public/post-categories', [CmsController::class, 'indexPostCategories']); // <--- TAMBAHKAN INI

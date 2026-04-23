@@ -26,19 +26,10 @@ class CmsController extends Controller {
                 'profiles' => Profile::where('active', 1)->get()->keyBy('key'),
                 'contacts' => Contact::where('active', 1)->get()->keyBy('key'),
 
-                'news' => Post::with('category')
+                'posts' => Post::with('category')
                     ->whereHas('category', function($q) {
-                        $q->where('name', 'LIKE', '%Berita%');
-                    })
-                    ->where('status', 1)
-                    ->where('active', 1)
-                    ->latest()
-                    ->take(3)
-                    ->get(),
-
-                'activities' => Post::with('category')
-                    ->whereHas('category', function($q) {
-                        $q->where('name', 'LIKE', '%Kegiatan%');
+                        $q->where('name', 'LIKE', '%Berita%')
+                        ->orWhere('name', 'LIKE', '%Kegiatan%');
                     })
                     ->where('status', 1)
                     ->where('active', 1)

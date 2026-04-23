@@ -183,9 +183,9 @@
                     <div class="chart-container mb-3" style="position: relative; height:150px;">
                         <canvas id="userRoleChart"></canvas>
                     </div>
-                    <div class="text-center">
+                    {{-- <div class="text-center">
                         <small class="text-muted">E-Pharma Engine v1.2 | Laravel {{ app()->version() }}</small>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
