@@ -33,6 +33,7 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('otp.verify');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('otp.resend');
 });
 
 

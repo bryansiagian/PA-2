@@ -183,6 +183,35 @@ class AuthController extends Controller
         ]);
     }
 
+    public function resendOtp(Request $request) {
+        $email = session('pending_otp_email');
+
+        if (!$email) {
+            return response()->json(['message' => 'Sesi habis, silakan daftar ulang.'], 422);
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Pengguna tidak ditemukan.'], 404);
+        }
+
+        // Generate OTP Baru
+        $otp = rand(100000, 999999);
+        $user->update([
+            'otp_code' => $otp,
+            'otp_expires_at' => now()->addMinutes(10)
+        ]);
+
+        // Kirim Email
+        try {
+            Mail::to($user->email)->send(new \App\Mail\OtpNotification($user->name, $otp));
+            return response()->json(['message' => 'Kode OTP baru telah dikirim ke email Anda.']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal mengirim email. Coba lagi nanti.'], 500);
+        }
+    }
+
     public function logout(Request $request) {
         if (Auth::check()) {
             Auth::user()->tokens()->delete();

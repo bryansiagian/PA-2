@@ -2,6 +2,12 @@
 
 @section('content')
 <style>
+    :root {
+        --primary: #00838f; /* Hijau Toska Tua */
+        --secondary: #2c4964; /* Navy */
+        --hover-color: #006064;
+    }
+
     /* MODIFIKASI: Mengubah header agar menyatu secara natural */
     .page-header {
         background: transparent;
@@ -10,7 +16,7 @@
         margin-bottom: 20px;
     }
     .section-heading {
-        color: #2c4964;
+        color: var(--secondary);
         font-weight: 700;
         position: relative;
         padding-bottom: 15px;
@@ -22,7 +28,7 @@
         position: absolute;
         width: 50px;
         height: 4px;
-        background: #3fbbc0;
+        background: var(--primary);
         bottom: 0;
         left: 0;
         border-radius: 2px;
@@ -33,7 +39,7 @@
         border: none;
         border-radius: 15px;
         background: #fff;
-        border-left: 5px solid #3fbbc0;
+        border-left: 5px solid var(--primary);
         box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         transition: 0.3s;
         margin-bottom: 15px;
@@ -59,13 +65,13 @@
         justify-content: center;
         background: #fff;
         border: 1px solid #dee2e6;
-        color: #3fbbc0;
+        color: var(--primary);
         font-weight: bold;
         cursor: pointer;
         transition: 0.2s;
         padding: 0;
     }
-    .btn-qty:hover { background: #3fbbc0; color: #fff; border-color: #3fbbc0; }
+    .btn-qty:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
 
     .card-summary {
         border: none;
@@ -76,8 +82,8 @@
     }
 
     .btn-medinest {
-        background: #3fbbc0;
-        color: white;
+        background: var(--primary);
+        color: white !important;
         border-radius: 30px;
         padding: 12px 25px;
         font-weight: 600;
@@ -85,10 +91,18 @@
         width: 100%;
         transition: 0.3s;
     }
-    .btn-medinest:hover:not(:disabled) { background: #329ea2; transform: translateY(-2px); }
+    .btn-medinest:hover:not(:disabled) {
+        background: var(--hover-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 131, 143, 0.3);
+    }
     .btn-medinest:disabled { background: #a5d8da; cursor: not-allowed; }
 
+    .text-teal { color: var(--primary) !important; }
+    .badge-teal { background-color: #e0f2f1; color: var(--primary); border: 1px solid #b2dfdb; }
+
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
 </style>
 
 <div class="page-header">
@@ -113,7 +127,8 @@
         <div class="col-lg-8">
             <div id="cartItemsContainer">
                 <div class="text-center py-5">
-                    <div class="spinner-border text-info"></div>
+                    <div class="spinner-border text-teal" role="status"></div>
+                    <p class="mt-3 text-muted">Menghubungkan ke gudang...</p>
                 </div>
             </div>
         </div>
@@ -122,7 +137,7 @@
         <div class="col-lg-4">
             <div class="card card-summary sticky-top" style="top: 100px;">
                 <div class="p-4 bg-light border-bottom text-center">
-                    <h5 class="fw-bold m-0">Ringkasan Permintaan</h5>
+                    <h5 class="fw-bold m-0" style="color: var(--secondary);">Ringkasan Permintaan</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-4">
@@ -139,21 +154,21 @@
                     </div>
                     <div class="d-flex justify-content-between mb-3 align-items-center">
                         <span class="text-muted small">Total Kuantitas</span>
-                        <span class="fw-bold text-info fs-4" id="totalQty">0</span>
+                        <span class="fw-bold fs-4 text-teal" id="totalQty">0</span>
                     </div>
 
                     <hr class="my-4 opacity-25">
 
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted text-uppercase">Catatan Tambahan</label>
-                        <textarea id="checkoutNotes" class="form-control bg-light border-0 small" rows="3" placeholder="Contoh: Titip di resepsionis..."></textarea>
+                        <textarea id="checkoutNotes" class="form-control bg-light border-0 small" rows="3" placeholder="Contoh: Unit Gawat Darurat, titip di resepsionis..."></textarea>
                     </div>
 
                     <button id="btnCheckout" onclick="processCheckout()" class="btn btn-medinest shadow-sm mb-3" disabled>
                         Proses Pengajuan <i class="bi bi-send-fill ms-2"></i>
                     </button>
 
-                    <a href="/#katalog" class="btn btn-link w-100 text-muted text-decoration-none small">
+                    <a href="/customer/products" class="btn btn-link w-100 text-muted text-decoration-none small">
                         <i class="bi bi-plus-lg me-1"></i> Tambah Item Lain
                     </a>
                 </div>
@@ -178,16 +193,17 @@
                     btnClear.style.display = 'none';
                     btnCheckout.disabled = true;
                     html = `<div class="text-center py-5 bg-white rounded-4 border border-dashed shadow-sm">
-                                <i class="bi bi-cart-x text-muted opacity-25" style="font-size: 5rem;"></i>
+                                <i class="bi bi-cart-x text-muted opacity-25" style="font-size: 5rem; color: var(--primary);"></i>
                                 <h4 class="fw-bold mt-3">Keranjang Kosong</h4>
-                                <a href="/#katalog" class="btn btn-medinest px-5 mt-2 w-auto">Lihat Katalog</a>
+                                <p class="text-muted">Anda belum memilih sediaan obat apapun.</p>
+                                <a href="/customer/products" class="btn btn-medinest px-5 mt-2 w-auto">Lihat Katalog</a>
                             </div>`;
                 } else {
                     btnClear.style.display = 'inline-block';
                     btnCheckout.disabled = false;
 
                     carts.forEach(item => {
-                        const product = item.product || {}; // Perubahan dari item.drug ke item.product
+                        const product = item.product || {};
                         const img = product.image ? `/${product.image}` : 'https://placehold.co/200x200?text=Produk';
                         const currentQty = parseInt(item.quantity);
                         totalQuantity += currentQty;
@@ -197,29 +213,31 @@
                             <div class="card-body p-3">
                                 <div class="row align-items-center text-center text-md-start">
                                     <div class="col-md-2">
-                                        <img src="${img}" class="img-fluid rounded-3" style="max-height: 80px;">
+                                        <div class="bg-light p-1 rounded-3">
+                                            <img src="${img}" class="img-fluid rounded-3" style="max-height: 80px; object-fit: contain;">
+                                        </div>
                                     </div>
                                     <div class="col-md-5">
                                         <h6 class="fw-bold text-dark mb-1">${product.name || 'Produk'}</h6>
                                         <div class="text-muted small">Kemasan: ${product.unit || '-'}</div>
-                                        <span class="badge bg-light text-primary border mt-1">Stok Gudang: ${product.stock}</span>
+                                        <span class="badge badge-teal mt-1">Stok Gudang: ${product.stock}</span>
                                     </div>
                                     <div class="col-md-3 mt-3 mt-md-0">
                                         <div class="qty-control">
-                                            <button type="button" class="btn-qty" onclick="changeQty(${item.id}, ${currentQty - 1}, ${product.stock})">
+                                            <button type="button" class="btn-qty" onclick="changeQty('${item.id}', ${currentQty - 1}, ${product.stock})">
                                                 <i class="bi bi-dash"></i>
                                             </button>
                                             <input type="number" class="form-control text-center border-0 bg-transparent fw-bold"
-                                                   style="width: 60px;" value="${currentQty}"
-                                                   onchange="changeQty(${item.id}, this.value, ${product.stock})">
-                                            <button type="button" class="btn-qty" onclick="changeQty(${item.id}, ${currentQty + 1}, ${product.stock})">
+                                                   style="width: 60px; color: var(--secondary);" value="${currentQty}"
+                                                   onchange="changeQty('${item.id}', this.value, ${product.stock})">
+                                            <button type="button" class="btn-qty" onclick="changeQty('${item.id}', ${currentQty + 1}, ${product.stock})">
                                                 <i class="bi bi-plus"></i>
                                             </button>
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-md-end mt-3 mt-md-0">
-                                        <button class="btn btn-link text-danger p-0" onclick="deleteItem(${item.id})">
-                                            <i class="bi bi-trash fs-5"></i>
+                                        <button class="btn btn-link text-danger p-0 text-decoration-none" onclick="deleteItem('${item.id}')">
+                                            <i class="bi bi-trash fs-5"></i> <span class="d-md-none">Hapus</span>
                                         </button>
                                     </div>
                                 </div>
@@ -231,7 +249,7 @@
                 container.innerHTML = html;
                 document.getElementById('totalKinds').innerText = carts.length;
                 document.getElementById('totalQty').innerText = totalQuantity;
-                if(typeof updateCartBadge === 'function') updateCartBadge();
+                if(window.updateCartBadge) window.updateCartBadge();
             });
     }
 
@@ -239,8 +257,9 @@
         const qty = parseInt(newQty);
         if (qty < 1) { deleteItem(cartId); return; }
         if (qty > maxStock) {
-            Swal.fire({ icon: 'warning', title: 'Stok Terbatas', text: `Sisa stok hanya ${maxStock} unit.`, confirmButtonColor: '#3fbbc0' });
-            fetchCart(); return;
+            Swal.fire({ icon: 'warning', title: 'Stok Terbatas', text: `Sisa stok di gudang hanya ${maxStock} unit.`, confirmButtonColor: '#00838f' });
+            fetchCart();
+            return;
         }
         axios.put(`/api/cart/${cartId}`, { quantity: qty }).then(() => fetchCart());
     }
@@ -254,8 +273,8 @@
             title: 'Kosongkan Keranjang?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3fbbc0',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#00838f',
             confirmButtonText: 'Ya, Kosongkan!'
         }).then((result) => {
             if (result.isConfirmed) axios.delete('/api/cart-clear').then(() => fetchCart());
@@ -268,23 +287,20 @@
 
         Swal.fire({
             title: 'Kirim Pengajuan?',
-            text: "Daftar permintaan akan dikirim ke petugas gudang.",
+            text: "Daftar permintaan akan dikirim ke petugas gudang pusat.",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#3fbbc0',
+            confirmButtonColor: '#00838f',
             confirmButtonText: 'Ya, Kirim'
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Mengirim...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-                // PERBAIKAN: Ganti URL dari /api/requests menjadi /api/orders
                 axios.post('/api/orders', { notes: notes, request_type: reqType })
                     .then(() => {
-                        Swal.fire({ icon: 'success', title: 'Berhasil', confirmButtonColor: '#3fbbc0' })
+                        Swal.fire({ icon: 'success', title: 'Berhasil Terkirim', confirmButtonColor: '#00838f' })
                             .then(() => window.location.href = '/customer/history');
                     })
                     .catch(err => {
-                        console.error(err);
                         Swal.fire('Gagal', err.response?.data?.message || 'Terjadi kesalahan sistem.', 'error');
                     });
             }
