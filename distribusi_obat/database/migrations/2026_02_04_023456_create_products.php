@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('product_code')->nullable();
             $table->foreignId('product_category_id')->constrained()->onDelete('cascade');
             $table->foreignId('warehouse_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('rack_id')->nullable()->constrained()->onDelete('set null');
             $table->string('sku')->unique();
             $table->string('name');
             $table->string('image')->nullable();

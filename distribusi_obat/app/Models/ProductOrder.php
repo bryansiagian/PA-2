@@ -16,6 +16,10 @@ class ProductOrder extends Model {
         'product_order_delivery_id', // Relasi ke Metode Pengiriman
         'product_order_delivery_cost',
         'product_order_discount',
+        'regency', 
+        'district',
+        'village', 
+        'shipping_address',
         'required_vehicle', // Jika masih ingin menyimpan string-nya (opsional)
         'notes',
         'total'

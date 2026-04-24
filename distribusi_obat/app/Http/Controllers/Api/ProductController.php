@@ -19,7 +19,7 @@ class ProductController extends Controller
     public function index() {
         try {
             // Relasi disesuaikan dengan skema baru: category dan warehouse
-            return Product::with('category', 'warehouse')
+            return Product::with('category', 'warehouse', 'rack')
                 ->where('active', 1)
                 ->latest()
                 ->get();

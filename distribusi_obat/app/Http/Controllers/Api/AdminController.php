@@ -25,7 +25,8 @@ class AdminController extends Controller
      */
     public function getUsers() {
         try {
-            $users = User::with('roles')
+            // PERBAIKAN: Tambahkan 'courierDetail' ke dalam with()
+            $users = User::with(['roles', 'courierDetail'])
                 ->where('status', 1)
                 ->whereHas('roles', function($query) {
                     $query->where('name', '!=', 'admin');
@@ -35,6 +36,8 @@ class AdminController extends Controller
 
             return response()->json($users, 200);
         } catch (\Exception $e) {
+            // Senior Tip: Selalu log error asli agar mudah debugging jika terjadi sesuatu di server
+            \Log::error("Error in getUsers: " . $e->getMessage());
             return response()->json(['message' => 'Gagal mengambil data user'], 500);
         }
     }

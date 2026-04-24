@@ -33,34 +33,47 @@ class DeliveryController extends Controller {
      * Dipanggil oleh Operator Gudang.
      */
     public function makeReady(Request $request, $id) {
+        $request->validate([
+            'product_order_type_id' => 'required|exists:product_order_types,id',
+            'courier_id' => 'nullable|exists:users,id'
+        ]);
+
         return DB::transaction(function() use ($request, $id) {
             $order = ProductOrder::findOrFail($id);
 
-            // Cek apakah admin memilih kurir atau tidak
-            $courierId = $request->courier_id;
+            // 1. Update Jenis Kendaraan berdasarkan pilihan Admin (Override data lama)
+            $typeId = $request->product_order_type_id;
+            $vehicleName = ($typeId == 2) ? 'car' : 'motorcycle'; // Konversi untuk kolom string
 
-            // Ambil ID Status yang dibutuhkan
+            $order->update([
+                'product_order_type_id' => $typeId,
+                'required_vehicle' => $vehicleName
+            ]);
+
+            // 2. Tentukan Status Pengiriman
+            $courierId = $request->courier_id;
             $readyStatus = DeliveryStatus::where('name', 'Ready')->first();
             $claimedStatus = DeliveryStatus::where('name', 'Claimed')->first();
 
-            // Tentukan status: Jika ada kurir, langsung 'Claimed'. Jika tidak, 'Ready'.
+            // Jika kurir ditunjuk langsung, status = Claimed. Jika dikosongkan, status = Ready (Masuk Bursa)
             $finalStatusId = $courierId ? $claimedStatus->id : $readyStatus->id;
 
             $delivery = Delivery::create([
                 'product_order_id'   => $order->id,
-                'courier_id'         => $courierId, // Bisa null atau berisi ID
+                'courier_id'         => $courierId,
                 'delivery_status_id' => $finalStatusId,
                 'tracking_number'    => 'TRK-' . strtoupper(bin2hex(random_bytes(4)))
             ]);
 
-            // Update status pesanan utama menjadi Shipping
+            // 3. Update status pesanan utama menjadi Shipping
             $orderStatusShipping = ProductOrderStatus::where('name', 'Shipping')->first();
             $order->update(['product_order_status_id' => $orderStatusShipping->id]);
 
-            // Catat di timeline tracking
+            // 4. Catat di timeline tracking
+            $vehicleLabel = ($typeId == 2) ? 'Mobil/Van' : 'Sepeda Motor';
             $description = $courierId
-                ? "Pesanan ditugaskan langsung kepada kurir."
-                : "Pesanan siap dijemput di bursa tugas.";
+                ? "Pesanan ditugaskan langsung kepada kurir menggunakan {$vehicleLabel}."
+                : "Pesanan siap dijemput di bursa tugas khusus armada {$vehicleLabel}.";
 
             ShipmentTracking::create([
                 'delivery_id' => $delivery->id,
@@ -68,9 +81,12 @@ class DeliveryController extends Controller {
                 'description' => $description
             ]);
 
-            AuditLog::create(['user_id' => auth()->id(), 'action' => "READY: Paket Order #{$id} diproses"]);
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => "READY: Paket #{$id} disiapkan untuk armada {$vehicleName}"
+            ]);
 
-            return response()->json(['message' => 'Pesanan berhasil diproses ke tahap pengiriman.']);
+            return response()->json(['message' => 'Resi diterbitkan. Pesanan siap didistribusikan.']);
         });
     }
 

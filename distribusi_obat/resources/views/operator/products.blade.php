@@ -76,6 +76,7 @@
                         <th class="ps-3">Produk & SKU</th>
                         <th>Kategori</th>
                         <th>Gudang</th>
+                        <th>Lokasi Rak</th> <!-- KOLOM BARU -->
                         <th class="text-center">Harga (Rp)</th>
                         <th class="text-center">Stok</th>
                         <th class="text-center">Status</th>
@@ -83,7 +84,7 @@
                     </tr>
                 </thead>
                 <tbody id="productTableBody">
-                    <tr><td colspan="7" class="text-center py-5 text-muted">Memuat data...</td></tr>
+                    <tr><td colspan="8" class="text-center py-5 text-muted">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -122,11 +123,22 @@
                             <label class="form-label fw-bold small text-muted">Satuan (Unit)</label>
                             <input type="text" name="unit" id="form_unit" class="form-control" required>
                         </div>
+
+                        <!-- Pilihan Gudang -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold small text-primary">Gudang Penyimpanan</label>
-                            <select name="warehouse_id" id="form_warehouse_id" class="form-select border-primary border-opacity-25" required></select>
+                            <select name="warehouse_id" id="form_warehouse_id" class="form-select border-primary border-opacity-25" onchange="loadRackOptions(this.value)" required></select>
                         </div>
-                        <div class="col-md-4 mb-3">
+
+                        <!-- Pilihan Rak (KOLOM BARU) -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-primary">Lokasi Rak</label>
+                            <select name="rack_id" id="form_rack_id" class="form-select border-primary border-opacity-25" required disabled>
+                                <option value="" selected disabled>-- Pilih Gudang Terlebih Dahulu --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold small text-muted">Harga Satuan (Rp)</label>
                             <input type="number" name="price" id="form_price" class="form-control" required>
                         </div>
@@ -158,7 +170,7 @@
     </div>
 </div>
 
-<!-- MODAL: STOCK IN -->
+<!-- Modal Stock In tetap sama -->
 <div class="modal fade" id="modalStockIn" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3">
@@ -190,6 +202,7 @@
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
 
     const modalProduct = new bootstrap.Modal(document.getElementById('modalProduct'));
+    let allRacks = []; // Simpan semua data rak secara global untuk filter cepat
 
     document.addEventListener('DOMContentLoaded', initPage);
 
@@ -208,7 +221,30 @@
             document.getElementById('form_warehouse_id').innerHTML = opt;
         });
 
+        // Pre-fetch Racks
+        axios.get('/api/inventory/racks').then(res => {
+            allRacks = res.data;
+        });
+
         fetchProducts();
+    }
+
+    // Fungsi Load Rak berdasarkan Gudang (Dependent Dropdown)
+    function loadRackOptions(warehouseId, selectedRackId = null) {
+        const rackSelect = document.getElementById('form_rack_id');
+        rackSelect.disabled = false;
+
+        let filteredRacks = allRacks.filter(r => r.storage_id == warehouseId || r.warehouse_id == warehouseId);
+
+        let html = '<option value="" selected disabled>-- Pilih Rak --</option>';
+        filteredRacks.forEach(r => {
+            html += `<option value="${r.id}" ${selectedRackId == r.id ? 'selected' : ''}>${r.name}</option>`;
+        });
+
+        rackSelect.innerHTML = html;
+        if(filteredRacks.length === 0) {
+            rackSelect.innerHTML = '<option value="" disabled selected>Belum ada rak di gudang ini</option>';
+        }
     }
 
     function fetchProducts() {
@@ -222,7 +258,7 @@
             let low = 0, out = 0;
 
             if (products.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted small">Katalog masih kosong.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted small">Katalog masih kosong.</td></tr>';
                 return;
             }
 
@@ -231,6 +267,9 @@
                 let badge = p.stock <= 0 ? 'bg-danger' : (p.stock <= p.min_stock ? 'bg-warning text-dark' : 'bg-success');
                 let imgUrl = p.image ? `/${p.image}` : 'https://placehold.co/200x200?text=No+Image';
 
+                // Rak logic
+                let rackDisplay = p.rack ? `<span class="badge bg-indigo bg-opacity-10 text-indigo border border-indigo border-opacity-25 px-2"><i class="ph-archive me-1"></i>${p.rack.name}</span>` : '<span class="text-muted fs-xs italic">Belum diset</span>';
+
                 html += `
                 <tr>
                     <td class="ps-3">
@@ -238,15 +277,16 @@
                             <img src="${imgUrl}" class="rounded shadow-sm me-3 border" style="width: 45px; height: 45px; object-fit: cover;">
                             <div>
                                 <div class="fw-bold text-dark text-truncate" style="max-width: 180px;">${p.name}</div>
-                                <div class="fs-xs text-muted font-monospace">SKU: ${p.sku} | CODE: ${p.product_code || '-'}</div>
+                                <div class="fs-xs text-muted font-monospace">SKU: ${p.sku}</div>
                             </div>
                         </div>
                     </td>
                     <td><span class="badge bg-light text-primary border-0">${p.category?.name || '-'}</span></td>
-                    <td><div class="small fw-bold"><i class="ph-warehouse me-1 text-muted"></i>${p.warehouse?.name || 'N/A'}</div></td>
+                    <td><div class="small fw-bold text-dark">${p.warehouse?.name || 'N/A'}</div></td>
+                    <td>${rackDisplay}</td> <!-- KOLOM BARU -->
                     <td class="text-center fw-semibold">Rp ${Number(p.price).toLocaleString('id-ID')}</td>
                     <td class="text-center fw-bold text-indigo fs-base">${p.stock}</td>
-                    <td class="text-center"><span class="badge ${badge} px-2 py-1 rounded-pill">${p.stock <= 0 ? 'HABIS' : (p.stock <= p.min_stock ? 'RENDAH' : 'AMAN')}</span></td>
+                    <td class="text-center"><span class="badge ${badge} px-2 py-1 rounded-pill text-uppercase">${p.stock <= 0 ? 'Habis' : (p.stock <= p.min_stock ? 'Rendah' : 'Aman')}</span></td>
                     <td class="text-center pe-3">
                         <div class="d-inline-flex">
                             <button onclick="openEditModal('${p.id}')" class="btn btn-sm btn-light text-primary border-0 me-2 shadow-sm"><i class="ph-note-pencil"></i></button>
@@ -270,7 +310,8 @@
         document.getElementById('product_id').value = '';
         document.getElementById('modalTitle').innerText = 'Daftarkan Produk Baru';
         document.getElementById('initialStockSection').classList.remove('d-none');
-        document.getElementById('editImageNote').classList.add('d-none');
+        document.getElementById('form_rack_id').disabled = true;
+        document.getElementById('form_rack_id').innerHTML = '<option value="" disabled selected>-- Pilih Gudang Terlebih Dahulu --</option>';
         modalProduct.show();
     }
 
@@ -283,15 +324,17 @@
             document.getElementById('form_product_code').value = p.product_code || '';
             document.getElementById('form_category_id').value = p.product_category_id;
             document.getElementById('form_warehouse_id').value = p.warehouse_id;
+
+            // Load rak options berdasarkan gudang produk ini
+            loadRackOptions(p.warehouse_id, p.rack_id);
+
             document.getElementById('form_unit').value = p.unit;
             document.getElementById('form_price').value = p.price;
             document.getElementById('form_min_stock').value = p.min_stock;
             document.getElementById('form_description').value = p.description || '';
 
             document.getElementById('modalTitle').innerText = 'Edit Informasi Produk';
-            document.getElementById('initialStockSection').classList.add('d-none'); // Sembunyikan stok saat edit
-            document.getElementById('editImageNote').classList.remove('d-none');
-
+            document.getElementById('initialStockSection').classList.add('d-none');
             modalProduct.show();
         }).catch(() => Swal.fire('Error', 'Gagal memuat data produk.', 'error'));
     }
@@ -309,13 +352,12 @@
         if (id) {
             url = `/api/products/${id}`;
             formData.append('_method', 'PUT');
-            // PERBAIKAN: Hapus field stock dari payload saat update agar tidak menimpa ke 0
             formData.delete('stock');
         }
 
         axios.post(url, formData).then(() => {
             modalProduct.hide();
-            Swal.fire({ icon: 'success', title: 'Berhasil', text: id ? 'Data diperbarui' : 'Produk ditambahkan', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Inventaris diperbarui', timer: 1500, showConfirmButton: false });
             fetchProducts();
         }).catch(err => {
             Swal.fire('Gagal', err.response?.data?.message || 'Terjadi kesalahan sistem.', 'error');
@@ -325,12 +367,11 @@
         });
     }
 
+    // Fungsi pendukung lainnya tetap sama (Stock In, Delete, dll)
     function submitStockIn() {
         const productId = document.getElementById('selectProductStock').value;
         const qty = document.getElementById('inputQty').value;
-
         if(!productId || !qty) return Swal.fire('Peringatan', 'Lengkapi data.', 'warning');
-
         axios.post('/api/products/stock-in', { product_id: productId, quantity: qty }).then(() => {
             bootstrap.Modal.getInstance(document.getElementById('modalStockIn')).hide();
             Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Stok telah diperbarui.', timer: 1500, showConfirmButton: false });
@@ -340,20 +381,8 @@
     }
 
     function confirmDelete(id, name) {
-        Swal.fire({
-            title: 'Hapus Produk?',
-            text: `Apakah Anda yakin ingin menghapus ${name}?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Ya, Hapus'
-        }).then(result => {
-            if (result.isConfirmed) {
-                axios.delete(`/api/products/${id}`).then(() => {
-                    Swal.fire('Terhapus', 'Produk berhasil dihapus.', 'success');
-                    fetchProducts();
-                });
-            }
+        Swal.fire({ title: 'Hapus Produk?', text: `Yakin menghapus ${name}?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus' }).then(result => {
+            if (result.isConfirmed) axios.delete(`/api/products/${id}`).then(() => { Swal.fire('Terhapus', 'Produk dihapus.', 'success'); fetchProducts(); });
         });
     }
 
@@ -372,5 +401,6 @@
     .btn-indigo:hover { background-color: #3f51b5; color: #fff; }
     .spinner { animation: rotation 2s infinite linear; display: inline-block; }
     @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
+    .italic { font-style: italic; }
 </style>
 @endsection

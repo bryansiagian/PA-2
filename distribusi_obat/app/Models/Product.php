@@ -17,6 +17,7 @@ class Product extends Model {
         'product_code',
         'product_category_id',
         'warehouse_id',
+        'rack_id',
         'sku',
         'name',
         'image',
@@ -42,6 +43,10 @@ class Product extends Model {
 
     public function warehouse() {
         return $this->belongsTo(Warehouse::class);
+    }
+
+    public function rack() {
+        return $this->belongsTo(Rack::class);
     }
 
     public function stockLogs() {

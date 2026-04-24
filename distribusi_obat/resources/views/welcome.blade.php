@@ -86,13 +86,28 @@
     .detail-label { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; margin-bottom: 5px; display: block;}
     .detail-value { font-weight: 600; color: var(--secondary); margin-bottom: 12px; font-size: 14px; }
 
-    .profile-item-box { transition: 0.3s; border: 1px solid #eee !important; }
+    .profile-item-box { transition: 0.3s; border: 1px solid #eee !important; cursor: pointer;}
     .profile-item-box:hover { background-color: #ffffff !important; border-color: var(--primary) !important; transform: translateY(-2px); }
 
-    /* CSS Agar List Visi Misi tampil berurutan angka */
-    #modalContentBody ol { padding-left: 20px; }
-    #modalContentBody ul { padding-left: 20px; list-style-type: decimal; }
-    #modalContentBody li { margin-bottom: 10px; color: #555; }
+    /* CSS UNTUK KONTEN CKEDITOR */
+    #aboutExcerpt strong, #modalContentBody strong { font-weight: 700 !important; color: #333; }
+    #modalContentBody ul { padding-left: 20px; margin-bottom: 15px; list-style-type: disc; }
+    #modalContentBody ol { padding-left: 20px; margin-bottom: 15px; list-style-type: decimal !important; }
+    #modalContentBody li { margin-bottom: 8px; color: #555; display: list-item !important; }
+    #modalContentBody p { margin-bottom: 15px; }
+
+    /* Styling khusus Visi agar beda dengan Misi */
+    .vision-text {
+        font-style: italic;
+        font-size: 1.1rem;
+        color: var(--secondary);
+        padding: 15px;
+        background: #f0f7f8;
+        border-left: 4px solid var(--primary);
+        border-radius: 0 8px 8px 0;
+    }
+
+    .quick-address-box { background-color: #f0f7f7; border: 1px solid #e0eeee; border-radius: 12px; padding: 15px; }
 
     /* Gallery Adjustment */
     .gallery-img { height: 180px; width: 100%; object-fit: cover; transition: 0.5s; cursor: pointer; }
@@ -142,6 +157,7 @@
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile mt-3">
               <li><a class="dropdown-item py-2" href="{{ route('customer.profile') }}"><i class="bi bi-person-badge me-2 text-primary"></i> Profil Saya</a></li>
               <li><a class="dropdown-item py-2" href="/dashboard"><i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard</a></li>
+              <li><a class="dropdown-item" href="/customer/history"><i class="bi bi-clock-history me-2 text-primary"></i> Riwayat Pesanan</a></li>
               <li><hr class="dropdown-divider"></li>
               <li>
                 <form action="{{ route('logout') }}" method="POST"> @csrf
@@ -174,11 +190,6 @@
         <a class="nav-link" href="#katalog"><i class="bi bi-capsule"></i> Katalog</a>
         <a class="nav-link" href="#organisasi"><i class="bi bi-people"></i> Organisasi</a>
         <a class="nav-link" href="#galeri"><i class="bi bi-images"></i> Galeri</a>
-        @auth @role('customer')
-          <a class="nav-link text-primary" href="/customer/cart">
-            <i class="bi bi-cart3"></i> Keranjang <span class="badge bg-danger ms-2" id="mobileCartBadge" style="display:none">0</span>
-          </a>
-        @endrole @endauth
       </nav>
     </div>
   </div>
@@ -247,15 +258,15 @@
             <h2 class="fw-bold mb-4" id="aboutTitle">Profil E-Pharma</h2>
             <div id="aboutExcerpt" class="text-muted lh-lg mb-4">Memuat profil yayasan...</div>
             <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="p-3 border rounded-3 d-flex align-items-center bg-light cursor-pointer profile-item-box" onclick="showFullContent('history')">
-                        <i class="bi bi-clock-history fs-3 text-primary me-3" style="color: var(--primary);"></i>
+                <div class="col-md-6" onclick="showFullContent('history')">
+                    <div class="p-3 border rounded-3 d-flex align-items-center bg-light cursor-pointer profile-item-box">
+                        <i class="bi bi-clock-history fs-3 text-primary me-3"></i>
                         <div><h6 class="fw-bold mb-0">Sejarah</h6><small class="text-primary fw-bold">Detail <i class="bi bi-arrow-right"></i></small></div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="p-3 border rounded-3 d-flex align-items-center bg-light cursor-pointer profile-item-box" onclick="showFullContent('vision_mission')">
-                        <i class="bi bi-eye fs-3 text-primary me-3" style="color: var(--primary);"></i>
+                <div class="col-md-6" onclick="showFullContent('vision_mission')">
+                    <div class="p-3 border rounded-3 d-flex align-items-center bg-light cursor-pointer profile-item-box">
+                        <i class="bi bi-eye fs-3 text-primary me-3"></i>
                         <div><h6 class="fw-bold mb-0">Visi Misi</h6><small class="text-primary fw-bold">Detail <i class="bi bi-arrow-right"></i></small></div>
                     </div>
                 </div>
@@ -313,7 +324,7 @@
 
   </main>
 
-  <!-- MODAL DETAIL PRODUK -->
+  <!-- MODAL DETAIL PRODUK + QUICK ORDER -->
   <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow rounded-4">
@@ -323,7 +334,7 @@
             <div class="modal-body p-4 p-md-5 pt-0">
                 <div class="row">
                     <div class="col-md-5 mb-4 mb-md-0 text-center">
-                        <img id="modalDetailImg" src="" alt="Produk" class="img-fluid rounded-3">
+                        <img id="modalDetailImg" src="" alt="Produk" class="img-fluid rounded-3 shadow-sm">
                     </div>
                     <div class="col-md-7 ps-md-4">
                         <span id="modalDetailCategory" class="badge bg-light text-primary rounded-pill mb-2 px-3">Kategori</span>
@@ -335,27 +346,69 @@
                             <div class="col-6"><label class="detail-label">Satuan</label><div id="modalDetailUnit" class="fw-bold text-dark">-</div></div>
                         </div>
 
-                        <!-- FORM PESAN LANGSUNG -->
+                        <!-- FORM PESAN LANGSUNG (QUICK ORDER) -->
                         <div id="quickOrderForm" class="bg-light p-3 rounded-3 mb-3 d-none">
-                            <h6 class="fw-bold small text-muted text-uppercase mb-3 border-bottom pb-2">Form Pesanan Langsung</h6>
-                            <div class="mb-3">
-                                <label class="detail-label">Jumlah Pesanan</label>
-                                <div class="qty-control">
-                                    <button type="button" class="btn-qty" onclick="changeQuickQty(-1)"><i class="bi bi-dash"></i></button>
-                                    <input type="number" id="quick_qty" class="form-control text-center border-0 bg-transparent fw-bold" style="width: 50px;" value="1" readonly>
-                                    <button type="button" class="btn-qty" onclick="changeQuickQty(1)"><i class="bi bi-plus"></i></button>
+                            <h6 class="fw-bold small text-muted text-uppercase mb-3 border-bottom pb-2">Konfirmasi Logistik Cepat (Sumut)</h6>
+
+                            <!-- WILAYAH API DRIVEN -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-4">
+                                    <label class="detail-label">Kab/Kota</label>
+                                    <select id="quick_regency" class="form-select form-select-sm" onchange="fetchDistricts(this.value)">
+                                        <option value="" disabled selected>Pilih...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="detail-label">Kecamatan</label>
+                                    <select id="quick_district" class="form-select form-select-sm" onchange="fetchVillages(this.value)" disabled>
+                                        <option value="">Pilih...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="detail-label">Kelurahan</label>
+                                    <select id="quick_village" class="form-select form-select-sm" disabled>
+                                        <option value="">Pilih...</option>
+                                    </select>
                                 </div>
                             </div>
+
+                            <!-- ALAMAT PILIHAN -->
                             <div class="mb-3">
-                                <label class="detail-label">Metode Pengiriman</label>
-                                <select id="quick_request_type" class="form-select form-select-sm border-0 shadow-sm">
-                                    <option value="delivery">🚚 Kurir Logistik Internal</option>
-                                    <option value="self_pickup">🏢 Ambil Sendiri di Gudang</option>
-                                </select>
+                                <label class="detail-label">Alamat Pengiriman</label>
+                                <div class="quick-address-box">
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="radio" name="q_addr_type" id="q_addr_profile" value="profile" checked onchange="toggleQuickAddrInput()">
+                                        <label class="form-check-label small fw-bold" for="q_addr_profile">Gunakan Alamat Akun</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="q_addr_type" id="q_addr_custom" value="custom" onchange="toggleQuickAddrInput()">
+                                        <label class="form-check-label small fw-bold" for="q_addr_custom">Input Alamat Baru</label>
+                                    </div>
+                                    <textarea id="quick_shipping_address" class="form-control form-control-sm d-none border-0 shadow-sm" rows="2" placeholder="Nama jalan, nomor gedung..."></textarea>
+                                </div>
                             </div>
-                            <div class="mb-0">
+
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="detail-label">Jumlah</label>
+                                    <div class="qty-control">
+                                        <button type="button" class="btn-qty" onclick="changeQuickQty(-1)"><i class="bi bi-dash"></i></button>
+                                        <input type="number" id="quick_qty" class="form-control text-center border-0 bg-transparent fw-bold" style="width: 45px;" value="1" readonly>
+                                        <button type="button" class="btn-qty" onclick="changeQuickQty(1)"><i class="bi bi-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="detail-label">Metode</label>
+                                    <select id="quick_request_type" class="form-select form-select-sm">
+                                        <option value="delivery">🚚 Kirim</option>
+                                        <option value="self_pickup">🏢 Ambil</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
                                 <label class="detail-label">Catatan Tambahan</label>
-                                <textarea id="quick_notes" class="form-control form-control-sm border-0 shadow-sm" rows="2" placeholder="Contoh: Unit Gawat Darurat..."></textarea>
+                                <textarea id="quick_notes" class="form-control form-control-sm shadow-sm" rows="2" placeholder="Contoh: Unit Gawat Darurat..."></textarea>
                             </div>
                         </div>
 
@@ -370,8 +423,8 @@
   <!-- Modal Profile Content -->
   <div class="modal fade" id="contentModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow rounded-4">
-        <div class="modal-header border-0 pb-0"><h4 class="fw-bold mb-0" id="modalContentTitle">Judul</h4><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4 text-muted lh-lg" id="modalContentBody"></div>
+        <div class="modal-header border-0 pb-0"><h4 class="fw-bold mb-0 text-primary" id="modalContentTitle">Judul</h4><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body p-4 p-md-5 text-muted lh-lg" id="modalContentBody"></div>
       </div>
   </div></div>
 
@@ -417,6 +470,8 @@
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
     axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+    const PROVINCE_ID = '12'; // Sumatera Utara
+
     let globalProfiles = {};
     let allGalleries = [];
     let allProducts = [];
@@ -429,7 +484,60 @@
         detailModalInstance = new bootstrap.Modal(document.getElementById('productDetailModal'));
         fetchLandingPage();
         fetchCatalog();
+        fetchRegencies();
     });
+
+    // --- API WILAYAH LOGIC ---
+    async function fetchRegencies() {
+        try {
+            const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${PROVINCE_ID}.json`);
+            const data = await response.json();
+            let html = '<option value="" selected disabled>Pilih Kab/Kota</option>';
+            data.forEach(item => {
+                html += `<option value="${item.id}" data-name="${item.name}">${item.name}</option>`;
+            });
+            document.getElementById('quick_regency').innerHTML = html;
+        } catch (error) { console.error("Gagal muat kabupaten:", error); }
+    }
+
+    async function fetchDistricts(regencyId) {
+        const districtSelect = document.getElementById('quick_district');
+        districtSelect.disabled = true; districtSelect.innerHTML = '<option>Memuat...</option>';
+        try {
+            const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${regencyId}.json`);
+            const data = await response.json();
+            let html = '<option value="" selected disabled>Pilih Kecamatan</option>';
+            data.forEach(item => {
+                html += `<option value="${item.id}" data-name="${item.name}">${item.name}</option>`;
+            });
+            districtSelect.innerHTML = html; districtSelect.disabled = false;
+        } catch (error) { console.error("Gagal muat kecamatan:", error); }
+    }
+
+    async function fetchVillages(districtId) {
+        const villageSelect = document.getElementById('quick_village');
+        villageSelect.disabled = true; villageSelect.innerHTML = '<option>Memuat...</option>';
+        try {
+            const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${districtId}.json`);
+            const data = await response.json();
+            let html = '<option value="" selected disabled>Pilih Kelurahan/Desa</option>';
+            data.forEach(item => {
+                html += `<option value="${item.id}" data-name="${item.name}">${item.name}</option>`;
+            });
+            villageSelect.innerHTML = html; villageSelect.disabled = false;
+        } catch (error) { console.error("Gagal muat kelurahan:", error); }
+    }
+
+    // --- LOGIKA UI ---
+    function toggleQuickAddrInput() {
+        const isCustom = document.getElementById('q_addr_custom').checked;
+        document.getElementById('quick_shipping_address').classList.toggle('d-none', !isCustom);
+    }
+
+    function stripHtml(html) {
+        let doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || "";
+    }
 
     function fetchLandingPage() {
         axios.get('/api/public/landing-page').then(res => {
@@ -437,13 +545,12 @@
             globalProfiles = d.profiles || {};
             allGalleries = d.gallery || [];
 
-            // 1. Profil
             if(globalProfiles.about) {
-                document.getElementById('aboutExcerpt').innerText = globalProfiles.about.content.substring(0, 250) + '...';
-                document.getElementById('footerAbout').innerText = globalProfiles.about.content.substring(0, 100) + '...';
+                document.getElementById('aboutTitle').innerText = globalProfiles.about.title;
+                document.getElementById('aboutExcerpt').innerHTML = globalProfiles.about.content;
+                document.getElementById('footerAbout').innerText = stripHtml(globalProfiles.about.content).substring(0, 100) + '...';
             }
 
-            // 2. Footer Kontak
             let contactHtml = '';
             if(d.contacts) {
                 Object.values(d.contacts).forEach(i => {
@@ -452,7 +559,6 @@
             }
             document.getElementById('dynamicContactList').innerHTML = contactHtml;
 
-            // 3. Berita & Kegiatan (MENGGUNAKAN KUNCI 'posts' DARI CONTROLLER)
             let postHtml = '';
             if(d.posts) {
                 d.posts.forEach(p => {
@@ -464,7 +570,7 @@
                             <div class="p-4">
                                 <span class="badge bg-primary mb-2">${p.category?.name || 'INFO'}</span>
                                 <h5 class="fw-bold mt-2">${p.title}</h5>
-                                <p class="small text-muted mb-0">${p.content.substring(0, 80)}...</p>
+                                <p class="small text-muted mb-0">${stripHtml(p.content).substring(0, 80)}...</p>
                             </div>
                         </div>
                     </div>`;
@@ -472,7 +578,6 @@
             }
             document.getElementById('postsContainer').innerHTML = postHtml;
 
-            // 4. Struktur Organisasi
             let orgHtml = '';
             if(d.organization) {
                 d.organization.forEach(o => {
@@ -489,7 +594,6 @@
             }
             document.getElementById('orgContainer').innerHTML = orgHtml;
 
-            // 5. Galeri (GRID DIPERBARUI AGAR TIDAK TERLALU BESAR)
             let galHtml = '';
             allGalleries.forEach((g, idx) => {
                 if(g.files?.length > 0) {
@@ -498,9 +602,6 @@
                         <div class="medinest-card cursor-pointer" onclick="showGallery(${idx})">
                             <div class="position-relative overflow-hidden">
                                 <img src="/${g.files[0].file_path}" class="gallery-img">
-                                <div class="position-absolute top-0 end-0 m-2">
-                                    <span class="badge bg-primary rounded-pill"><i class="bi bi-images me-1"></i> ${g.files.length}</span>
-                                </div>
                             </div>
                             <div class="p-3 text-center bg-white border-top"><h6 class="mb-0 fw-bold small">${g.title}</h6></div>
                         </div>
@@ -536,8 +637,17 @@
         document.getElementById('modalDetailUnit').innerText = p.unit;
         document.getElementById('modalDetailPrice').innerText = 'Rp ' + Number(p.price).toLocaleString('id-ID');
 
+        // Reset Form Wilayah
         document.getElementById('quick_qty').value = 1;
         document.getElementById('quick_notes').value = '';
+        document.getElementById('quick_regency').value = '';
+        document.getElementById('quick_district').innerHTML = '<option value="">Pilih Kecamatan</option>';
+        document.getElementById('quick_village').innerHTML = '<option value="">Pilih Kelurahan</option>';
+        document.getElementById('quick_district').disabled = true;
+        document.getElementById('quick_village').disabled = true;
+        document.getElementById('q_addr_profile').checked = true;
+        document.getElementById('quick_shipping_address').value = '';
+        document.getElementById('quick_shipping_address').classList.add('d-none');
 
         const isCustomer = @auth @if(auth()->user()->hasRole('customer')) true @else false @endif @else false @endauth;
         const actionBtn = document.getElementById('modalActionButtons');
@@ -567,14 +677,50 @@
     }
 
     function quickOrder(id, name) {
-        const qty = document.getElementById('quick_qty').value;
-        axios.post('/api/orders/quick', {
-            product_id: id, quantity: qty,
+        const regSel = document.getElementById('quick_regency');
+        const distSel = document.getElementById('quick_district');
+        const villSel = document.getElementById('quick_village');
+
+        const payload = {
+            product_id: id,
+            quantity: document.getElementById('quick_qty').value,
             notes: document.getElementById('quick_notes').value,
-            request_type: document.getElementById('quick_request_type').value
-        }).then(() => {
-            Swal.fire('Berhasil!', 'Pesanan diproses.', 'success').then(() => window.location.href = '/customer/history');
-        }).catch(err => Swal.fire('Gagal', err.response?.data?.message || 'Error', 'error'));
+            request_type: document.getElementById('quick_request_type').value,
+            regency: regSel.options[regSel.selectedIndex]?.getAttribute('data-name'),
+            district: distSel.options[distSel.selectedIndex]?.getAttribute('data-name'),
+            village: villSel.options[villSel.selectedIndex]?.getAttribute('data-name'),
+            use_profile_address: document.getElementById('q_addr_profile').checked ? 1 : 0,
+            shipping_address: document.getElementById('quick_shipping_address').value
+        };
+
+        if(!payload.regency || !payload.district || !payload.village) {
+            return Swal.fire('Peringatan', 'Lengkapi data Hub Regional (Kabupaten, Kecamatan, Kelurahan).', 'warning');
+        }
+
+        Swal.fire({
+            title: 'Kirim Pesanan Kilat?',
+            text: "Permintaan stok akan segera diproses.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#00838f',
+            confirmButtonText: 'Ya, Kirim'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axios.post('/api/orders/quick', payload).then(() => {
+                    Swal.fire('Berhasil!', 'Pesanan instan telah diproses.', 'success')
+                        .then(() => window.location.href = '/customer/history');
+                }).catch(err => {
+                    Swal.fire('Gagal', err.response?.data?.message || 'Error', 'error');
+                });
+            }
+        });
+    }
+
+    function showFullContent(key) {
+        const data = globalProfiles[key]; if(!data) return;
+        document.getElementById('modalContentTitle').innerText = data.title;
+        document.getElementById('modalContentBody').innerHTML = data.content;
+        new bootstrap.Modal(document.getElementById('contentModal')).show();
     }
 
     function showGallery(index) {
@@ -586,32 +732,13 @@
         new bootstrap.Modal(document.getElementById('galleryModal')).show();
     }
 
-    function showFullContent(key) {
-        const data = globalProfiles[key]; if(!data) return;
-        document.getElementById('modalContentTitle').innerText = data.title;
-        document.getElementById('modalContentBody').innerHTML = data.content;
-        new bootstrap.Modal(document.getElementById('contentModal')).show();
-    }
-
     function updateCartBadge() {
         axios.get('/api/cart').then(res => {
             const count = res.data.length;
             const bD = document.getElementById('cartBadge');
-            const bM = document.getElementById('mobileCartBadge');
-            if (count > 0) {
-                if(bD){ bD.innerText = count; bD.style.display = 'inline-block'; }
-                if(bM){ bM.innerText = count; bM.style.display = 'inline-block'; }
-            } else {
-                if(bD) bD.style.display = 'none';
-                if(bM) bM.style.display = 'none';
-            }
+            if (count > 0 && bD) { bD.innerText = count; bD.style.display = 'inline-block'; }
         }).catch(() => {});
     }
   </script>
 </body>
 </html>
-
-
-<div class="text-center mt-5">
-                <a href="/posts" class="btn btn-medinest px-5 py-3 shadow">Lihat Semua Berita</a>
-            </div>
