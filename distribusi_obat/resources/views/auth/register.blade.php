@@ -145,19 +145,27 @@
 
                     <form id="formRegister" onsubmit="submitRegister(event)">
                         @csrf
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label text-uppercase">Nama Unit / Petugas</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                    <input type="text" name="name" class="form-control form-with-icon" placeholder="Contoh: Klinik Sehat / Budi Santoso" required>
-                                </div>
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase">Nama Unit / Petugas</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" name="name" class="form-control form-with-icon" placeholder="Contoh: Klinik Sehat / Budi Santoso" required>
                             </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-uppercase">Alamat Email Resmi</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                     <input type="email" name="email" class="form-control form-with-icon" placeholder="kontak@unitkesehatan.id" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-uppercase">Nomor Telepon / WhatsApp</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input type="tel" name="phone" class="form-control form-with-icon" placeholder="08xxxxxxxxxx" required>
                                 </div>
                             </div>
                         </div>

@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/users/{id}', [AdminController::class, 'updateUser']);
         Route::delete('/users/{id}', [AdminController::class, 'destroyUser']);
         Route::get('/roles', [AdminController::class, 'getRoles']);
+        Route::get('/order-statuses', [AdminController::class, 'getOrderStatuses']);
 
         // Logs & Analytics
         Route::get('/admin/logs', [AdminController::class, 'getLogs']);

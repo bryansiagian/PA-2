@@ -1,6 +1,33 @@
 @extends('layouts.portal')
 
 @section('content')
+<style>
+    :root {
+        --primary: #00838f;
+        --secondary: #2c4964;
+        --hover-color: #006064;
+    }
+
+    .text-accent { color: var(--primary) !important; }
+
+    #timelineContainer { border-left: 2px solid #e0ebec; padding-left: 35px; position: relative; }
+    .timeline-node { position: relative; padding-bottom: 2.5rem; }
+    .timeline-node::before {
+        content: ''; position: absolute; left: -46px; top: 0;
+        width: 20px; height: 20px; background: #fff;
+        border: 4px solid #dee2e6; border-radius: 50%; z-index: 2;
+    }
+    .timeline-node.active::before {
+        border-color: var(--primary); background: var(--primary);
+        box-shadow: 0 0 0 6px rgba(0, 131, 143, 0.1);
+    }
+    .timeline-node:last-child { padding-bottom: 0; }
+    .timeline-date { font-size: 11px; font-weight: 700; color: #9eb5b6; text-transform: uppercase; }
+    .timeline-title { font-weight: 700; color: var(--secondary); margin-top: 2px; }
+    .timeline-desc { font-size: 13px; color: #6c757d; line-height: 1.5; }
+    .italic { font-style: italic; }
+</style>
+
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
         <div class="col-md-9">
@@ -9,16 +36,16 @@
                 <a href="/customer/history" class="btn btn-outline-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                     <i class="bi bi-arrow-left"></i>
                 </a>
-                <h3 class="fw-bold m-0" style="color: #2c4964;">Detail Pelacakan Paket</h3>
+                <h3 class="fw-bold m-0" style="color: var(--secondary);">Detail Pelacakan Paket</h3>
             </div>
 
             <!-- CARD 1: INFO UTAMA RESI -->
-            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="border-top: 5px solid #3fbbc0 !important;">
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="border-top: 5px solid var(--primary) !important;">
                 <div class="card-body p-4">
                     <div class="row align-items-center">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <small class="text-uppercase fw-bold text-muted" style="font-size: 11px; letter-spacing: 1px;">Nomor Resi Pengiriman</small>
-                            <h4 class="fw-bold m-0" style="color: #3fbbc0;" id="trackNum">-------</h4>
+                            <h4 class="fw-bold m-0" style="color: var(--primary);" id="trackNum">-------</h4>
                         </div>
                         <div class="col-md-6 text-md-end">
                             <small class="text-muted d-block mb-1 small text-uppercase">Status Terkini</small>
@@ -37,7 +64,7 @@
             <!-- CARD 2: BUKTI FOTO (Hanya muncul jika Delivered) -->
             <div id="proofSection" class="card border-0 shadow-sm rounded-4 mb-4 d-none">
                 <div class="card-body p-4 text-center">
-                    <h6 class="fw-bold mb-3 text-start"><i class="bi bi-camera-fill me-2 text-success"></i>Konfirmasi Foto Penerimaan</h6>
+                    <h6 class="fw-bold mb-3 text-start"><i class="bi bi-camera-fill me-2 text-accent"></i>Konfirmasi Foto Penerimaan</h6>
                     <div class="bg-light p-2 rounded-4 d-inline-block border">
                         <img id="proofImg" src="" class="img-fluid rounded-4 shadow-sm" style="max-height: 350px; cursor: zoom-in;" onclick="window.open(this.src)">
                     </div>
@@ -47,7 +74,7 @@
 
             <!-- CARD 3: TIMELINE PERJALANAN -->
             <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
-                <h5 class="fw-bold mb-4" style="color: #2c4964;">
+                <h5 class="fw-bold mb-4" style="color: var(--secondary);">
                     <i class="bi bi-clock-history me-2 text-accent"></i>Riwayat Perjalanan
                 </h5>
 
@@ -62,26 +89,6 @@
         </div>
     </div>
 </div>
-
-<style>
-    #timelineContainer { border-left: 2px solid #e0ebec; padding-left: 35px; position: relative; }
-    .timeline-node { position: relative; padding-bottom: 2.5rem; }
-    .timeline-node::before {
-        content: ''; position: absolute; left: -46px; top: 0;
-        width: 20px; height: 20px; background: #fff;
-        border: 4px solid #dee2e6; border-radius: 50%; z-index: 2;
-    }
-    .timeline-node.active::before {
-        border-color: #3fbbc0; background: #3fbbc0;
-        box-shadow: 0 0 0 6px rgba(63, 187, 192, 0.1);
-    }
-    .timeline-node:last-child { padding-bottom: 0; }
-    .timeline-date { font-size: 11px; font-weight: 700; color: #9eb5b6; text-transform: uppercase; }
-    .timeline-title { font-weight: 700; color: #2c4964; margin-top: 2px; }
-    .timeline-desc { font-size: 13px; color: #6c757d; line-height: 1.5; }
-    .text-accent { color: #3fbbc0 !important; }
-    .italic { font-style: italic; }
-</style>
 
 <script>
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + '{{ session('api_token') }}';
@@ -98,7 +105,7 @@
                 document.getElementById('courierName').innerText = `Kurir: ${d.courier ? d.courier.name : 'Mencari Kurir...'}`;
                 document.getElementById('lastUpdate').innerText = `Update: ${new Date(d.updated_at).toLocaleTimeString('id-ID')} WIB`;
 
-                // 2. Perbaikan Logika Status (Sekarang d.status.name adalah Objek)
+                // 2. Perbaikan Logika Status
                 const currentStatus = d.status ? d.status.name.toLowerCase() : '';
                 const badge = document.getElementById('badgeStatus');
                 badge.innerText = currentStatus.toUpperCase();
@@ -112,6 +119,7 @@
                     }
                 } else if (currentStatus === 'in transit' || currentStatus === 'claimed') {
                     badge.className = "badge bg-info text-white rounded-pill px-4 py-2";
+                    badge.style.backgroundColor = "var(--primary) !important"; // Paksa warna primary untuk in transit
                 } else {
                     badge.className = "badge bg-warning text-dark rounded-pill px-4 py-2";
                 }
@@ -138,7 +146,7 @@
                 document.getElementById('timelineContainer').innerHTML = html;
             })
             .catch(err => {
-                console.error("Detail Error JS:", err); // Lihat di console F12 untuk detail baris yang error
+                console.error("Detail Error JS:", err);
                 document.getElementById('timelineContainer').innerHTML = `
                     <div class="alert alert-danger border-0 shadow-sm text-center">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>

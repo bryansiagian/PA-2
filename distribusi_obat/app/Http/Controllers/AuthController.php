@@ -27,8 +27,10 @@ class AuthController extends Controller
     public function register(Request $request) {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email', // Hapus unique dulu di sini, kita validasi manual di bawah
+            'email' => 'required|email',
             'password' => 'required|confirmed|min:6',
+            'phone' => 'required|string|max:20', // Perbaikan: Tambahkan aturan validasi
+            'address' => 'required|string'
         ]);
 
         return DB::transaction(function() use ($request) {
@@ -47,11 +49,12 @@ class AuthController extends Controller
                 $user = $existingUser;
                 $user->update([
                     'name' => $request->name,
+                    'phone' => $request->phone, // PERBAIKAN: Tambahkan ini agar phone tersimpan saat daftar ulang
                     'password' => Hash::make($request->password),
                     'address' => $request->address,
                     'status' => 0, // Kembalikan ke Pending
                     'otp_code' => $otp,
-                    'otp_expires_at' => Carbon::now()->addMinutes(10),
+                    'otp_expires_at' => \Carbon\Carbon::now()->addMinutes(10),
                     'email_verified_at' => null // Wajib verifikasi ulang
                 ]);
             } else {
@@ -59,11 +62,12 @@ class AuthController extends Controller
                 $user = User::create([
                     'name' => $request->name,
                     'email' => $request->email,
+                    'phone' => $request->phone, // Ini sudah benar
                     'password' => Hash::make($request->password),
                     'address' => $request->address,
                     'status' => 0,
                     'otp_code' => $otp,
-                    'otp_expires_at' => Carbon::now()->addMinutes(10),
+                    'otp_expires_at' => \Carbon\Carbon::now()->addMinutes(10),
                 ]);
                 $user->assignRole('customer');
             }
