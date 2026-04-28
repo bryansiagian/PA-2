@@ -24,6 +24,12 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
+    :root {
+      --primary: #00838f; /* Hijau Toska Tua sesuai Welcome */
+      --secondary: #2c4964;
+      --hover-color: #006064;
+    }
+
     body {
       background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)),
                   url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1920&q=80');
@@ -47,7 +53,7 @@
     }
 
     .card-header-accent {
-      background: #3fbbc0;
+      background: var(--primary);
       height: 6px;
       width: 100%;
     }
@@ -56,14 +62,14 @@
       font-family: 'Ubuntu', sans-serif;
       font-size: 2.5rem;
       font-weight: 700;
-      color: #2c4964;
+      color: var(--secondary);
       text-decoration: none;
       display: block;
       margin-bottom: 5px;
     }
 
     .login-logo span {
-      color: #3fbbc0;
+      color: var(--primary);
     }
 
     .form-control {
@@ -75,12 +81,12 @@
     }
 
     .form-control:focus {
-      border-color: #3fbbc0;
-      box-shadow: 0 0 0 0.2rem rgba(63, 187, 192, 0.1);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.2rem rgba(0, 131, 143, 0.1);
     }
 
     .btn-login {
-      background: #3fbbc0;
+      background: var(--primary);
       color: white;
       border-radius: 30px;
       padding: 12px;
@@ -92,13 +98,13 @@
     }
 
     .btn-login:hover {
-      background: #329ea2;
-      box-shadow: 0 5px 15px rgba(63, 187, 192, 0.3);
+      background: var(--hover-color);
+      box-shadow: 0 5px 15px rgba(0, 131, 143, 0.3);
       color: white;
     }
 
     .back-to-site {
-      color: #3fbbc0;
+      color: var(--primary);
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: 500;
@@ -106,7 +112,7 @@
     }
 
     .back-to-site:hover {
-      color: #2c4964;
+      color: var(--secondary);
     }
 
     .input-group-text {
@@ -114,11 +120,16 @@
       border-radius: 10px 0 0 10px;
       border: 1px solid #e1e1e1;
       border-right: none;
-      color: #3fbbc0;
+      color: var(--primary);
     }
 
     .form-control-with-icon {
       border-radius: 0 10px 10px 0;
+    }
+
+    .text-primary-custom {
+      color: var(--primary) !important;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -133,18 +144,17 @@
         <!-- Logo Section -->
         <div class="text-center mb-4">
           <a href="/" class="login-logo">E-<span>Pharma</span></a>
-          <p class="text-muted small">Sistem Manajemen Logistik Farmasi Terpadu</p>
+          <p class="text-muted small">Portal Logistik Farmasi Terpadu</p>
         </div>
 
         <h5 class="fw-bold mb-4 text-dark text-center">Silakan Masuk</h5>
 
-        <!-- Perubahan: Menggunakan id form dan onsubmit JavaScript -->
         <form id="formLogin" onsubmit="submitLogin(event)">
           @csrf
 
           <!-- Email Field -->
           <div class="mb-3">
-            <label class="form-label small fw-bold text-muted">ALAMAT EMAIL</label>
+            <label class="form-label small fw-bold text-muted text-uppercase">Alamat Email</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-envelope"></i></span>
               <input type="email" name="email" class="form-control form-control-with-icon"
@@ -154,7 +164,7 @@
 
           <!-- Password Field -->
           <div class="mb-4">
-            <label class="form-label small fw-bold text-muted">KATA SANDI</label>
+            <label class="form-label small fw-bold text-muted text-uppercase">Kata Sandi</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-lock"></i></span>
               <input type="password" name="password" class="form-control form-control-with-icon"
@@ -195,26 +205,49 @@
         const formData = new FormData(event.target);
 
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memverifikasi...';
 
         axios.post('/login', formData)
             .then(res => {
+                // Login Sukses
                 window.location.href = res.data.redirect;
             })
             .catch(err => {
                 btn.disabled = false;
-                btn.innerHTML = 'Masuk ke Sistem';
+                btn.innerHTML = 'Masuk ke Sistem <i class="bi bi-box-arrow-in-right ms-1"></i>';
 
+                if (!err.response) {
+                    Swal.fire({ icon: 'error', title: 'Koneksi Gagal', text: 'Pastikan server Anda berjalan.' });
+                    return;
+                }
+
+                const response = err.response.data;
                 const status = err.response.status;
-                const msg = err.response.data.message;
 
-                if (status === 403) { // Belum OTP
-                    Swal.fire({ icon: 'warning', title: 'Verifikasi Email', text: msg, confirmButtonColor: '#3fbbc0' })
-                        .then(() => window.location.href = err.response.data.redirect);
+                if (status === 403) { // Email Belum Verifikasi OTP
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Verifikasi Email',
+                        text: response.message,
+                        confirmButtonColor: '#00838f',
+                        confirmButtonText: 'Lanjut Verifikasi'
+                    }).then(() => {
+                        window.location.href = response.redirect;
+                    });
                 } else if (status === 401) { // Menunggu Admin
-                    Swal.fire({ icon: 'info', title: 'Menunggu Persetujuan', text: msg, confirmButtonColor: '#2c4964' });
-                } else { // Email tidak ada (404) atau Password salah (422)
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: msg, confirmButtonColor: '#3fbbc0' });
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Akun Belum Aktif',
+                        text: response.message,
+                        confirmButtonColor: '#2c4964'
+                    });
+                } else { // Salah Password atau Email (422/404)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses Ditolak',
+                        text: response.message || 'Email atau password salah.',
+                        confirmButtonColor: '#00838f'
+                    });
                 }
             });
     }

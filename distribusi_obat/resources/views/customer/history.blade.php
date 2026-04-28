@@ -2,6 +2,12 @@
 
 @section('content')
 <style>
+    :root {
+      --primary: #00838f;
+      --secondary: #2c4964;
+      --hover-color: #006064;
+    }
+
     /* Custom Styling untuk menyelaraskan dengan MediNest */
     .page-header {
         background: transparent;
@@ -9,7 +15,7 @@
         margin-bottom: 25px;
     }
     .section-heading {
-        color: #2c4964;
+        color: var(--secondary);
         font-weight: 700;
         position: relative;
         padding-bottom: 15px;
@@ -21,7 +27,7 @@
         display: block;
         width: 50px;
         height: 3px;
-        background: #3fbbc0;
+        background: var(--primary);
         bottom: 0;
         left: 0;
     }
@@ -30,7 +36,7 @@
         border-radius: 15px;
         transition: all 0.3s ease;
         background: #fff;
-        border-left: 5px solid #3fbbc0;
+        border-left: 5px solid var(--primary);
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .card-history:hover {
@@ -38,7 +44,7 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
     .req-number {
-        color: #3fbbc0;
+        color: var(--primary);
         font-family: 'Ubuntu', sans-serif;
         font-size: 1.1rem;
     }
@@ -51,13 +57,22 @@
         align-items: center;
     }
     .btn-medinest {
-        background: #3fbbc0;
-        color: white;
+        background: var(--primary);
+        color: white !important;
         border-radius: 25px;
         padding: 8px 20px;
         transition: 0.3s;
         font-weight: 600;
+        border: none;
     }
+    .btn-medinest:hover {
+        background: var(--hover-color);
+        box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3);
+    }
+
+    .text-accent { color: var(--primary) !important; }
+    .btn-outline-info { border-color: var(--primary); color: var(--primary); }
+    .btn-outline-info:hover { background-color: var(--primary); border-color: var(--primary); color: #fff; }
 
     @media (max-width: 768px) {
         .page-header { padding: 20px 0; }
@@ -82,11 +97,11 @@
         <div class="row align-items-center">
             <div class="col-12 col-md-6 mb-3 mb-md-0 text-center text-md-start">
                 <h2 class="section-heading d-inline-block d-md-block">Riwayat Permintaan</h2>
-                <p class="text-muted small mb-0">Pantau distribusi logistik secara real-time.</p>
+                <p class="text-muted small mb-0">Pantau distribusi logistik unit Anda secara real-time.</p>
             </div>
             <div class="col-12 col-md-6 text-center text-md-end">
                 <button onclick="fetchHistory()" class="btn btn-white btn-sm rounded-pill px-4 border shadow-sm">
-                    <i class="bi bi-arrow-clockwise me-1 text-info"></i> Sinkronisasi
+                    <i class="bi bi-arrow-clockwise me-1 text-accent"></i> Sinkronisasi
                 </button>
             </div>
         </div>
@@ -96,15 +111,16 @@
 <div class="container mb-5">
     <!-- Loading State -->
     <div id="loadingHistory" class="text-center py-5">
-        <div class="spinner-border text-info" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+        <div class="spinner-border" role="status" style="width: 2.5rem; height: 2.5rem; color: var(--primary);"></div>
         <p class="mt-3 text-muted small fw-bold">Menghubungkan ke Server...</p>
     </div>
 
     <!-- Empty State -->
     <div id="emptyHistory" class="text-center py-5 d-none bg-white rounded-4 shadow-sm border">
-        <i class="bi bi-clipboard2-pulse opacity-25" style="font-size: 4rem; color: #3fbbc0;"></i>
-        <h4 class="fw-bold mt-3">Belum Ada Permintaan</h4>
-        <a href="/#katalog" class="btn btn-medinest mt-2 px-5 shadow">Mulai Pesan</a>
+        <i class="bi bi-clipboard2-pulse opacity-25" style="font-size: 4rem; color: var(--primary);"></i>
+        <h4 class="fw-bold mt-3" style="color: var(--secondary);">Belum Ada Permintaan</h4>
+        <p class="text-muted small">Unit Anda belum melakukan pemesanan stok produk.</p>
+        <a href="/customer/products" class="btn btn-medinest mt-2 px-5 shadow">Mulai Pesan</a>
     </div>
 
     <!-- History List -->
@@ -118,7 +134,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0 rounded-4">
             <div class="modal-header border-light">
-                <h6 class="fw-bold mb-0 text-secondary"><i class="bi bi-file-earmark-medical me-2 text-info"></i>Rincian Item</h6>
+                <h6 class="fw-bold mb-0" style="color: var(--secondary);"><i class="bi bi-file-earmark-medical me-2 text-accent"></i>Rincian Item</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-3" id="detailContent"></div>
@@ -141,7 +157,6 @@
         listContainer.innerHTML = '';
         empty.classList.add('d-none');
 
-        // PERBAIKAN: Ganti URL dari /api/requests menjadi /api/orders
         axios.get('/api/orders')
             .then(res => {
                 loading.classList.add('d-none');
@@ -154,7 +169,6 @@
 
                 let html = '';
                 data.forEach(req => {
-                    // Karena menggunakan Lookup Status, ambil req.status.name
                     const statusName = req.status ? req.status.name : 'Unknown';
                     const statusConfig = getStatusBadge(statusName.toLowerCase());
 
@@ -162,7 +176,6 @@
                         day: 'numeric', month: 'short', year: 'numeric'
                     });
 
-                    // Cek tipe pengambilan (Self Pickup biasanya ID 2 di Seeder)
                     const isPickup = req.product_order_delivery_id == 2;
                     let statusText = statusName.toUpperCase();
 
@@ -184,7 +197,7 @@
                                     </div>
                                     <div class="col-6 col-md-3">
                                         <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 9px;">Tanggal</div>
-                                        <div class="text-dark fw-bold small"><i class="bi bi-calendar3 me-1 text-info"></i>${date}</div>
+                                        <div class="text-dark fw-bold small"><i class="bi bi-calendar3 me-1 text-accent"></i>${date}</div>
                                     </div>
                                     <div class="col-12 col-md-3 my-3 my-md-0 text-center text-md-start">
                                         <div class="small text-muted text-uppercase mb-1 fw-bold" style="font-size: 9px;">Status Logistik</div>
@@ -238,10 +251,9 @@
 
     function viewDetail(id) {
         const modalBody = document.getElementById('detailContent');
-        modalBody.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-info spinner-border-sm"></div></div>';
+        modalBody.innerHTML = '<div class="text-center p-4"><div class="spinner-border spinner-border-sm" style="color: var(--primary);"></div></div>';
         new bootstrap.Modal(document.getElementById('modalDetail')).show();
 
-        // Ganti ke /api/orders
         axios.get(`/api/orders`).then(res => {
             const order = res.data.find(r => r.id === id);
             if(!order) return;
@@ -255,12 +267,12 @@
                         <div class="fw-bold text-dark">${name}</div>
                         <small class="text-muted">Harga: Rp${Number(item.price_at_order).toLocaleString()}</small>
                     </div>
-                    <span class="badge bg-light text-primary rounded-pill border px-2">Qty: ${item.quantity}</span>
+                    <span class="badge bg-light text-accent rounded-pill border px-2">Qty: ${item.quantity}</span>
                 </div>`;
             });
             itemsHtml += `
                 <div class="mt-3 pt-2 border-top">
-                    <div class="d-flex justify-content-between fw-bold text-indigo">
+                    <div class="d-flex justify-content-between fw-bold text-accent">
                         <span>Total Pembayaran</span>
                         <span>Rp${Number(order.total).toLocaleString()}</span>
                     </div>
@@ -278,13 +290,13 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3fbbc0',
-            confirmButtonText: 'Ya, Batalkan'
+            cancelButtonColor: 'var(--primary)',
+            confirmButtonText: 'Ya, Batalkan',
+            cancelButtonText: 'Kembali'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Ganti ke /api/orders
                 axios.post(`/api/orders/${id}/cancel`).then(() => {
-                    Swal.fire('Dibatalkan', 'Pesanan berhasil dibatalkan', 'success');
+                    Swal.fire({ icon: 'success', title: 'Dibatalkan', confirmButtonColor: 'var(--primary)' });
                     fetchHistory();
                 });
             }

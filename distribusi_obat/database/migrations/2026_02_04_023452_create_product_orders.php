@@ -19,6 +19,10 @@ return new class extends Migration
             $table->foreignId('product_order_delivery_id')->nullable(); // Delivery, Self Pickup
             $table->decimal('product_order_delivery_cost', 15, 2)->default(0);
             $table->decimal('product_order_discount', 15, 2)->default(0);
+            $table->string('regency')->nullable(); // Kabupaten/Kota
+            $table->string('district')->nullable(); // Kecamatan
+            $table->string('village')->nullable(); // Kelurahan/Desa
+            $table->text('shipping_address')->nullable(); // Detail alamat (Jalan/No)
             $table->enum('required_vehicle', ['motorcycle', 'car'])->default('motorcycle');
             $table->text('notes')->nullable();
             $table->decimal('total', 15, 2)->default(0);

@@ -127,13 +127,22 @@
             <div class="text-center mb-4">
                 <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=5c68e2&color=fff&bold=true" class="rounded-circle shadow border border-4 border-white mb-2" width="80">
                 <h5 class="fw-bold mb-0">${u.name}</h5>
-                <div class="text-muted small">${u.email}</div>
+                <div class="text-muted small mb-1">${u.email}</div>
+                <div class="badge bg-indigo rounded-pill px-3">${roleName.toUpperCase()}</div>
+            </div>
+
+            <!-- PENAMBAHAN NOMOR TELEPON -->
+            <div class="mb-3">
+                <label class="d-block fs-xs fw-bold text-muted text-uppercase mb-1">Nomor Telepon / WhatsApp</label>
+                <div class="p-2 bg-light rounded-3 border-start border-indigo border-3 small fw-bold">
+                    <i class="ph-phone me-2 text-indigo"></i> ${u.phone || 'Tidak tersedia'}
+                </div>
             </div>
 
             <div class="mb-3">
                 <label class="d-block fs-xs fw-bold text-muted text-uppercase mb-1">Alamat Unit / Lokasi</label>
                 <div class="p-3 bg-light rounded-3 border-start border-indigo border-3 small">
-                    ${u.address || 'Alamat tidak tersedia'}
+                    <i class="ph-map-pin me-2 text-indigo"></i> ${u.address || 'Alamat tidak tersedia'}
                 </div>
             </div>`;
 
@@ -155,10 +164,21 @@
             confirmButtonText: 'Ya, Lanjutkan'
         }).then(result => {
             if(result.isConfirmed) {
-                bootstrap.Modal.getInstance(document.getElementById('modalDetailUser')).hide();
+                const modalEl = document.getElementById('modalDetailUser');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if(modal) modal.hide();
+
+                Swal.fire({
+                    title: 'Memproses...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading() }
+                });
+
                 axios.post(`/api/users/${id}/${action}`).then(res => {
                     Swal.fire('Berhasil', res.data.message, 'success');
                     loadPending();
+                }).catch(err => {
+                    Swal.fire('Gagal', 'Terjadi kesalahan saat memproses permintaan.', 'error');
                 });
             }
         });
@@ -172,5 +192,6 @@
     @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
     .btn-indigo { background-color: #5c68e2; color: #fff; }
     .text-indigo { color: #5c68e2; }
+    .bg-indigo { background-color: #5c68e2 !important; }
 </style>
 @endsection

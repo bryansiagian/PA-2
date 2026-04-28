@@ -26,19 +26,10 @@ class CmsController extends Controller {
                 'profiles' => Profile::where('active', 1)->get()->keyBy('key'),
                 'contacts' => Contact::where('active', 1)->get()->keyBy('key'),
 
-                'news' => Post::with('category')
+                'posts' => Post::with('category')
                     ->whereHas('category', function($q) {
-                        $q->where('name', 'LIKE', '%Berita%');
-                    })
-                    ->where('status', 1)
-                    ->where('active', 1)
-                    ->latest()
-                    ->take(3)
-                    ->get(),
-
-                'activities' => Post::with('category')
-                    ->whereHas('category', function($q) {
-                        $q->where('name', 'LIKE', '%Kegiatan%');
+                        $q->where('name', 'LIKE', '%Berita%')
+                        ->orWhere('name', 'LIKE', '%Kegiatan%');
                     })
                     ->where('status', 1)
                     ->where('active', 1)
@@ -138,7 +129,15 @@ class CmsController extends Controller {
 
     // --- Manajemen Berita & Kegiatan (Admin) ---
     public function indexPosts() {
-        return Post::with(['category', 'author'])->where('active', 1)->latest()->get();
+        try {
+            // Kita ambil data yang aktif saja, dan pastikan kolom status & active ikut terkirim
+            return Post::with(['category', 'author'])
+                ->where('active', 1)
+                ->latest()
+                ->get();
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 
     public function showPost($id) {

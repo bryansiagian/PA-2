@@ -33,6 +33,7 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('otp.verify');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('otp.resend');
 });
 
 
@@ -47,6 +48,10 @@ Route::middleware(['auth'])->group(function() {
     Route::get('/profile', function () {
         return view('admin.cms.profile');
     })->name('profile.index');
+
+    Route::get('/customer/profile', function () {
+        return view('customer.profile');
+    })->name('customer.profile');
 
 
     // =====================

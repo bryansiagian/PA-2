@@ -180,12 +180,12 @@
       </a>
 
       <!-- SEARCH BOX (HIDDEN ON MOBILE) -->
-      <div class="search-box d-none d-lg-block mx-4 flex-grow-1" style="max-width: 400px;">
+      {{-- <div class="search-box d-none d-lg-block mx-4 flex-grow-1" style="max-width: 400px;">
         <div class="input-group">
             <span class="input-group-text bg-transparent border-0 pe-0"><i class="bi bi-search text-muted"></i></span>
             <input id="globalSearchInput" class="form-control border-0 shadow-none bg-transparent" type="search" placeholder="Cari sediaan obat...">
         </div>
-      </div>
+      </div> --}}
 
       <!-- ACTION BUTTONS -->
       <div class="d-flex align-items-center">
@@ -203,6 +203,7 @@
             <span class="d-none d-sm-inline">{{ Auth::user()->name }}</span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile">
+            <li><a class="dropdown-item py-2" href="{{ route('customer.profile') }}"><i class="bi bi-person-badge me-2"></i> Profil Saya</a></li>
             <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
             <li><a class="dropdown-item" href="/customer/history"><i class="bi bi-clock-history"></i> Riwayat Pesanan</a></li>
             <li><hr class="dropdown-divider"></li>

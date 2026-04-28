@@ -21,8 +21,9 @@
 
   <style>
     :root {
-      --accent-color: #3fbbc0;
-      --heading-color: #2c4964;
+      --primary: #00838f; /* Hijau Toska Tua sesuai Welcome & Login */
+      --secondary: #2c4964;
+      --hover-color: #006064;
     }
 
     body {
@@ -45,7 +46,7 @@
     }
 
     .register-header {
-      background: var(--accent-color);
+      background: var(--primary);
       color: white;
       padding: 40px 30px;
       text-align: center;
@@ -62,11 +63,11 @@
     }
 
     .register-logo span {
-      color: var(--heading-color);
+      color: var(--secondary);
     }
 
     .form-label {
-      color: var(--heading-color);
+      color: var(--secondary);
       font-weight: 600;
       font-size: 0.85rem;
       margin-bottom: 8px;
@@ -81,14 +82,14 @@
       transition: 0.3s;
     }
 
-    .form-control:focus {
-      border-color: var(--accent-color);
-      box-shadow: 0 0 0 0.25rem rgba(63, 187, 192, 0.1);
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.25rem rgba(0, 131, 143, 0.1);
       background-color: #fff;
     }
 
     .btn-register {
-      background: var(--accent-color);
+      background: var(--primary);
       color: white;
       border-radius: 30px;
       padding: 15px;
@@ -100,25 +101,26 @@
     }
 
     .btn-register:hover {
-      background: #329ea2;
-      box-shadow: 0 8px 20px rgba(63, 187, 192, 0.3);
+      background: var(--hover-color);
+      box-shadow: 0 8px 20px rgba(0, 131, 143, 0.3);
       color: white;
     }
 
     .login-link {
-      color: var(--accent-color);
+      color: var(--primary);
       text-decoration: none;
       font-weight: 600;
     }
 
     .login-link:hover {
       text-decoration: underline;
+      color: var(--hover-color);
     }
 
     .input-group-text {
       background: #fff;
       border-color: #deebec;
-      color: var(--accent-color);
+      color: var(--primary);
       border-radius: 10px 0 0 10px;
     }
 
@@ -133,7 +135,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="card card-register">
+            <div class="card card-register border-0">
                 <div class="register-header">
                     <a href="/" class="register-logo">E-<span>Pharma</span></a>
                     <h4 class="fw-bold mb-1">Registrasi Mitra Faskes</h4>
@@ -143,19 +145,27 @@
 
                     <form id="formRegister" onsubmit="submitRegister(event)">
                         @csrf
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label text-uppercase">Nama Unit / Petugas</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                    <input type="text" name="name" class="form-control form-with-icon" placeholder="Contoh: Klinik Sehat / Budi Santoso" required>
-                                </div>
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase">Nama Unit / Petugas</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" name="name" class="form-control form-with-icon" placeholder="Contoh: Klinik Sehat / Budi Santoso" required>
                             </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-uppercase">Alamat Email Resmi</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                     <input type="email" name="email" class="form-control form-with-icon" placeholder="kontak@unitkesehatan.id" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-uppercase">Nomor Telepon / WhatsApp</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input type="tel" name="phone" class="form-control form-with-icon" placeholder="08xxxxxxxxxx" required>
                                 </div>
                             </div>
                         </div>
@@ -223,7 +233,7 @@
                     icon: 'success',
                     title: 'Pendaftaran Berhasil',
                     text: 'Kode OTP telah dikirim ke email Anda. Silakan masukkan kode tersebut pada halaman berikutnya.',
-                    confirmButtonColor: '#3fbbc0',
+                    confirmButtonColor: '#00838f',
                 }).then(() => {
                     // MENGARAHKAN KE HALAMAN VERIFIKASI OTP SESUAI RESPON SERVER
                     window.location.href = res.data.redirect;
@@ -246,7 +256,7 @@
                     icon: 'error',
                     title: 'Pendaftaran Gagal',
                     text: msg,
-                    confirmButtonColor: '#3fbbc0',
+                    confirmButtonColor: '#00838f',
                 });
             });
     }

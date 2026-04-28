@@ -618,7 +618,7 @@
                             <i class="ph-dots-three sidebar-resize-show"></i>
                         </li>
                         <li class="nav-item">
-                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
+                            <a href="/admin/users" class="nav-link {{ request()->is('admin/users') ? 'active' : '' }}">
                                 <i class="ph-users-three"></i>
                                 <span>Kelola Pengguna</span>
                             </a>
@@ -712,6 +712,12 @@
                             <a href="/operator/warehouses" class="nav-link {{ request()->is('operator/warehouses*') ? 'active' : '' }}">
                                 <i class="ph-buildings"></i> <!-- DIGANTI: disamakan dengan Profile Yayasan (pasti muncul) -->
                                 <span>Daftar Gudang</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/operator/racks" class="nav-link {{ request()->is('operator/racks*') ? 'active' : '' }}">
+                                <i class="ph-buildings"></i> <!-- DIGANTI: disamakan dengan Profile Yayasan (pasti muncul) -->
+                                <span>Daftar Rak</span>
                             </a>
                         </li>
                         @endcan

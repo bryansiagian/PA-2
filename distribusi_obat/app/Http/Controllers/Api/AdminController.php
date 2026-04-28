@@ -25,7 +25,8 @@ class AdminController extends Controller
      */
     public function getUsers() {
         try {
-            $users = User::with('roles')
+            // PERBAIKAN: Tambahkan 'courierDetail' ke dalam with()
+            $users = User::with(['roles', 'courierDetail'])
                 ->where('status', 1)
                 ->whereHas('roles', function($query) {
                     $query->where('name', '!=', 'admin');
@@ -35,6 +36,8 @@ class AdminController extends Controller
 
             return response()->json($users, 200);
         } catch (\Exception $e) {
+            // Senior Tip: Selalu log error asli agar mudah debugging jika terjadi sesuatu di server
+            \Log::error("Error in getUsers: " . $e->getMessage());
             return response()->json(['message' => 'Gagal mengambil data user'], 500);
         }
     }
@@ -66,6 +69,7 @@ class AdminController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6',
+            'phone'    => $request->phone,
             'role_id'  => 'required|exists:roles,id',
             'address'  => 'nullable|string',
             'vehicle_type' => 'nullable|required_if:role_name,courier|in:motorcycle,car',
@@ -166,55 +170,115 @@ class AdminController extends Controller
     public function getAnalytics(Request $request) {
         try {
             $period = $request->query('period', 'daily');
+            $statusId = $request->query('status_id');
+            $startDate = $request->query('start_date');
+            $endDate = $request->query('end_date');
 
-            // Ambil ID Status dari tabel lookup
+            // Ambil ID Status penting untuk kalkulasi rasio & produk terlaris
             $completedStatus = ProductOrderStatus::where('name', 'Completed')->first();
             $completedId = $completedStatus ? $completedStatus->id : 0;
 
-            $shippingStatus = ProductOrderStatus::where('name', 'Shipping')->first();
-            $shippingId = $shippingStatus ? $shippingStatus->id : 0;
-
-            // 1. Hitung Statistik Utama
-            $totalUsers = User::role('customer')->count(); // Total Mitra
-            $totalProducts = Product::where('active', 1)->count(); // Total Katalog
-            $totalOrders = ProductOrder::count(); // Total Transaksi Pembelian
-
-            // Pesanan yang belum sampai (Status selain Completed dan Cancelled)
             $cancelledStatus = ProductOrderStatus::where('name', 'Cancelled')->first();
             $cancelledId = $cancelledStatus ? $cancelledStatus->id : 0;
-            $notShippedCount = ProductOrder::whereNotIn('product_order_status_id', [$completedId, $cancelledId])->count();
 
-            // 2. Statistik Grafik Tren
+            // --- 1. SET RENTANG WAKTU UNTUK GRAFIK ---
             if ($period == 'daily') {
-                $stats = ProductOrder::select(
-                        DB::raw('DATE_FORMAT(created_at, "%d %b") as label'),
-                        DB::raw('COUNT(*) as total_requests')
-                    )
-                    ->where('created_at', '>=', now()->subDays(7))
-                    ->groupBy('label')->orderBy('created_at', 'ASC')->get();
+                $daysCount = 7;
+                // Jika ada start_date manual, hitung selisih harinya, jika tidak default 7 hari
+                $start = $startDate ? Carbon::parse($startDate) : now()->subDays($daysCount - 1);
+                $end = $endDate ? Carbon::parse($endDate) : now();
             } else {
-                $stats = ProductOrder::select(
-                        DB::raw('DATE_FORMAT(created_at, "%b %Y") as label'),
-                        DB::raw('COUNT(*) as total_requests')
-                    )
-                    ->where('created_at', '>=', now()->subMonths(6))
-                    ->groupBy('label')->orderBy('created_at', 'ASC')->get();
+                $monthCount = 6;
+                $start = $startDate ? Carbon::parse($startDate)->startOfMonth() : now()->subMonths($monthCount - 1)->startOfMonth();
+                $end = $endDate ? Carbon::parse($endDate)->endOfMonth() : now()->endOfMonth();
             }
 
-            // 3. Produk Terlaris
+            // --- 2. BASE QUERY (UNTUK FILTER TRANSAKSI) ---
+            // Query ini digunakan untuk menghitung ringkasan di dashboard berdasarkan filter
+            $baseOrderQuery = ProductOrder::query();
+
+            if ($statusId && $statusId !== 'all') {
+                $baseOrderQuery->where('product_order_status_id', $statusId);
+            }
+
+            if ($startDate && $endDate) {
+                $baseOrderQuery->whereBetween('created_at', [Carbon::parse($startDate)->startOfDay(), Carbon::parse($endDate)->endOfDay()]);
+            }
+
+            // --- 3. HITUNG STATISTIK UTAMA (RINGKASAN) ---
+            $totalUsers = User::role('customer')->where('status', 1)->count(); // Hanya Mitra Aktif
+            $totalProducts = Product::where('active', 1)->count();
+
+            // Total Pesanan & Item Berdasarkan Filter yang dipilih di UI
+            $summaryOrders = (clone $baseOrderQuery)->count();
+            $summaryItems = (int)DB::table('product_order_details')
+                ->join('product_orders', 'product_order_details.product_order_id', '=', 'product_orders.id')
+                // Terapkan filter yang sama dengan base query
+                ->when($statusId && $statusId !== 'all', function($q) use ($statusId) {
+                    return $q->where('product_orders.product_order_status_id', $statusId);
+                })
+                ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
+                    return $q->whereBetween('product_orders.created_at', [Carbon::parse($startDate)->startOfDay(), Carbon::parse($endDate)->endOfDay()]);
+                })
+                ->sum('quantity');
+
+            // Belum Terkirim (Status selain Completed & Cancelled) - Global
+            $notShippedCount = ProductOrder::whereNotIn('product_order_status_id', [$completedId, $cancelledId])->count();
+
+            // --- 4. LOGIKA GRAFIK TREN (DENGAN FILLER ANGKA 0) ---
+            $chartData = [];
+            if ($period == 'daily') {
+                $diff = (int)Carbon::parse($start)->diffInDays($end);
+                for ($i = 0; $i <= $diff; $i++) {
+                    $dateLabel = Carbon::parse($start)->addDays($i)->format('d M');
+                    $chartData[$dateLabel] = 0;
+                }
+                $dbDateFormat = '%d %b';
+            } else {
+                $diff = (int)Carbon::parse($start)->diffInMonths($end);
+                for ($i = 0; $i <= $diff; $i++) {
+                    $dateLabel = Carbon::parse($start)->addMonths($i)->format('M Y');
+                    $chartData[$dateLabel] = 0;
+                }
+                $dbDateFormat = '%b %Y';
+            }
+
+            // Ambil data trend dari DB berdasarkan filter
+            $trendStats = (clone $baseOrderQuery)
+                ->select(
+                    DB::raw("DATE_FORMAT(created_at, '$dbDateFormat') as label"),
+                    DB::raw('COUNT(*) as total_requests')
+                )
+                ->groupBy('label')
+                ->get();
+
+            foreach ($trendStats as $stat) {
+                if (isset($chartData[$stat->label])) {
+                    $chartData[$stat->label] = $stat->total_requests;
+                }
+            }
+
+            // Format ulang untuk Chart.js
+            $finalChartStats = [];
+            foreach ($chartData as $label => $val) {
+                $finalChartStats[] = ['label' => $label, 'total_requests' => $val];
+            }
+
+            // --- 5. PRODUK TERLARIS (TOP 5) ---
             $topProducts = DB::table('product_order_details')
                 ->join('products', 'products.id', '=', 'product_order_details.product_id')
                 ->join('product_orders', 'product_orders.id', '=', 'product_order_details.product_order_id')
                 ->where('product_orders.product_order_status_id', $completedId)
                 ->select('products.name', DB::raw('SUM(product_order_details.quantity) as total_qty'))
                 ->groupBy('products.id', 'products.name')
-                ->orderBy('total_qty', 'DESC')->limit(5)->get();
+                ->orderBy('total_qty', 'DESC')
+                ->limit(5)->get();
 
-            // 4. Data Rasio Pengiriman
+            // --- 6. DATA RASIO PENGIRIMAN (DOUGHNUT CHART) ---
             $shippedCount = ProductOrder::where('product_order_status_id', $completedId)->count();
 
             return response()->json([
-                'stats' => $stats,
+                'stats' => $finalChartStats,
                 'top_drugs' => $topProducts,
                 'delivery_ratio' => [
                     'shipped' => $shippedCount,
@@ -223,17 +287,15 @@ class AdminController extends Controller
                 'summary' => [
                     'total_users' => $totalUsers,
                     'total_products' => $totalProducts,
-                    'total_orders' => $totalOrders,
+                    'total_orders' => $summaryOrders, // Terpengaruh filter
                     'not_shipped' => $notShippedCount,
-                    'total_items_distributed' => (int)DB::table('product_order_details')
-                        ->join('product_orders', 'product_order_details.product_order_id', '=', 'product_orders.id')
-                        ->where('product_orders.product_order_status_id', $completedId)->sum('quantity'),
+                    'total_items_distributed' => $summaryItems, // Terpengaruh filter
                     'low_stock_products' => Product::where('active', 1)->whereRaw('stock <= min_stock')->count()
                 ]
             ]);
 
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Internal Server Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -253,16 +315,60 @@ class AdminController extends Controller
         return response()->json($query->latest()->get());
     }
 
+    public function getOrderStatuses() {
+        try {
+            // Mengambil semua data dari tabel product_order_statuses
+            $statuses = \App\Models\ProductOrderStatus::all();
+            return response()->json($statuses);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal mengambil status'], 500);
+        }
+    }
+
     /**
      * Export Laporan.
      */
-    public function exportExcel() {
-        return Excel::download(new OrdersExport, 'Laporan_Distribusi_EPharma_' . date('Ymd') . '.xlsx');
+    public function exportExcel(Request $request) {
+        // Tambahkan ini untuk mencegah timeout (5 menit)
+        ini_set('max_execution_time', 300);
+
+        $type = $request->query('type', 'orders');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        $statusId = $request->query('status_id');
+
+        if ($type === 'users') {
+            return Excel::download(new \App\Exports\UsersExport($startDate, $endDate), 'Data_Mitra.xlsx');
+        }
+
+        return Excel::download(
+            new \App\Exports\OrdersExport($startDate, $endDate, $statusId),
+            'Laporan_Distribusi_EPharma_' . date('Ymd') . '.xlsx'
+        );
     }
 
-    public function exportPdf() {
-        $orders = ProductOrder::with(['user', 'status', 'type', 'items'])->latest()->get();
-        $pdf = Pdf::loadView('pdf.orders_report', compact('orders'));
-        return $pdf->download('Laporan_Distribusi_EPharma_' . date('Ymd') . '.pdf');
+    public function exportPdf(Request $request) {
+        $type = $request->query('type', 'orders');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        $statusId = $request->query('status_id');
+
+        if ($type === 'users') {
+            $data = User::role('customer')
+                ->where('status', 1)
+                ->whereBetween('created_at', [Carbon::parse($startDate)->startOfDay(), Carbon::parse($endDate)->endOfDay()])
+                ->get();
+            $pdf = Pdf::loadView('pdf.users_report', compact('data', 'startDate', 'endDate'));
+            return $pdf->download('Data_User.pdf');
+        }
+
+        $query = ProductOrder::with(['user', 'status']);
+        if ($statusId !== 'all') {
+            $query->where('product_order_status_id', $statusId);
+        }
+        $orders = $query->whereBetween('created_at', [Carbon::parse($startDate)->startOfDay(), Carbon::parse($endDate)->endOfDay()])->get();
+
+        $pdf = Pdf::loadView('pdf.orders_report', compact('orders', 'startDate', 'endDate'));
+        return $pdf->download('Laporan_Distribusi.pdf');
     }
 }
